@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Responsive Variations — Same Content</title>
+  <style>
+    /* -------- Base / Mobile-first (Version 1: phone) -------- */
+    :root{
+      --bg: #111;
+      --fg: #E9E7FD;
+      --muted: #BFB8FF;
+      --accent: #A28BFF;
+      --border: #2a2a2a;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body{
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;           /* 手机版：衬线字体 */
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.6;
+      letter-spacing: .2px;
+    }
+
+    header{
+      background: linear-gradient(180deg, #1a1a1a, #121212);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    /* Nav (mobile vertical) */
+    nav { max-width: 1100px; margin: 0 auto; }
+    nav ul{
+      list-style: none;
+      padding: 16px;
+      margin: 0;
+      display: flex;
+      flex-direction: column;        /* 竖排 */
+      gap: 12px;
+    }
+    nav li{
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    nav a{
+      display: block;
+      padding: 12px 14px;
+      text-decoration: none;
+      color: var(--fg);
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: .08em;
+    }
+    nav li.active a{
+      background: var(--accent);
+      color: #0b0b0f;
+    }
+    nav li:not(.active) a:hover{
+      background: #191919;
+    }
+
+    /* Main */
+    main{
+      max-width: 720px;
+      margin: 28px auto;
+      padding: 0 18px 40px;
+    }
+    .card{
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      background: #0f0f14;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+    p.cursive{
+      font-style: italic;
+      font-size: 1.05rem;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    footer{
+      height: 40px;
+    }
+
+    /* ---------- Version 2: Tablet (>= 600px) 侧栏布局 + 新配色/字体 ---------- */
+    @media (min-width: 600px){
+      :root{
+        --bg: #F5EFE6;            /* 奶油纸感背景 */
+        --fg: #1E1A16;
+        --muted: #6B5B53;
+        --accent: #D26A25;        /* 温暖橘 */
+        --border: #E2D6C8;
+      }
+      body{
+        font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif; /* 平板：人文无衬线 */
+        background: var(--bg);
+        color: var(--fg);
+        display: flex;            /* 关键：让 header 当作侧栏 */
+        min-height: 100dvh;
+      }
+
+      header{
+        position: static;
+        width: 280px;             /* 侧边栏宽度 */
+        min-height: 100dvh;
+        border-right: 1px solid var(--border);
+        border-bottom: none;
+        background: linear-gradient(180deg, #FFF4E8, #F5EFE6);
+      }
+
+      nav ul{
+        padding: 22px;
+        gap: 10px;
+      }
+      nav li{
+        border: none;
+        border-radius: 10px;
+        background: #FFF8F0;
+        box-shadow: 0 1px 0 #eadbcc;
+      }
+      nav li.active a{
+        background: var(--accent);
+        color: #fff;
+      }
+      nav a{
+        color: #3b2e24;
+        text-transform: none;     /* 去掉全大写 */
+        letter-spacing: .02em;
+      }
+
+      main{
+        flex: 1;
+        max-width: none;
+        margin: 0;
+        padding: 40px clamp(24px, 6vw, 80px);
+        display: flex;
+        align-items: center;
+      }
+      .card{
+        background: #ffffff;
+        border-color: #eadbcc;
+        box-shadow: 0 8px 24px rgba(149, 117, 84, .18);
+        padding: clamp(20px, 4vw, 36px);
+      }
+      p.cursive{
+        font-size: clamp(1.05rem, 2.6vw, 1.25rem);
+        color: #4a3c33;
+      }
+    }
+
+    /* ---------- Version 3: Desktop (>= 900px) 顶部导航 / 宽画布 / 现代无衬线 ---------- */
+    @media (min-width: 900px){
+      :root{
+        --bg: #f7f9ff;
+        --fg: #0b1020;
+        --muted: #47506a;
+        --accent: #3450FF;
+        --border: #e6ebff;
+        --radius: 16px;
+      }
+
+      body{
+        display: block;                   /* 回到顶部导航布局 */
+        font-family: Helvetica, Arial, sans-serif;  /* 桌面：现代无衬线 */
+        background:
+          radial-gradient(1000px 400px at 10% -10%, rgba(52,80,255,.15), transparent 60%),
+          radial-gradient(800px 300px at 90% -20%, rgba(52,80,255,.12), transparent 60%),
+          var(--bg);
+      }
+
+      header{
+        background: rgba(255,255,255,.8);
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+      }
+      nav{
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      nav ul{
+        flex-direction: row;              /* 横排 */
+        align-items: center;
+        justify-content: flex-end;
+        gap: 4px;
+        padding: 10px 16px;
+      }
+      nav li{
+        background: transparent;
+        border: none;
+        border-radius: 10px;
+      }
+      nav a{
+        border-radius: 10px;
+        padding: 10px 14px;
+        color: var(--fg);
+        text-transform: none;
+        font-weight: 600;
+      }
+      nav li.active a{
+        background: var(--accent);
+        color: #fff;
+        box-shadow: 0 8px 24px rgba(52,80,255,.28);
+      }
+      nav li:not(.active) a:hover{
+        background: #eef2ff;
+      }
+
+      main{
+        max-width: 1100px;
+        margin: 64px auto 96px;
+        padding: 0 24px;
+        display: flex;
+        align-items: stretch;
+      }
+      .card{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: clamp(28px, 4vw, 48px);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        background: #fff;
+        box-shadow:
+          0 10px 30px rgba(23, 36, 84, .08),
+          0 2px 6px rgba(23, 36, 84, .05);
+      }
+      p.cursive{
+        font-style: italic;
+        font-size: clamp(1.1rem, 1.6vw, 1.35rem);
+        color: var(--muted);
+        max-width: 70ch;
+        text-wrap: pretty;
+        margin: 0;
+      }
+    }
+
+    /* （可选）超宽屏再微调 */
+    @media (min-width: 1200px){
+      nav ul{ padding: 12px 24px; }
+      main{ max-width: 1280px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav aria-label="Primary">
+      <ul>
+        <li><a href="#" aria-current="false">Home</a></li>
+        <li><a href="#" aria-current="false">Work</a></li>
+        <li class="active cursive another-class"><a href="#" aria-current="page">Blog</a></li>
+        <li><a href="#" aria-current="false">Resume</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <article class="card" role="article">
+      <p class="cursive">
+        Lorem ipsum dolor sit amet consectetur adipisicing elit. Libero dignissimos doloremque iure.
+        Perferendis, delectus? Tenetur, ea a. Animi dolor libero possimus officiis sapiente ea.
+        Maxime eligendi nisi iusto corrupti aut.
+      </p>
+    </article>
+  </main>
+
+  <footer aria-hidden="true"></footer>
+</body>
+</html>
