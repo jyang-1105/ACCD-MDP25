@@ -1,5 +1,5 @@
 let cBox = document.getElementById("colorBox");
-let colorBtn = document.getElementById("changeColor")
+let colorBtn = document.getElementById("changeColorBtn")
 let ImgBox = document.getElementById("RabbitImage")
 let ImageBtn = document.getElementById("toggleImage")
 
@@ -13,13 +13,13 @@ let assignRandomColor = function()
 
 const togglerabbitImage =   () =>
 {
-    console.log(imgBox.src)
-    if (imgBox.src.includes("Rabbit1.jpg")) 
+    console.log(ImgBox.src)
+    if (ImgBox.src.includes("Rabbit1.jpg")) 
     {
         console.log("chaging to Rabbit2")
-        imgBox.src = "assets/Rabbit2.jpg"
+        ImgBox.src = "assets/Rabbit2.jpg"
     }
 
 }
-ImageBtn.addEventListener("click", toggleRabbitImage)
+ImageBtn.addEventListener("click", togglerabbitImage)
 colorBtn.addEventListener("click", assignRandomColor)
