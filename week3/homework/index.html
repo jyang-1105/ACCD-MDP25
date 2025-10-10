@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kitty Gallery</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo">🐾 Kitty Gallery</div>
+    <nav class="links" aria-label="Navigation">
+      <a href="#">Link 1</a>
+      <a href="#">Link 2</a>
+      <a href="#">Link 3</a>
+      <a href="#">Link 4</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="gallery" aria-label="Image gallery">
+      <div class="thumbs" role="list">
+        <button class="thumb" aria-current="true" aria-label="Kitty 1" data-full="assets/kitty1.jpg">
+          <img src="assets/kitty1.jpg" alt="Kitty 1 thumbnail" />
+        </button>
+        <button class="thumb" aria-label="Kitty 2" data-full="assets/kitty2.jpg">
+          <img src="assets/kitty2.jpg" alt="Kitty 2 thumbnail" />
+        </button>
+        <button class="thumb" aria-label="Kitty 3" data-full="assets/kitty3.jpg">
+          <img src="assets/kitty3.jpg" alt="Kitty 3 thumbnail" />
+        </button>
+        <button class="thumb" aria-label="Kitty 4" data-full="assets/kitty4.jpg">
+          <img src="assets/kitty4.jpg" alt="Kitty 4 thumbnail" />
+        </button>
+      </div>
+
+      <div class="viewer" aria-live="polite">
+        <img id="viewerImg" src="assets/kitty1.jpg" alt="Kitty 1 (displayed)" />
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
