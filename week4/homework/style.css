@@ -1,6 +1,49 @@
-html, body {
-  margin: 0; padding: 0;
-  background: #0a0a0f;   /* 深色背景更显色彩 */
-  height: 100%;
+/* —— 基础排版 —— */
+:root{
+  --bg:#0b0e13;
+  --fg:#e8ecf1;
+  --muted:#9fb3c8;
+  --card:#11161e;
+  --border:#1b2230;
 }
-canvas { display: block; }
+html,body{margin:0;height:100%;}
+body{
+  background:var(--bg);
+  color:var(--fg);
+  font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+}
+
+/* 页面结构 */
+.page-header{
+  max-width:920px; margin:32px auto 8px; padding:0 16px;
+}
+.page-header h1{margin:0 0 4px; font-size:28px; letter-spacing:.2px;}
+.subtitle{margin:0; color:var(--muted);}
+
+.doc, .sketch-section{
+  max-width:920px; margin:16px auto; padding:16px; box-sizing:border-box;
+  background:var(--card); border:1px solid var(--border); border-radius:14px;
+}
+.doc h2, .sketch-section h2{margin:.2rem 0 0.6rem;}
+.doc h3{margin:1rem 0 .4rem;}
+.bullets{margin:.2rem 0 .8rem 1.2rem;}
+.bullets li{margin:.2rem 0;}
+code{background:#0e1420; padding:2px 6px; border-radius:6px;}
+
+/* 动画容器（小尺寸） */
+.sketch-holder{
+  width:100%;
+  /* 高度：保持更小的可视窗口（可改 340~520） */
+  aspect-ratio: 16 / 9;       /* 宽高比 */
+  max-height: 420px;          /* 上限，避免太高 */
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  border:1px solid var(--border);
+  background:#0a0a0f;
+}
+.sketch-title{margin:0 0 .6rem; color:var(--muted);}
+.caption{margin:.6rem 0 0; color:var(--muted); font-size:13px}
+
+/* 让 p5 画布撑满容器 */
+canvas{ display:block; width:100% !important; height:100% !important; }

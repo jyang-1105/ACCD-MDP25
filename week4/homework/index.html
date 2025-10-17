@@ -3,13 +3,77 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Bouncy Orbs with Obstacles — p5.js</title>
+  <title>Non-Interactive Non-Linear Movement — Assignment Page</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- Top: assignment write-up -->
+  <header class="page-header">
+    <h1>Non-Interactive Non-Linear Movement (p5.js)</h1>
+    <p class="subtitle">Colorful bouncing orbs + rectangular obstacles · elastic reflection with subtle noise</p>
+  </header>
+
+  <section class="doc">
+    <h2>Project Notes / Documentation</h2>
+
+    <h3>Concept</h3>
+    <p>
+      My sketch shows a bunch of colorful orbs bouncing around inside a small field while avoiding several rectangular
+      obstacles. The motion is non-interactive (it runs by itself) and non-linear. I add a tiny Perlin noise “push” to
+      the velocity each frame, so the paths never feel perfectly mechanical or predictable.
+    </p>
+
+    <h3>How it works (short)</h3>
+    <ul class="bullets">
+      <li>Each orb stores position, velocity, radius, and a base hue.</li>
+      <li>On every frame I add a small <code>noise()</code>-based jitter to its velocity, then move it.</li>
+      <li>Collisions: elastic reflection on the canvas edges and on the faces of rectangular obstacles.</li>
+      <li>To avoid sticking, after a hit I push the orb slightly out along the collision normal and damp the speed a bit.</li>
+    </ul>
+
+    <h3>Problems &amp; Solutions</h3>
+    <ul class="bullets">
+      <li><strong>Orbs got stuck on obstacle edges.</strong> I added position correction along the surface normal and a tiny
+        random kick after reflection. This removes overlap and stops the jitter.</li>
+      <li><strong>Motion looked too “perfect.”</strong> I applied a small <code>noise()</code> term to velocity instead of
+        directly to position. That kept momentum but made the movement feel more alive.</li>
+      <li><strong>Readability with text on the same page.</strong> I shrank the canvas and placed it under the write-up so the
+        documentation stays the focus.</li>
+    </ul>
+
+    <h3>Reflection (2 paragraphs)</h3>
+    <p>
+      The most interesting problem for me was the “sticking” bug. At first, I only flipped the velocity when an orb touched
+      an obstacle, which looked fine until an orb hit a corner and started vibrating in place. Reading more about collision
+      response, I realized I was missing positional correction. After the velocity reflection, I now push the orb slightly
+      outward along the collision normal so it no longer overlaps with the rectangle.
+    </p>
+    <p>
+      Fixing that changed the vibe of the whole piece. The animation felt less glitchy and more intentional, and it also
+      helped me understand “non-linear” beyond just randomness. The noise is small, but it keeps the system from falling
+      into repetitive loops, while the physics rules still give it structure. It ends up somewhere between order and drift,
+      which is exactly what I wanted for this assignment.
+    </p>
+
+    <h3>Assets &amp; Submission</h3>
+    <ul class="bullets">
+      <li>Libraries: <code>p5.min.js</code>, <code>p5.sound.min.js</code> (in <code>/libraries</code>)</li>
+      <li>Code: <code>index.html</code>, <code>style.css</code>, <code>sketch.js</code></li>
+      <li>Video: screen-capture of the animation (to be uploaded). URL goes here: <em>https://&lt;your-link&gt;</em></li>
+    </ul>
+  </section>
+
+  <!-- Bottom: smaller animation area -->
+  <section class="sketch-section">
+    <h2 class="sketch-title">Animation</h2>
+    <div id="sketch-holder" class="sketch-holder"></div>
+    <p class="caption">Note: the animation is non-interactive and automatically adapts to the container size.</p>
+  </section>
+
+  <!-- p5 libraries -->
   <script src="libraries/p5.min.js"></script>
   <script src="libraries/p5.sound.min.js"></script>
+  <!-- your sketch -->
   <script src="sketch.js"></script>
 </body>
 </html>
-

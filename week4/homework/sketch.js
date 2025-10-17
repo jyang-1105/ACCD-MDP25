@@ -1,178 +1,149 @@
-/* 
-  Bouncy Orbs with Rectangular Obstacles
-  - 多个彩色圆球在屏幕内弹性反弹
-  - 碰到矩形障碍物会反射
-  - 速度加入少量 Perlin 噪声 -> 非线性运动质感
-*/
-
+/* Bouncy Orbs (small canvas version inside #sketch-holder) */
 let balls = [];
 let obstacles = [];
-const BALL_COUNT = 40;
+const BALL_COUNT = 36;
 
 function setup() {
-  createCanvas(windowWidth, windowHeight);
-  // 创建障碍物（可自定义/增加）
-  // Obstacle(x, y, w, h)
-  obstacles.push(new Obstacle(width*0.25, height*0.35, 200, 24));
-  obstacles.push(new Obstacle(width*0.6, height*0.6, 240, 28));
-  obstacles.push(new Obstacle(width*0.55, height*0.25, 30, 220));
-  obstacles.push(new Obstacle(width*0.15, height*0.7, 180, 20));
+  const {w, h} = holderSize();
+  const cnv = createCanvas(w, h);
+  cnv.parent("sketch-holder");
 
-  // 创建小球
-  for (let i = 0; i < BALL_COUNT; i++) {
-    const r = random(10, 26);
-    const x = random(r, width - r);
-    const y = random(r, height - r);
-    // 避免出生在障碍物里
-    if (isPointInAnyObstacle(x, y)) { i--; continue; }
-    const speed = random(1.2, 3.2);
-    const angle = random(TWO_PI);
-    balls.push(new Ball(x, y, cos(angle)*speed, sin(angle)*speed, r));
-  }
+  setupObstacles();
+  setupBalls();
 
   noStroke();
+  frameRate(60);
 }
 
 function draw() {
-  // 半透明叠加制造拖影
-  background(10, 12, 20, 35);
+  // 深色+轻拖影
+  background(10, 12, 20, 40);
 
-  // 画障碍物
+  // 障碍物
   for (const ob of obstacles) ob.draw();
 
-  // 更新并绘制小球
+  // 小球
   for (const b of balls) {
     b.update();
-    // 与边界碰撞
     b.bounceEdges();
-    // 与障碍物碰撞
-    for (const ob of obstacles) {
-      b.collideObstacle(ob);
-    }
+    for (const ob of obstacles) b.collideObstacle(ob);
     b.draw();
   }
 }
 
-function windowResized() {
-  resizeCanvas(windowWidth, windowHeight);
+/* ---------- Layout helpers ---------- */
+function holderSize(){
+  const el = document.getElementById("sketch-holder");
+  // el 还未渲染时兜底
+  const w = el?.clientWidth || windowWidth * 0.9;
+  const h = el?.clientHeight || Math.min(420, w * 9/16);
+  return { w: floor(w), h: floor(h) };
+}
+function windowResized(){
+  const {w,h} = holderSize();
+  resizeCanvas(w, h);
+  setupObstacles(true); // 重建障碍物以适应新尺寸
 }
 
-// ---------- 工具 ----------
-function clamp(v, lo, hi) { return max(lo, min(hi, v)); }
-
-function isPointInAnyObstacle(px, py) {
-  return obstacles.some(ob => (
-    px >= ob.x && px <= ob.x + ob.w && py >= ob.y && py <= ob.y + ob.h
-  ));
-}
-
-// ---------- 类 ----------
-class Ball {
-  constructor(x, y, vx, vy, r) {
-    this.pos = createVector(x, y);
-    this.vel = createVector(vx, vy);
-    this.r = r;
-    this.hueBase = random(360);
-    this.noiseSeedX = random(1000);
-    this.noiseSeedY = random(2000, 3000);
+/* ---------- Scene setup ---------- */
+function setupBalls(){
+  balls = [];
+  for (let i = 0; i < BALL_COUNT; i++) {
+    const r = random(10, 24);
+    const x = random(r, width - r);
+    const y = random(r, height - r);
+    if (pointInObstacles(x, y)) { i--; continue; }
+    const speed = random(1.2, 3.0);
+    const a = random(TWO_PI);
+    balls.push(new Ball(x, y, cos(a)*speed, sin(a)*speed, r));
   }
+}
+function setupObstacles(keepCount=false){
+  // 按当前画布尺寸放置一些矩形
+  obstacles = [];
+  const pad = max(16, width*0.02);
+  obstacles.push(new Obstacle(width*0.18, height*0.58, width*0.26, 18));
+  obstacles.push(new Obstacle(width*0.62, height*0.25, 22, height*0.42));
+  obstacles.push(new Obstacle(width*0.30, height*0.28, width*0.22, 16));
+  // 也可以再加一条底部短杠
+  obstacles.push(new Obstacle(width*0.55, height*0.80, width*0.18, 14));
+}
 
-  update() {
-    // 给速度一点点噪声扰动（非线性）
-    const nX = noise(this.noiseSeedX + frameCount * 0.007);
-    const nY = noise(this.noiseSeedY + frameCount * 0.007);
-    const jitter = 0.15; // 扰动强度（可调）
-    this.vel.x += map(nX, 0, 1, -jitter, jitter);
-    this.vel.y += map(nY, 0, 1, -jitter, jitter);
+/* ---------- Utils ---------- */
+function clamp(v, lo, hi){ return max(lo, min(hi, v)); }
+function pointInObstacles(px, py){
+  return obstacles.some(ob => px>=ob.x && px<=ob.x+ob.w && py>=ob.y && py<=ob.y+ob.h);
+}
 
-    // 限速避免飞走
-    this.vel.limit(4.5);
-
+/* ---------- Classes ---------- */
+class Ball{
+  constructor(x,y,vx,vy,r){
+    this.pos = createVector(x,y);
+    this.vel = createVector(vx,vy);
+    this.r = r;
+    this.h = random(360);
+    this.nx = random(1000);
+    this.ny = random(2000,3000);
+  }
+  update(){
+    // 非线性：给速度添加噪声扰动
+    const jitter = 0.14;
+    this.vel.x += map(noise(this.nx + frameCount*0.007), 0, 1, -jitter, jitter);
+    this.vel.y += map(noise(this.ny + frameCount*0.007), 0, 1, -jitter, jitter);
+    this.vel.limit(4.2);
     this.pos.add(this.vel);
   }
+  bounceEdges(){
+    if (this.pos.x < this.r){ this.pos.x = this.r; this.vel.x *= -1; }
+    if (this.pos.x > width - this.r){ this.pos.x = width - this.r; this.vel.x *= -1; }
+    if (this.pos.y < this.r){ this.pos.y = this.r; this.vel.y *= -1; }
+    if (this.pos.y > height - this.r){ this.pos.y = height - this.r; this.vel.y *= -1; }
+  }
+  collideObstacle(ob){
+    const nx = clamp(this.pos.x, ob.x, ob.x+ob.w);
+    const ny = clamp(this.pos.y, ob.y, ob.y+ob.h);
+    const dx = this.pos.x - nx;
+    const dy = this.pos.y - ny;
+    const d2 = dx*dx + dy*dy;
+    if (d2 < this.r*this.r){
+      let n = createVector(dx,dy);
+      if (n.magSq() === 0){
+        // 退到最近边
+        const left = abs(this.pos.x - ob.x);
+        const right = abs(ob.x+ob.w - this.pos.x);
+        const top = abs(this.pos.y - ob.y);
+        const bottom = abs(ob.y+ob.h - this.pos.y);
+        const m = min(left,right,top,bottom);
+        if (m===left) n.set(-1,0); else if (m===right) n.set(1,0);
+        else if (m===top) n.set(0,-1); else n.set(0,1);
+      }else n.normalize();
 
-  bounceEdges() {
-    // 左右
-    if (this.pos.x < this.r) {
-      this.pos.x = this.r;
-      this.vel.x *= -1;
-    } else if (this.pos.x > width - this.r) {
-      this.pos.x = width - this.r;
-      this.vel.x *= -1;
-    }
-    // 上下
-    if (this.pos.y < this.r) {
-      this.pos.y = this.r;
-      this.vel.y *= -1;
-    } else if (this.pos.y > height - this.r) {
-      this.pos.y = height - this.r;
-      this.vel.y *= -1;
+      // 速度反射
+      const vdotn = this.vel.dot(n);
+      const reflect = p5.Vector.mult(n, 2*vdotn);
+      this.vel.sub(reflect).mult(0.985).add(p5.Vector.random2D().mult(0.04));
+
+      // 位置校正
+      const d = sqrt(d2);
+      const overlap = this.r - d + 0.6;
+      this.pos.add(p5.Vector.mult(n, overlap));
     }
   }
-
-  collideObstacle(ob) {
-    // 计算圆到矩形的最近点
-    const nearestX = clamp(this.pos.x, ob.x, ob.x + ob.w);
-    const nearestY = clamp(this.pos.y, ob.y, ob.y + ob.h);
-    const dx = this.pos.x - nearestX;
-    const dy = this.pos.y - nearestY;
-    const distSq = dx*dx + dy*dy;
-
-    if (distSq < this.r * this.r) {
-      // 碰撞：法线向量
-      let normal = createVector(dx, dy);
-      // 圆心在矩形内部的罕见情况 -> 选择最短推出方向
-      if (normal.magSq() === 0) {
-        const leftPen   = abs((this.pos.x - ob.x));
-        const rightPen  = abs((ob.x + ob.w) - this.pos.x);
-        const topPen    = abs((this.pos.y - ob.y));
-        const bottomPen = abs((ob.y + ob.h) - this.pos.y);
-        const minPen = min(leftPen, rightPen, topPen, bottomPen);
-        if (minPen === leftPen)      normal.set(-1, 0);
-        else if (minPen === rightPen)normal.set( 1, 0);
-        else if (minPen === topPen)  normal.set( 0,-1);
-        else                         normal.set( 0, 1);
-      } else {
-        normal.normalize();
-      }
-
-      // 反射速度 v' = v - 2(v·n)n
-      const vdotn = this.vel.dot(normal);
-      const reflect = p5.Vector.mult(normal, 2 * vdotn);
-      this.vel.sub(reflect);
-
-      // 稍微增加能量损失/扰动，避免“卡住”
-      this.vel.mult(0.98);
-      this.vel.add(p5.Vector.random2D().mult(0.05));
-
-      // 位置校正：把圆推出接触面外
-      const dist = sqrt(distSq);
-      const overlap = this.r - dist + 0.5;
-      this.pos.add(p5.Vector.mult(normal, overlap));
-    }
-  }
-
-  draw() {
-    // 颜色：随时间在色环上轻微漂移
-    const hue = (this.hueBase + frameCount * 0.3) % 360;
-    colorMode(HSB, 360, 100, 100, 100);
+  draw(){
+    colorMode(HSB,360,100,100,100);
+    const hue = (this.h + frameCount*0.35) % 360;
     fill(hue, 85, 100, 92);
     noStroke();
-    circle(this.pos.x, this.pos.y, this.r * 2);
-    colorMode(RGB, 255);
+    circle(this.pos.x, this.pos.y, this.r*2);
+    colorMode(RGB,255);
   }
 }
 
-class Obstacle {
-  constructor(x, y, w, h) {
-    this.x = x; this.y = y; this.w = w; this.h = h;
-  }
-  draw() {
-    push();
+class Obstacle{
+  constructor(x,y,w,h){ this.x=x; this.y=y; this.w=w; this.h=h; }
+  draw(){
     noStroke();
-    fill(240, 240, 255, 40);    // 半透明填充
+    fill(240,240,255,38);
     rect(this.x, this.y, this.w, this.h, 6);
-    pop();
   }
 }
-
