@@ -7,65 +7,54 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Top: assignment write-up -->
   <header class="page-header">
     <h1>Non-Interactive Non-Linear Movement (p5.js)</h1>
-    <p class="subtitle">Colorful bouncing orbs + rectangular obstacles · elastic reflection with subtle noise</p>
+    <p class="subtitle">Image orbs bouncing with subtle noise · edge hits swap images · rectangular obstacles</p>
   </header>
 
   <section class="doc">
     <h2>Project Notes / Documentation</h2>
-
     <h3>Concept</h3>
     <p>
-      My sketch shows a bunch of colorful orbs bouncing around inside a small field while avoiding several rectangular
-      obstacles. The motion is non-interactive (it runs by itself) and non-linear. I add a tiny Perlin noise “push” to
-      the velocity each frame, so the paths never feel perfectly mechanical or predictable.
+      This sketch shows several image orbs bouncing inside the canvas. The movement is non-interactive and non-linear.
+      I added a little Perlin noise to the velocity every frame, making the motion feel smoother and more organic.
+      When an orb hits a canvas edge, it swaps to the other image. When it hits a rectangular obstacle, it simply bounces off.
     </p>
-
-    <h3>How it works</h3>
-    <ul class="bullets">
-      <li>Each orb stores position, velocity, radius, and a base hue.</li>
-      <li>On every frame I add a small <code>noise()</code>-based jitter to its velocity, then move it.</li>
-      <li>Collisions: elastic reflection on the canvas edges and on the faces of rectangular obstacles.</li>
-      <li>To avoid sticking, after a hit I push the orb slightly out along the collision normal and damp the speed a bit.</li>
-    </ul>
 
     <h3>Problems &amp; Solutions</h3>
     <ul class="bullets">
-      <li><strong>Orbs got stuck on obstacle edges.</strong> I added position correction along the surface normal and a tiny
-        random kick after reflection. This removes overlap and stops the jitter.</li>
-      <li><strong>Motion looked too “perfect.”</strong> I applied a small <code>noise()</code> term to velocity instead of
-        directly to position. That kept momentum but made the movement feel more alive.</li>
-      <li><strong>Readability with text on the same page.</strong> I shrank the canvas and placed it under the write-up so the
-        documentation stays the focus.</li>
+      <li><strong>Sticking issue:</strong> Balls sometimes got stuck on obstacle corners. I solved it by pushing them slightly outward after collision and reducing their speed a bit.</li>
+      <li><strong>Too linear motion:</strong> Adding <code>noise()</code> to the velocity made the motion less predictable and more natural.</li>
+      <li><strong>Visual balance:</strong> I reduced the number of orbs and resized the canvas to keep the focus on both text and animation.</li>
     </ul>
 
-    <h3>Reflection </h3>
+    <h3>Reflection</h3>
     <p>
-      The most interesting problem for me was the “sticking” bug. At first, I only flipped the velocity when an orb touched
-      an obstacle, which looked fine until an orb hit a corner and started vibrating in place. Reading more about collision
-      response, I realized I was missing positional correction. After the velocity reflection, I now push the orb slightly
-      outward along the collision normal so it no longer overlaps with the rectangle.
+      At first, I only flipped the velocity direction when an orb collided, but that caused them to vibrate or stick at the edges.
+      Adding position correction and damping fixed the problem and made the animation feel cleaner and more realistic.
     </p>
     <p>
-      Fixing that changed the vibe of the whole piece. The animation felt less glitchy and more intentional, and it also
-      helped me understand “non-linear” beyond just randomness. The noise is small, but it keeps the system from falling
-      into repetitive loops, while the physics rules still give it structure. It ends up somewhere between order and drift,
-      which is exactly what I wanted for this assignment.
+      I also learned that “non-linear movement” doesn’t just mean randomness—it’s about creating continuous, natural changes.
+      The mix of physics and noise produces a balanced, living motion that feels between control and chaos.
     </p>
 
-  <!-- Bottom: smaller animation area -->
+    <h3>Assets &amp; Submission</h3>
+    <ul class="bullets">
+      <li>Images: <code>assets/ball1.jpg</code>, <code>assets/ball2.jpg</code></li>
+      <li>Libraries: <code>p5.min.js</code>, <code>p5.sound.min.js</code></li>
+      <li>Code files: <code>index.html</code>, <code>style.css</code>, <code>sketch.js</code></li>
+      <li>Video capture: record the animation and upload the URL for submission</li>
+    </ul>
+  </section>
+
   <section class="sketch-section">
     <h2 class="sketch-title">Animation</h2>
     <div id="sketch-holder" class="sketch-holder"></div>
-    <p class="caption">Jia Yang</p>
+    <p class="caption">Note: The animation runs automatically and adapts to window size.</p>
   </section>
 
-  <!-- p5 libraries -->
   <script src="libraries/p5.min.js"></script>
   <script src="libraries/p5.sound.min.js"></script>
-  <!-- your sketch -->
   <script src="sketch.js"></script>
 </body>
 </html>
