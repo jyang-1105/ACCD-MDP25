@@ -1,24 +1,22 @@
-/* Forest Signaling Map — revert ring size, enlarge path radius slightly (with caps)
-   - 外/内环尺寸回到之前版本：外(0.54,0.315,-0.075)，内(0.33,0.20,+0.21)
-   - 仅放大“路径半径”（outerPathGain / innerPathGain），并用像素带宽 bandPx 限制
-   - 图例固定在图像下方，完整显示；背景柔白；速度/频度保持真实感设定
+/* Forest Signaling Map — fire-side underground colors in black/red/gray
+   - 外/内环范围 = 之前满意的尺寸；仅轨道半径微扩，视觉贴合
+   - 火灾侧(左) 内环粒子 = 黑/红/灰；健康侧(右) = 原绿系
+   - 图例固定下方，双列；内环分“healthy / fire”两组
 */
 
 let img;
-
-// 画布高度保留较高，保证图例完整显示
 let cw = 1280, ch = 980;
 
 let cx, cy, drawW, drawH;
 
-// 椭圆轴与偏移（恢复到你之前满意的一版）
+// 椭圆轴与偏移（回到你之前满意的一版）
 let aOuter, bOuter, aInnerFlow, bInnerFlow, rot;
 let OUTER_DY, INNER_DY;
 
-// 仅放大“路径半径”的系数（不会改变环的范围）
-const outerPathGain = 1.06;  // 外环路径半径微增（≈+6%）
-const innerPathGain = 1.08;  // 内环路径半径微增（≈+8%）
-const bandPx        = 12;    // 最多只比原轨道外扩 12px，避免“范围变大”的观感
+// 仅放大“路径半径”（不会改变环的总体范围）
+const outerPathGain = 1.06;  // 外环路径半径微增
+const innerPathGain = 1.08;  // 内环路径半径微增
+const bandPx        = 12;    // 外扩最多 12px
 
 // 扇区
 const FIRE_SECTOR    = { start: 0.65 * Math.PI, end: 1.35 * Math.PI };   // 左
@@ -35,7 +33,7 @@ const AIR_TYPES = [
   {key:'H2Ov', label:'H₂O↑  vapor',           col:'#90CAF9', speed:1.7, size:12, w:1.3},
 ];
 
-// —— 内环（地下）物质 —— //
+// —— 内环（地下）物质（健康侧用绿系） —— //
 const UNDER_TYPES = [
   {key:'H2O',  label:'H₂O  water',        col:'#2E7D32', speed:1.7, size:14, w:1.5},
   {key:'Suc',  label:'Suc  sugars',       col:'#388E3C', speed:1.6, size:13, w:1.4},
@@ -53,7 +51,26 @@ const UNDER_TYPES = [
   {key:'EX',   label:'Ex  root exudates', col:'#558B2F', speed:1.1, size:11, w:1.1},
 ];
 
-// 频度
+// —— 火灾侧地下（内环）的替换调色板：黑 / 红 / 灰 —— //
+// 如果需要更“黑”，可以把灰色换成更深的 #424242 / #212121
+const FIRE_UNDER_COLORS = {
+  'H2O':'#9E9E9E',  // 水 → 灰
+  'Suc':'#757575',  // 糖 → 深灰
+  'AA':'#9E9E9E',   // 氨基酸 → 灰
+  'N':'#616161',    // 氮 → 暗灰
+  'P':'#757575',    // 磷 → 深灰
+  'K':'#9E9E9E',    // 钾 → 灰
+  'ABA':'#D32F2F',  // 胁迫激素 → 红
+  'JA':'#C62828',   // 红
+  'SA':'#B71C1C',   // 深红
+  'IAA':'#424242',  // 深灰
+  'CK':'#616161',   // 暗灰
+  'SL':'#424242',   // 深灰
+  'e':'#000000',    // 电信号 → 纯黑
+  'EX':'#757575'    // 分泌物 → 深灰
+};
+
+// 频度（不变）
 const SPAWN_OUTER = [
   {type:'ETH',  side:'fire',    p:0.32},
   {type:'GLV',  side:'fire',    p:0.28},
@@ -138,7 +155,7 @@ function draw(){
   particles = particles.filter(p => !p.dead);
   particles.forEach(p => p.draw());
 
-  // 图例：固定在下方、双列、完整可见
+  // 图例：固定在下方、双列、完整可见（含“Inner — fire”黑红灰）
   const imgBounds = {left: cx - drawW/2, right: cx + drawW/2, top: cy - drawH/2, bottom: cy + drawH/2};
   drawLegendTwoColsBelow(imgBounds);
 }
@@ -154,6 +171,15 @@ class Particle{
     this.alpha= 255; this.age=0;
     this.tJit   = (ring==='outer') ? random(-0.010,0.010) : random(-0.006,0.006);
     this.breath = (ring==='outer') ? 1.0 : 0.45;
+
+    // —— 针对“火灾侧内环”的配色覆盖 —— //
+    if (this.ring === 'inner' && this.side === 'fire'){
+      // 若对应键存在火灾侧配色，则覆盖；否则沿用默认色
+      const k = this.kind.key;
+      this.col = FIRE_UNDER_COLORS[k] ? FIRE_UNDER_COLORS[k] : this.kind.col;
+    } else {
+      this.col = this.kind.col;
+    }
   }
   step(){
     const sec = (this.side==='fire') ? FIRE_SECTOR : HEALTHY_SECTOR;
@@ -174,16 +200,14 @@ class Particle{
     let x0 = aBase * Math.cos(this.t);
     let y0 = yb    * Math.sin(this.t);
 
-    // —— 仅放大“路径半径”（带像素上限），不改变环的总体范围 —— //
+    // 仅放大路径半径（带像素上限）
     const gain = (this.ring==='outer') ? outerPathGain : innerPathGain;
-    const r    = Math.hypot(x0, y0);          // 原半径
-    const rNew = r * gain;                    // 放大后的半径
-    const rCap = r + bandPx;                  // 最多外扩 bandPx 像素
+    const r    = Math.hypot(x0, y0);
+    const rNew = r * gain;
+    const rCap = r + bandPx;
     const rUse = Math.min(rNew, rCap);
-    const scale = r > 0 ? (rUse / r) : 1.0;   // 实际缩放（若r=0则不动）
-
-    x0 *= scale;
-    y0 *= scale;
+    const scale = r > 0 ? (rUse / r) : 1.0;
+    x0 *= scale; y0 *= scale;
 
     // 旋转 + 平移
     const xr = x0 * Math.cos(rot) - y0 * Math.sin(rot);
@@ -193,10 +217,10 @@ class Particle{
   draw(){
     const p = this.pos();
     strokeWeight(this.kind.w);
-    stroke(colorA(this.kind.col, 90));
+    stroke(colorA(this.col, 90));  // 使用覆盖后的颜色
     point(p.x, p.y);
     noStroke();
-    fill(colorA(this.kind.col, this.alpha));
+    fill(colorA(this.col, this.alpha));
     textAlign(CENTER, CENTER);
     const short = this.kind.label.split('  ')[0];
     textSize(this.kind.size);
@@ -222,10 +246,10 @@ function drawHeader(){
   stroke(245); line(padX, padY+86, padX+maxW, padY+86);
 }
 
-/* ===== 图例：固定下方，双列，动态高度 ===== */
+/* ===== 图例：固定下方，双列，动态高度（含火灾侧内环黑红灰） ===== */
 function drawLegendTwoColsBelow(imgB){
   const pad = 16;
-  const cardW = Math.min(width - 48, 740);
+  const cardW = Math.min(width - 48, 780);
   const x = (width - cardW)/2;
   const y = imgB.bottom + 28;
 
@@ -243,20 +267,41 @@ function drawLegendTwoColsBelow(imgB){
     ['·  smoke', '#616161'],    ['CO₂', '#9E9E9E'],
     ['H₂O↑  vapor', '#90CAF9']
   ];
-  const innerItems = [
+  // 内环图例拆成两组：healthy（绿系）与 fire（黑红灰）
+  const innerHealthy = [
     ['H₂O  water','#2E7D32'],['Suc  sugars','#388E3C'],['AA  amino acids','#43A047'],
     ['N  nitrogen','#4CAF50'],['P  phosphorus','#66BB6A'],['K  potassium','#81C784'],
     ['ABA','#1B5E20'],['JA','#2E7D32'],['SA','#33691E'],['IAA','#00796B'],
     ['CK','#00838F'],['SL','#0097A7'],['e⁻  electrical','#00695C'],['Ex  root exudates','#558B2F']
   ];
+  const innerFire = [
+    ['H₂O  (fire)', FIRE_UNDER_COLORS['H2O']],
+    ['Suc  (fire)', FIRE_UNDER_COLORS['Suc']],
+    ['AA   (fire)', FIRE_UNDER_COLORS['AA']],
+    ['N    (fire)', FIRE_UNDER_COLORS['N']],
+    ['P    (fire)', FIRE_UNDER_COLORS['P']],
+    ['K    (fire)', FIRE_UNDER_COLORS['K']],
+    ['ABA  (fire)', FIRE_UNDER_COLORS['ABA']],
+    ['JA   (fire)', FIRE_UNDER_COLORS['JA']],
+    ['SA   (fire)', FIRE_UNDER_COLORS['SA']],
+    ['IAA  (fire)', FIRE_UNDER_COLORS['IAA']],
+    ['CK   (fire)', FIRE_UNDER_COLORS['CK']],
+    ['SL   (fire)', FIRE_UNDER_COLORS['SL']],
+    ['e⁻   (fire)', FIRE_UNDER_COLORS['e']],
+    ['Ex   (fire)', FIRE_UNDER_COLORS['EX']]
+  ];
 
+  // 计算高度
   const rowsOuter = Math.ceil(outerItems.length/2);
-  const rowsInner = Math.ceil(innerItems.length/2);
+  const rowsInH   = Math.ceil(innerHealthy.length/2);
+  const rowsInF   = Math.ceil(innerFire.length/2);
   const contentH =
       headerH + pad/2 +
       subH + rowsOuter*lineH +
       10 +
-      subH + rowsInner*lineH;
+      subH + rowsInH*lineH +
+      6 +
+      subH + rowsInF*lineH;
   const cardH = contentH + pad*1.5;
 
   drawShadow(()=>{ fill(255); noStroke(); rect(x, y, cardW, cardH, 8); }, 8, 0, 6, color(0,0,0,20));
@@ -268,8 +313,12 @@ function drawLegendTwoColsBelow(imgB){
   yy = drawTwoColItems(outerItems, x+pad, yy, innerW, lineH, gutter);
 
   yy += 10;
-  fill(120); text('Inner (underground):', x+pad, yy); yy += subH;
-  drawTwoColItems(innerItems, x+pad, yy, innerW, lineH, gutter);
+  fill(120); text('Inner — healthy:', x+pad, yy); yy += subH;
+  yy = drawTwoColItems(innerHealthy, x+pad, yy, innerW, lineH, gutter);
+
+  yy += 6;
+  fill(120); text('Inner — fire (black/red/gray):', x+pad, yy); yy += subH;
+  drawTwoColItems(innerFire, x+pad, yy, innerW, lineH, gutter);
 }
 
 // 两列渲染
@@ -281,13 +330,8 @@ function drawTwoColItems(items, x, y, innerW, lineH, gutter){
   items.forEach((pair, i)=>{
     const [label, col] = pair;
     fill(col);
-    if (i % 2 === 0){
-      drawWrappedText(label, left, yL, colW, lineH);
-      yL += lineH;
-    }else{
-      drawWrappedText(label, right, yR, colW, lineH);
-      yR += lineH;
-    }
+    drawWrappedText(label, (i%2===0?left:right), (i%2===0?yL:yR), colW, lineH);
+    if (i%2===0) yL += lineH; else yR += lineH;
   });
   return Math.max(yL, yR);
 }
@@ -298,7 +342,7 @@ function drawWrappedText(str, x, y, maxW, lineH){
   let line = '', yy = y;
   textAlign(LEFT, TOP);
   for (let i=0;i<words.length;i++){
-    let test = line ? line + ' ' + words[i] : words[i];
+    const test = line ? line + ' ' + words[i] : words[i];
     if (textWidth(test) > maxW){
       text(line, x, yy);
       line = words[i];
