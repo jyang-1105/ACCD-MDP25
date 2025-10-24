@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Process Documentation - Complex Motion Rhythm</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+      color: #222;
+      line-height: 1.6;
+    }
+    header {
+      text-align: center;
+      padding: 50px 20px 10px;
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    p.subtitle {
+      color: #666;
+      font-size: 0.95rem;
+      margin: 0;
+    }
+    main {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    h2 {
+      text-align: center;
+      font-size: 1.3rem;
+      margin-top: 40px;
+      color: #333;
+    }
+    .iteration {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      margin: 50px 0;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 30px;
+    }
+    .iteration:nth-child(even) {
+      flex-direction: row-reverse;
+    }
+    .iteration img {
+      width: 45%;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+    .text {
+      width: 50%;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .text h3 {
+      margin-top: 0;
+      font-weight: 600;
+      color: #111;
+    }
+    .text p {
+      margin: 8px 0;
+      font-size: 0.95rem;
+      color: #444;
+    }
+    iframe {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border: none;
+      border-radius: 8px;
+      background: #f7f7f7;
+      margin-top: 20px;
+    }
+    footer {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #777;
+      margin-top: 60px;
+      padding: 30px 0;
+      border-top: 1px solid #eee;
+    }
+    @media (max-width: 768px) {
+      .iteration {
+        flex-direction: column !important;
+      }
+      .iteration img, .text {
+        width: 100%;
+      }
+      .text {
+        padding: 10px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Complex Motion Rhythm</h1>
+    <p class="subtitle">Exploring timing, rhythm, and organic motion through p5.js</p>
+  </header>
+
+  <main>
+    <h2>Final Interactive Sketch</h2>
+    <!-- If you uploaded to OpenProcessing, replace the src below -->
+    <iframe src="index.html"></iframe>
+
+    <h2>Process Documentation</h2>
+
+    <div class="iteration">
+      <img src="assets/iterations/iter1.jpg" alt="iter 1">
+      <div class="text">
+        <h3>iter 1 — basic circular motion</h3>
+        <p>In the first iteration, I built a simple circular system. A small planet moves around the center using trigonometric functions. This helped me understand basic periodic motion.</p>
+      </div>
+    </div>
+
+    <div class="iteration">
+      <img src="assets/iterations/iter2.jpg" alt="iter 2">
+      <div class="text">
+        <h3>iter 2 — adding organic shape</h3>
+        <p>I added a jelly-like form generated with Perlin noise. The movement feels soft and slightly unpredictable, introducing a more natural rhythm.</p>
+      </div>
+    </div>
+
+    <div class="iteration">
+      <img src="assets/iterations/iter3.jpg" alt="iter 3">
+      <div class="text">
+        <h3>iter 3 — timed intervals</h3>
+        <p>Here I made the jelly move after specific time intervals. It creates pauses and restarts, which makes the motion feel less mechanical and more alive.</p>
+      </div>
+    </div>
+
+    <div class="iteration">
+      <img src="assets/iterations/iter4.jpg" alt="iter 4">
+      <div class="text">
+        <h3>iter 4 — de-synchronization</h3>
+        <p>I started to desynchronize the planet and jelly. Both follow different rhythms, so their motions rarely repeat in the same way. This adds complexity and visual interest.</p>
+      </div>
+    </div>
+
+    <div class="iteration">
+      <img src="assets/iterations/iter5.jpg" alt="iter 5">
+      <div class="text">
+        <h3>iter 5 — space background</h3>
+        <p>To give depth, I added a starfield and foggy nebula background. The scene now feels like a small world floating in space.</p>
+      </div>
+    </div>
+
+    <div class="iteration">
+      <img src="assets/iterations/iter6.jpg" alt="iter 6">
+      <div class="text">
+        <h3>iter 6 — final rainbow jelly</h3>
+        <p>In the final version, the jelly changes its color randomly across frames, becoming a vibrant rainbow shape that represents dynamic rhythm and energy.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    © 2025 | Created by [Jia Yang] | ArtCenter MDP Studio | Made with p5.js
+  </footer>
+
+</body>
+</html>
