@@ -1,0 +1,67 @@
+/* =========================
+   🌸 Rain–Flower System Style
+   ========================= */
+
+body {
+  margin: 0;
+  background-color: #000;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  color: #eee;
+}
+
+header {
+  text-align: center;
+  padding: 40px 20px 10px 20px;
+  color: #fff;
+}
+
+header h1 {
+  font-size: 2em;
+  letter-spacing: 1px;
+}
+
+header p {
+  max-width: 700px;
+  margin: 0 auto;
+  color: #ccc;
+  line-height: 1.6;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#sketch-container {
+  margin-top: 20px;
+}
+
+.description {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 0 20px;
+  color: #ddd;
+}
+
+.description h2 {
+  color: #ffd8e4;
+  border-bottom: 1px solid #444;
+  padding-bottom: 5px;
+}
+
+.uml {
+  display: block;
+  margin: 20px auto;
+  width: 500px;
+  opacity: 0.8;
+}
+
+footer {
+  text-align: center;
+  font-size: 0.9em;
+  color: #666;
+  padding: 20px 0;
+  border-top: 1px solid #222;
+}
