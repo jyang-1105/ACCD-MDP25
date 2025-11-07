@@ -41,8 +41,9 @@ function draw() {
 
   let intensity = Number(rainSlider.value());
 
-  // 🌧 雨量影响湿度（调慢变化）
-  globalMoisture = lerp(globalMoisture, intensity / 40, 0.02);
+  // 🌧 环境湿度由雨量直接决定（强相关）
+  // 这里用较高的 lerp 速度，模拟快速响应雨强
+  globalMoisture = lerp(globalMoisture, intensity / 40, 0.05);
 
   // 🌧 生成雨滴
   if (frameCount % 2 === 0 && intensity > 0) {
@@ -63,16 +64,16 @@ function draw() {
     }
   }
 
-  // 🌊 更新涟漪
+  // 🌊 涟漪
   for (let i = ripples.length - 1; i >= 0; i--) {
     ripples[i].update();
     ripples[i].draw();
     if (ripples[i].alpha <= 0) ripples.splice(i, 1);
   }
 
-  // 🌱 更新植物
+  // 🌱 更新植物（传入当前雨量 & 湿度）
   for (let p of plants) {
-    p.update(globalMoisture);
+    p.update(globalMoisture, intensity);
     p.draw();
   }
 
@@ -88,7 +89,7 @@ function draw() {
 function waterNearby(x) {
   for (let p of plants) {
     if (abs(p.x - x) < 70) {
-      p.water = min(p.water + 0.8, p.maxWater);
+      p.water = min(p.water + 0.6, p.maxWater);
     }
   }
 }
@@ -148,18 +149,22 @@ class Plant {
     this.centerHue = random([45, 200, 250]);
   }
 
-  update(envMoisture) {
-    // 🪴 环境湿度对植物的影响更缓慢
-    this.water += envMoisture * 0.08 - 0.04;
+  update(envMoisture, rainIntensity) {
+    // 🌿 水分积累与雨强双重影响（核心变化）
+    let rainFactor = rainIntensity / 40; // [0,1]区间
+    this.water += envMoisture * 0.05 + rainFactor * 0.05 - 0.025;
     this.water = constrain(this.water, 0, this.maxWater);
 
-    // 生长速度更慢且更可控
+    // 🌱 生长速度与雨量强相关
+    let growthSpeed = map(rainIntensity, 0, 40, 0.001, 0.05);
+    let bloomSpeed = map(rainIntensity, 0, 40, 0.0005, 0.005);
+
     if (this.water > 0.5) {
-      this.height = min(this.height + this.water * 0.03, this.maxHeight);
-      this.bloom = min(this.bloom + this.water * 0.0015, 1);
+      this.height = min(this.height + this.water * growthSpeed, this.maxHeight);
+      this.bloom = min(this.bloom + this.water * bloomSpeed, 1);
     } else {
-      this.height = max(this.height - 0.08, 20);
-      this.bloom = max(this.bloom - 0.001, 0.2);
+      this.height = max(this.height - 0.04, 20);
+      this.bloom = max(this.bloom - 0.0008, 0.2);
     }
   }
 
@@ -176,7 +181,7 @@ class Plant {
     line(0, 0, 0, -this.height);
     let headY = -this.height;
 
-    // 🌸 花瓣亮度随水分变化
+    // 🌸 花亮度与水分+雨量相关
     noStroke();
     let brightness = map(this.water, 0, this.maxWater, 30, 95);
     fill(this.petalHue, 55, 100, brightness);
@@ -187,10 +192,8 @@ class Plant {
       ellipse(px, py, 20, 14);
     }
 
-    // 花心
     fill(this.centerHue, 70, 100, brightness);
     ellipse(0, headY, 12);
-
     pop();
   }
 }
