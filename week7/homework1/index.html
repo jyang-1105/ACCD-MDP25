@@ -1,210 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🌧️ Rain & Flowers System</title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🌧️ Rain × Flower Growth System</title>
 
-    <!-- 引入 p5.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+  <!-- Load local p5 libraries -->
+  <script src="libraries/p5.min.js"></script>
+  <script src="libraries/p5.sound.min.js"></script>
 
-    <!-- 引入自定义样式 -->
-    <link rel="stylesheet" href="style.css" />
-  </head>
+  <!-- Style -->
+  <link rel="stylesheet" href="style.css" />
+</head>
 
-  <body>
-    <header>
-      <h1>🌸 Rain–Flower Growth System</h1>
-      <p>
-        A poetic simulation of nature — where rainfall brings life to glowing
-        flowers.  
-        Adjust the rain intensity and watch how the system evolves.
-      </p>
-    </header>
+<body>
+  <header>
+    <h1>🌸 Rain × Flower Growth System</h1>
+    <p>
+      This project visualizes how rainfall nourishes existing flowers — helping them grow upward and bloom.  
+      Through interaction, users can influence the environment by adjusting rainfall intensity.
+    </p>
+  </header>
 
-    <main>
-      <!-- 画布将会被P5自动插入 -->
-      <div id="sketch-container"></div>
+  <main>
+    <section class="uml">
+      <h2>📊 System Diagram</h2>
+      <p>The system below models <strong>Rain</strong>, <strong>Ripple</strong>, and <strong>Plant</strong> objects and their interdependent behaviors.</p>
+      <img src="Diagram.png" alt="UML Diagram" class="uml-diagram" />
+    </section>
 
-      <section class="description">
-        <h2>📊 UML Diagram</h2>
-        <img src="uml-diagram.png" alt="UML Diagram Placeholder" class="uml" />
+    <section class="sketch-area">
+      <div class="canvas-container">
+        <div id="sketch-container"></div>
+        <div class="controls">
+          <h3>🌦 Control Panel</h3>
+          <button id="lessRain">🌤️ Less Rain</button>
+          <button id="moreRain">☔️ More Rain</button>
+          <div class="slider-group">
+            <label>Rain Intensity</label>
+            <input type="range" id="rainSlider" min="0" max="40" value="10" />
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
 
-        <h2>🧠 Reflection</h2>
-        <p>
-          This system explores how simple interactions can generate emergent
-          beauty.  
-          Each drop of rain nourishes new flowers, forming a living, responsive
-          landscape.  
-          The project reflects a balance between randomness, control, and the
-          poetic rhythm of growth.
-        </p>
-      </section>
-    </main>
+  <footer>
+    <p>© 2025 Media Design Practices · Interactive Systems · Created with p5.js</p>
+  </footer>
 
-    <footer>
-      <p>
-        <strong>Author:</strong> Your Name | Media Design Practices – Grad Lab |
-        2025
-      </p>
-    </footer>
-
-    <!-- ========================= -->
-    <!-- 💧 P5.js Sketch Code -->
-    <!-- ========================= -->
-    <script>
-      let flowers = [];
-      let raindrops = [];
-      let ripples = [];
-      let rainSlider;
-
-      function setup() {
-        let canvas = createCanvas(800, 500);
-        canvas.parent("sketch-container");
-        colorMode(HSB, 360, 100, 100, 100);
-
-        rainSlider = createSlider(0, 30, 5, 1);
-        rainSlider.position(width - 160, height - 40);
-        rainSlider.style("width", "130px");
-
-        for (let i = 0; i < 6; i++) {
-          flowers.push(new Flower(random(width), height - random(80, 120)));
-        }
-      }
-
-      function draw() {
-        background(0);
-
-        let rainIntensity = rainSlider.value();
-
-        noStroke();
-        fill(200);
-        textSize(14);
-        textAlign(LEFT);
-        text("Rain Intensity: " + rainIntensity, width - 170, height - 50);
-
-        // 🌧️ Generate raindrops
-        if (frameCount % 3 === 0) {
-          for (let i = 0; i < rainIntensity; i++) {
-            raindrops.push(new Rain(random(width), random(-100, 0)));
-          }
-        }
-
-        // ☔ Update rain
-        for (let i = raindrops.length - 1; i >= 0; i--) {
-          raindrops[i].fall();
-          raindrops[i].display();
-
-          if (raindrops[i].y > height - 20) {
-            ripples.push(new Ripple(raindrops[i].x, height - 20));
-            if (random() < 0.2) {
-              flowers.push(new Flower(raindrops[i].x, height - random(60, 120)));
-            }
-            raindrops.splice(i, 1);
-          }
-        }
-
-        // 🌊 Ripples
-        for (let i = ripples.length - 1; i >= 0; i--) {
-          ripples[i].expand();
-          ripples[i].display();
-          if (ripples[i].alpha <= 0) ripples.splice(i, 1);
-        }
-
-        // 🌸 Flowers
-        for (let f of flowers) {
-          f.swing();
-          f.display();
-        }
-
-        // 地面
-        noStroke();
-        fill(0, 0, 15);
-        rect(0, height - 20, width, 30);
-      }
-
-      // ☔ RainDrop 类
-      class Rain {
-        constructor(x, y) {
-          this.x = x;
-          this.y = y;
-          this.speed = random(5, 9);
-          this.len = random(8, 15);
-        }
-
-        fall() {
-          this.y += this.speed;
-        }
-
-        display() {
-          noStroke();
-          fill(200, 80, 100, 80);
-          ellipse(this.x, this.y, 4, this.len);
-        }
-      }
-
-      // 🌊 Ripple 类
-      class Ripple {
-        constructor(x, y) {
-          this.x = x;
-          this.y = y;
-          this.r = 2;
-          this.alpha = 80;
-        }
-
-        expand() {
-          this.r += 1.5;
-          this.alpha -= 1.5;
-        }
-
-        display() {
-          noFill();
-          stroke(200, 50, 100, this.alpha);
-          ellipse(this.x, this.y, this.r);
-        }
-      }
-
-      // 🌸 Flower 类
-      class Flower {
-        constructor(x, y) {
-          this.x = x;
-          this.y = y;
-          this.size = random(15, 35);
-          this.color = color(random(0, 360), 60, 100);
-          this.petalCount = int(random(5, 9));
-          this.swingOffset = random(TWO_PI);
-        }
-
-        swing() {
-          this.x += sin(frameCount * 0.02 + this.swingOffset) * 0.1;
-        }
-
-        display() {
-          push();
-          translate(this.x, this.y);
-
-          // 茎
-          stroke(120, 80, 80);
-          strokeWeight(2);
-          line(0, 0, 0, 80);
-
-          // 花瓣
-          noStroke();
-          fill(this.color);
-          for (let i = 0; i < this.petalCount; i++) {
-            let angle = (TWO_PI / this.petalCount) * i;
-            let px = cos(angle) * this.size;
-            let py = sin(angle) * this.size;
-            ellipse(px, py, this.size, this.size * 0.7);
-          }
-
-          // 花心
-          fill(50, 30, 100);
-          ellipse(0, 0, this.size * 0.7);
-
-          pop();
-        }
-      }
-    </script>
-  </body>
+  <script src="sketch.js"></script>
+</body>
 </html>

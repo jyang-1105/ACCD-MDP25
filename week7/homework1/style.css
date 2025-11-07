@@ -1,67 +1,114 @@
-/* =========================
-   🌸 Rain–Flower System Style
-   ========================= */
-
 body {
   margin: 0;
   background-color: #000;
   font-family: "Helvetica Neue", Arial, sans-serif;
   color: #eee;
+  line-height: 1.6;
 }
 
 header {
   text-align: center;
-  padding: 40px 20px 10px 20px;
-  color: #fff;
+  padding: 40px 20px 20px;
 }
 
 header h1 {
   font-size: 2em;
-  letter-spacing: 1px;
-}
-
-header p {
-  max-width: 700px;
-  margin: 0 auto;
-  color: #ccc;
-  line-height: 1.6;
+  color: #fff;
 }
 
 main {
+  max-width: 950px;
+  margin: 0 auto;
+  padding: 0 20px 60px;
+}
+
+h2 {
+  color: #ffd6e7;
+  border-bottom: 1px solid #333;
+  padding-bottom: 4px;
+  margin-top: 40px;
+}
+
+p {
+  color: #ccc;
+  font-size: 15px;
+}
+
+.uml-diagram {
+  display: block;
+  margin: 25px auto;
+  width: 280px;
+  border-radius: 8px;
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.1);
+}
+
+/* ========== Canvas + Controls Layout ========== */
+.canvas-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 30px;
+  margin-top: 30px;
+}
+
+canvas {
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
+}
+
+/* Control panel */
+.controls {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  background: #111;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+  min-width: 180px;
 }
 
-#sketch-container {
-  margin-top: 20px;
+.controls h3 {
+  color: #ffd6e7;
+  margin-bottom: 10px;
 }
 
-.description {
-  max-width: 800px;
-  margin: 40px auto;
-  padding: 0 20px;
-  color: #ddd;
+button {
+  background-color: #222;
+  color: #eee;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  margin: 6px 0;
+  transition: background 0.3s ease;
+  width: 100%;
 }
 
-.description h2 {
-  color: #ffd8e4;
-  border-bottom: 1px solid #444;
-  padding-bottom: 5px;
+button:hover {
+  background-color: #444;
 }
 
-.uml {
+.slider-group {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.slider-group label {
   display: block;
-  margin: 20px auto;
-  width: 500px;
-  opacity: 0.8;
+  font-size: 13px;
+  color: #bbb;
+  margin-bottom: 6px;
+}
+
+.slider-group input[type="range"] {
+  width: 130px;
 }
 
 footer {
   text-align: center;
+  color: #777;
   font-size: 0.9em;
-  color: #666;
-  padding: 20px 0;
+  padding: 20px;
   border-top: 1px solid #222;
 }
