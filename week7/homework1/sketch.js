@@ -4,14 +4,14 @@ let ripples = [];
 let rainSlider;
 let moreRainButton, lessRainButton;
 const SOIL_LINE = 460;
-let globalMoisture = 0; // 新增：环境湿度
+let globalMoisture = 0; // 环境湿度
 
 function setup() {
   let canvas = createCanvas(700, 500);
   canvas.parent("sketch-container");
   colorMode(HSB, 360, 100, 100, 100);
 
-  // DOM elements
+  // --- 控制UI ---
   rainSlider = select("#rainSlider");
   moreRainButton = select("#moreRain");
   lessRainButton = select("#lessRain");
@@ -26,7 +26,7 @@ function setup() {
     rainSlider.value(newVal);
   });
 
-  // Initial plants
+  // --- 初始化植物 ---
   for (let i = 0; i < 22; i++) {
     let x = map(i, 0, 21, 40, width - 40) + random(-10, 10);
     plants.push(new Plant(x, SOIL_LINE + 2));
@@ -41,17 +41,17 @@ function draw() {
 
   let intensity = Number(rainSlider.value());
 
-  // 雨量影响湿度
-  globalMoisture = lerp(globalMoisture, intensity / 40, 0.03); // 平滑变化
+  // 🌧 雨量影响湿度（调慢变化）
+  globalMoisture = lerp(globalMoisture, intensity / 40, 0.02);
 
-  // 生成雨滴
+  // 🌧 生成雨滴
   if (frameCount % 2 === 0 && intensity > 0) {
     for (let i = 0; i < intensity; i++) {
       raindrops.push(new Rain(random(width), random(-120, -10)));
     }
   }
 
-  // 更新雨滴
+  // 💧 更新雨滴
   for (let i = raindrops.length - 1; i >= 0; i--) {
     let r = raindrops[i];
     r.update();
@@ -63,38 +63,37 @@ function draw() {
     }
   }
 
-  // 更新涟漪
+  // 🌊 更新涟漪
   for (let i = ripples.length - 1; i >= 0; i--) {
     ripples[i].update();
     ripples[i].draw();
     if (ripples[i].alpha <= 0) ripples.splice(i, 1);
   }
 
-  // 更新植物
+  // 🌱 更新植物
   for (let p of plants) {
     p.update(globalMoisture);
     p.draw();
   }
 
-  // 显示数值
+  // 📊 显示数值
   noStroke();
   fill(200, 30, 90);
   textSize(14);
   textAlign(LEFT);
   text(`Rain Intensity: ${intensity}`, 20, 30);
-  text(`Moisture: ${nf(globalMoisture, 1, 2)}`, 20, 50);
+  text(`Soil Moisture: ${nf(globalMoisture, 1, 2)}`, 20, 50);
 }
 
 function waterNearby(x) {
   for (let p of plants) {
     if (abs(p.x - x) < 70) {
-      p.water = min(p.water + 1.2, p.maxWater);
+      p.water = min(p.water + 0.8, p.maxWater);
     }
   }
 }
 
-// ---- Classes ----
-
+// ---- Rain ----
 class Rain {
   constructor(x, y) {
     this.x = x;
@@ -114,6 +113,7 @@ class Rain {
   }
 }
 
+// ---- Ripple ----
 class Ripple {
   constructor(x, y) {
     this.x = x;
@@ -133,6 +133,7 @@ class Ripple {
   }
 }
 
+// ---- Plant ----
 class Plant {
   constructor(x, baseY) {
     this.x = x;
@@ -148,17 +149,17 @@ class Plant {
   }
 
   update(envMoisture) {
-    // 植物随环境变化获得或失去水分
-    this.water += envMoisture * 0.2 - 0.05;
+    // 🪴 环境湿度对植物的影响更缓慢
+    this.water += envMoisture * 0.08 - 0.04;
     this.water = constrain(this.water, 0, this.maxWater);
 
-    // 根据水分变化高度和花开程度
+    // 生长速度更慢且更可控
     if (this.water > 0.5) {
-      this.height = min(this.height + this.water * 0.1, this.maxHeight);
-      this.bloom = min(this.bloom + this.water * 0.005, 1);
+      this.height = min(this.height + this.water * 0.03, this.maxHeight);
+      this.bloom = min(this.bloom + this.water * 0.0015, 1);
     } else {
-      this.height = max(this.height - 0.1, 20);
-      this.bloom = max(this.bloom - 0.002, 0.2);
+      this.height = max(this.height - 0.08, 20);
+      this.bloom = max(this.bloom - 0.001, 0.2);
     }
   }
 
@@ -175,9 +176,9 @@ class Plant {
     line(0, 0, 0, -this.height);
     let headY = -this.height;
 
-    // 花瓣
+    // 🌸 花瓣亮度随水分变化
     noStroke();
-    let brightness = map(this.water, 0, this.maxWater, 40, 100);
+    let brightness = map(this.water, 0, this.maxWater, 30, 95);
     fill(this.petalHue, 55, 100, brightness);
     for (let i = 0; i < 7; i++) {
       let ang = (TWO_PI / 7) * i;
