@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gesture Particle Brush</title>
+  
+  <!-- P5.js Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  
+  <!-- ML5.js Library -->
+  <script src="https://unpkg.com/ml5@1/dist/ml5.min.js"></script>
+  
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+      font-weight: 300;
+      letter-spacing: 2px;
+    }
+    
+    #canvas-container {
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      border: 1px solid #ddd;
+      background-color: white;
+    }
+    
+    .gesture-guide {
+      margin-top: 30px;
+      max-width: 640px;
+      width: 100%;
+      background: white;
+      padding: 25px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+    
+    .gesture-guide h2 {
+      color: #333;
+      font-size: 20px;
+      margin-bottom: 20px;
+      font-weight: 400;
+    }
+    
+    .gesture-item {
+      margin-bottom: 18px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .gesture-item:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    
+    .gesture-name {
+      font-weight: bold;
+      color: #555;
+      margin-bottom: 5px;
+      font-size: 16px;
+    }
+    
+    .gesture-desc {
+      color: #777;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <h1>Gesture Particle Brush</h1>
+  
+  <div id="canvas-container"></div>
+  
+  <div class="gesture-guide">
+    <h2>Gesture Modes</h2>
+    
+    <div class="gesture-item">
+      <div class="gesture-name">One Finger Extended</div>
+      <div class="gesture-desc">Creates a smooth flowing trail with small particles following your fingertip.</div>
+    </div>
+    
+    <div class="gesture-item">
+      <div class="gesture-name">Two Fingers Extended (Peace Sign)</div>
+      <div class="gesture-desc">Generates explosive firework bursts with larger particles that shoot outward and fall with gravity.</div>
+    </div>
+    
+    <div class="gesture-item">
+      <div class="gesture-name">Open Hand (All Fingers Spread)</div>
+      <div class="gesture-desc">Produces a gentle star field effect with particles slowly drifting outward from the center of your palm.</div>
+    </div>
+  </div>
+  
+  <script src="sketch.js"></script>
+</body>
+</html>
