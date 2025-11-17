@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hesitation Path - Eye Tracking</title>
+  
+  <!-- p5.js -->
+  <script src="libraries/p5.min.js"></script>
+  <script src="libraries/p5.sound.min.js"></script>
+  
+  <!-- WebGazer.js for eye tracking -->
+  <script src="https://webgazer.cs.brown.edu/webgazer.js"></script>
+  
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+    
+    canvas {
+      display: block;
+    }
+    
+    /* WebGazer 视频样式 */
+    #webgazerVideoContainer {
+      border: 3px solid #00ff00 !important;
+      border-radius: 8px !important;
+      box-shadow: 0 4px 20px rgba(0,255,0,0.5) !important;
+      background: black !important;
+    }
+    
+    /* 校准提示 */
+    #calibrationHelper {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 30px;
+      border-radius: 15px;
+      text-align: center;
+      z-index: 10000;
+      display: none;
+      max-width: 500px;
+    }
+    
+    #calibrationHelper h2 {
+      margin: 0 0 20px 0;
+      color: #00ff00;
+    }
+    
+    #calibrationHelper button {
+      background: #00ff00;
+      color: black;
+      border: none;
+      padding: 15px 30px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    
+    #calibrationHelper button:hover {
+      background: #00cc00;
+    }
+  </style>
+</head>
+<body>
+  <!-- 校准帮助 -->
+  <div id="calibrationHelper">
+    <h2>📍 Eye Tracking Calibration</h2>
+    <p><strong>HOW TO CALIBRATE:</strong></p>
+    <ol style="text-align: left; line-height: 1.8;">
+      <li>Look at the TOP LEFT corner and click</li>
+      <li>Look at the TOP RIGHT corner and click</li>
+      <li>Look at the BOTTOM LEFT corner and click</li>
+      <li>Look at the BOTTOM RIGHT corner and click</li>
+      <li>Look at the CENTER and click</li>
+      <li>Repeat on different ice cream flavors</li>
+    </ol>
+    <p style="color: #ffff00; margin-top: 20px;">
+      ⚠️ Keep your head still and only move your eyes!
+    </p>
+    <button onclick="document.getElementById('calibrationHelper').style.display='none'">Start Calibration</button>
+  </div>
+  
+  <script src="sketch.js"></script>
+  
+  <script>
+    // 显示校准帮助
+    function showCalibrationHelper() {
+      document.getElementById('calibrationHelper').style.display = 'block';
+    }
+  </script>
+</body>
+</html>

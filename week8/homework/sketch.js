@@ -1,5 +1,3 @@
-// Gesture Particle Brush - Enhanced Version
-// Using P5.js + ML5.js HandPose
 
 let handPose;
 let video;
@@ -7,34 +5,34 @@ let hands = [];
 let particles = [];
 let hue = 0;
 
-// Particle class with enhanced visual differences
+
 class Particle {
   constructor(x, y, mode) {
     this.x = x;
     this.y = y;
     this.mode = mode;
     
-    // Different life spans for different modes
+   
     if (mode === 'firework') {
       this.life = 255;
-      this.size = random(8, 20); // Larger particles
+      this.size = random(8, 20); 
       let angle = random(TWO_PI);
-      let speed = random(5, 12); // Faster explosion
+      let speed = random(5, 12); 
       this.vx = cos(angle) * speed;
       this.vy = sin(angle) * speed;
-      this.gravity = 0.3; // Strong gravity
+      this.gravity = 0.3; 
     } else if (mode === 'star') {
       this.life = 200;
-      this.size = random(2, 8); // Smaller, delicate particles
+      this.size = random(2, 8); 
       let angle = random(TWO_PI);
-      let speed = random(0.3, 1.5); // Very slow drift
+      let speed = random(0.3, 1.5); 
       this.vx = cos(angle) * speed;
       this.vy = sin(angle) * speed;
       this.gravity = 0;
-    } else { // flow mode
+    } else { 
       this.life = 180;
-      this.size = random(4, 10); // Medium particles
-      this.vx = random(-0.5, 0.5); // Minimal drift
+      this.size = random(4, 10); 
+      this.vx = random(-0.5, 0.5); 
       this.vy = random(-0.5, 0.5);
       this.gravity = 0;
     }
@@ -47,14 +45,14 @@ class Particle {
     this.x += this.vx;
     this.y += this.vy;
     
-    // Apply gravity only for fireworks
+   
     if (this.mode === 'firework') {
       this.vy += this.gravity;
-      this.life -= 4; // Fade faster
+      this.life -= 4; 
     } else if (this.mode === 'star') {
-      this.life -= 1.5; // Fade very slowly
+      this.life -= 1.5; 
     } else {
-      this.life -= 2.5; // Moderate fade
+      this.life -= 2.5; 
     }
   }
   
@@ -62,23 +60,22 @@ class Particle {
     noStroke();
     colorMode(HSB);
     
-    // Different visual styles for each mode
     if (this.mode === 'firework') {
-      // Bright, vibrant fireworks
+ 
       fill(this.color, 85, 95, this.life);
       circle(this.x, this.y, this.size);
-      // Add glow effect
+
       fill(this.color, 60, 100, this.life * 0.3);
       circle(this.x, this.y, this.size * 1.5);
     } else if (this.mode === 'star') {
-      // Soft, gentle stars
+
       fill(this.color, 50, 90, this.life);
       circle(this.x, this.y, this.size);
-      // Subtle glow
+
       fill(this.color, 30, 95, this.life * 0.2);
       circle(this.x, this.y, this.size * 2);
     } else {
-      // Smooth flowing trail
+ 
       fill(this.color, 70, 85, this.life);
       circle(this.x, this.y, this.size);
     }
@@ -89,12 +86,12 @@ class Particle {
   }
 }
 
-// Preload ML5 model
+
 function preload() {
   handPose = ml5.handPose({ maxHands: 1, flipped: true });
 }
 
-// Setup canvas and video
+
 function setup() {
   let canvas = createCanvas(640, 480);
   canvas.parent('canvas-container');
@@ -108,13 +105,13 @@ function setup() {
   background(255);
 }
 
-// Main draw loop
+
 function draw() {
-  // Semi-transparent white background for trail effect
+
   fill(255, 25);
   rect(0, 0, width, height);
   
-  // Draw flipped video
+
   push();
   translate(width, 0);
   scale(-1, 1);
@@ -122,10 +119,10 @@ function draw() {
   image(video, 0, 0, width, height);
   pop();
   
-  // Update color hue
+
   hue = (hue + 0.5) % 360;
   
-  // Update and draw particles
+
   for (let i = particles.length - 1; i >= 0; i--) {
     particles[i].update();
     particles[i].display();
@@ -135,7 +132,7 @@ function draw() {
     }
   }
   
-  // Draw hand and create particles
+
   if (hands.length > 0) {
     let hand = hands[0];
     let mode = detectGesture(hand);
@@ -145,17 +142,16 @@ function draw() {
     let indexTip = hand.index_finger_tip;
     
     if (mode === 'firework') {
-      // Create 5 firework particles per frame
+  
       for (let i = 0; i < 5; i++) {
         particles.push(new Particle(indexTip.x, indexTip.y, 'firework'));
       }
     } else if (mode === 'flow') {
-      // Create 2 flowing particles per frame
+
       for (let i = 0; i < 2; i++) {
         particles.push(new Particle(indexTip.x, indexTip.y, 'flow'));
       }
     } else if (mode === 'star') {
-      // Create 3 star particles from palm center
       let thumb = hand.thumb_tip;
       let pinky = hand.pinky_finger_tip;
       let centerX = (indexTip.x + thumb.x + pinky.x) / 3;
@@ -166,7 +162,7 @@ function draw() {
     }
   }
   
-  // Display info
+
   fill(60);
   noStroke();
   textSize(16);
@@ -174,7 +170,7 @@ function draw() {
   text('Particles: ' + particles.length, 10, 30);
 }
 
-// Detect hand gesture with clear distinctions
+
 function detectGesture(hand) {
   let indexTip = hand.index_finger_tip;
   let middleTip = hand.middle_finger_tip;
@@ -183,37 +179,36 @@ function detectGesture(hand) {
   let thumb = hand.thumb_tip;
   let wrist = hand.wrist;
   
-  // Calculate distances from wrist
   let indexDist = dist(indexTip.x, indexTip.y, wrist.x, wrist.y);
   let middleDist = dist(middleTip.x, middleTip.y, wrist.x, wrist.y);
   let ringDist = dist(ringTip.x, ringTip.y, wrist.x, wrist.y);
   let pinkyDist = dist(pinkyTip.x, pinkyTip.y, wrist.x, wrist.y);
   let thumbDist = dist(thumb.x, thumb.y, wrist.x, wrist.y);
   
-  // Determine which fingers are extended
+
   let indexUp = indexDist > 120;
   let middleUp = middleDist > 120;
   let ringUp = ringDist > 100;
   let pinkyUp = pinkyDist > 90;
   let thumbOut = thumbDist > 100;
   
-  // Open hand: all fingers extended
+
   if (indexUp && middleUp && ringUp && pinkyUp && thumbOut) {
     return 'star';
   } 
-  // Two fingers: index and middle only
+
   else if (indexUp && middleUp && !ringUp && !pinkyUp) {
     return 'firework';
   } 
-  // One finger: index only
+
   else if (indexUp && !middleUp && !ringUp) {
     return 'flow';
   }
   
-  return 'flow'; // Default to flow
+  return 'flow'; 
 }
 
-// Draw hand skeleton
+
 function drawHandSkeleton(hand) {
   fill(100, 150, 250);
   noStroke();
@@ -231,12 +226,12 @@ function drawHandSkeleton(hand) {
   }
 }
 
-// Receive hand detection results
+
 function gotHands(results) {
   hands = results;
 }
 
-// Click to clear canvas
+
 function mousePressed() {
   particles = [];
   background(255);
