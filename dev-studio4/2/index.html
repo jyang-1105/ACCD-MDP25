@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proximity Mosaic</title>
+    <title>Proximity</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
     <script src="https://unpkg.com/ml5@1/dist/ml5.js"></script>
     <style>
@@ -15,8 +15,8 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #0a0a0a;
-            color: #ffffff;
+            background: #ffffff;
+            color: #333333;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -30,7 +30,7 @@
             position: relative;
             border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
             background: #000;
         }
 
@@ -53,7 +53,7 @@
 
         .description {
             font-size: 14px;
-            color: #888;
+            color: #666;
             line-height: 1.6;
             margin-bottom: 20px;
         }
@@ -61,30 +61,59 @@
         #status {
             display: inline-block;
             padding: 8px 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(0, 0, 0, 0.08);
             border-radius: 20px;
             font-size: 13px;
-            color: #aaa;
+            color: #888;
             transition: all 0.3s ease;
         }
 
         #status.ready {
-            background: rgba(102, 126, 234, 0.1);
-            border-color: rgba(102, 126, 234, 0.3);
+            background: rgba(102, 126, 234, 0.08);
+            border-color: rgba(102, 126, 234, 0.2);
             color: #667eea;
         }
 
         #status.detecting {
-            background: rgba(118, 75, 162, 0.1);
-            border-color: rgba(118, 75, 162, 0.3);
+            background: rgba(118, 75, 162, 0.08);
+            border-color: rgba(118, 75, 162, 0.2);
             color: #764ba2;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .mode-btn {
+            padding: 12px 24px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 25px;
+            background: rgba(0, 0, 0, 0.02);
+            color: #666;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .mode-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+            border-color: rgba(0, 0, 0, 0.15);
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent;
+            color: #fff;
         }
 
         .instruction {
             margin-top: 24px;
             font-size: 12px;
-            color: #555;
+            color: #999;
             letter-spacing: 1px;
         }
 
@@ -97,11 +126,19 @@
     <div id="canvas-container"></div>
     
     <div id="info">
-        <h1>PROXIMITY MOSAIC</h1>
+        <h1>PROXIMITY</h1>
         <p class="description">
-            Move closer to increase pixelation.<br>
+            Move closer to pixelate or disintegrate.<br>
             Step away for clarity.
         </p>
+        <div class="controls">
+            <button id="mosaicBtn" class="mode-btn active" onclick="setMode('mosaic')">
+                🔲 Mosaic
+            </button>
+            <button id="particleBtn" class="mode-btn" onclick="setMode('particle')">
+                ✨ Particles
+            </button>
+        </div>
         <div id="status">Initializing...</div>
         <p class="instruction">ALLOW CAMERA ACCESS TO BEGIN</p>
     </div>
