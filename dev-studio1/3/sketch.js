@@ -13,11 +13,16 @@ let startTime = 0;
 let abandoned = [];
 let selectedFlavor = null;
 let hasSelected = false;
-let okConfirmTimer = 0; // 改名: peace -> ok
+let okConfirmTimer = 0;
 
 // 保存反馈
 let saveMessage = '';
 let saveMessageTimer = 0;
+
+// ✅ 加载进度
+let loadingProgress = 0;
+let totalAssets = 11;
+let loadedAssets = 0;
 
 const names = ['Strawberry', 'Chocolate', 'Mango', 'Mint', 'Lemon',
                'Pistachio', 'Raspberry', 'Hazelnut', 'Coconut', 'Vanilla'];
@@ -25,48 +30,108 @@ const names = ['Strawberry', 'Chocolate', 'Mango', 'Mint', 'Lemon',
 const files = ['strawberry.png', 'chocolate.png', 'mango.png', 'mint.png', 'lemon.png',
                'pistachio.png', 'raspberry.png', 'hazelnut.png', 'coconut.png', 'vanilla.png'];
 
-const READY_THRESHOLD = 3000; // 3秒
+const READY_THRESHOLD = 3000; // ✅ 恢复3秒，用于显示Ready
 
 function preload() {
-  for (let f of files) imgs.push(loadImage(f));
-  handPose = ml5.handPose();
+  console.log('开始加载...');
+  
+  for (let i = 0; i < files.length; i++) {
+    loadImage(files[i], 
+      (img) => {
+        imgs.push(img);
+        loadedAssets++;
+        updateLoadingProgress();
+        console.log(`加载完成: ${files[i]} (${loadedAssets}/${totalAssets})`);
+      },
+      () => {
+        console.error(`加载失败: ${files[i]}`);
+        imgs.push(createImage(100, 100));
+        loadedAssets++;
+        updateLoadingProgress();
+      }
+    );
+  }
+  
+  handPose = ml5.handPose(() => {
+    loadedAssets++;
+    updateLoadingProgress();
+    console.log('HandPose模型加载完成!');
+  });
+}
+
+function updateLoadingProgress() {
+  loadingProgress = Math.floor((loadedAssets / totalAssets) * 100);
+  
+  let progressText = document.getElementById('progress-text');
+  let progressBar = document.getElementById('progress-bar');
+  
+  if (progressText) {
+    progressText.textContent = loadingProgress + '%';
+  }
+  
+  if (progressBar) {
+    progressBar.style.width = loadingProgress + '%';
+  }
+  
+  console.log(`加载进度: ${loadingProgress}%`);
 }
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
+  
+  let checkLoading = setInterval(() => {
+    if (loadedAssets >= totalAssets) {
+      clearInterval(checkLoading);
+      initApp();
+    }
+  }, 100);
+  
+  textAlign(CENTER, CENTER);
+}
+
+function initApp() {
+  console.log('初始化应用...');
+  
   setupBoxes();
   
   video = createCapture(VIDEO);
   video.size(640, 480);
   video.hide();
   
-  let videoElement = document.getElementById('webcam');
-  videoElement.srcObject = video.elt.srcObject;
-  
-  handPose.detectStart(video, gotHands);
-  
   setTimeout(() => {
-    document.getElementById('loading-screen').classList.add('hidden');
-  }, 2000);
-  
-  textAlign(CENTER, CENTER);
+    let videoElement = document.getElementById('webcam');
+    if (videoElement && video.elt.srcObject) {
+      videoElement.srcObject = video.elt.srcObject;
+    }
+    
+    if (handPose && video) {
+      handPose.detectStart(video, gotHands);
+    }
+    
+    setTimeout(() => {
+      let loadingScreen = document.getElementById('loading-screen');
+      if (loadingScreen) {
+        loadingScreen.style.opacity = '0';
+        setTimeout(() => {
+          loadingScreen.style.display = 'none';
+        }, 500);
+      }
+    }, 300);
+  }, 500);
 }
 
 function setupBoxes() {
-  // 优化布局：更好的间距和尺寸
-  let w = width * 0.16;  // 稍微缩小图片宽度
-  let h = height * 0.35; // 稍微缩小图片高度
-  let gap = width * 0.025; // 增加间距
+  let w = width * 0.16;
+  let h = height * 0.35;
+  let gap = width * 0.025;
   
-  // 计算起始位置，留出顶部空间给标题
   let startX = (width - (w * 5 + gap * 4)) / 2;
-  let startY = height * 0.18; // 从18%的位置开始，给标题留足空间
+  let startY = height * 0.18;
   
-  // 确保底部也有足够空间
   let totalHeight = h * 2 + gap;
   if (startY + totalHeight > height * 0.85) {
     startY = height * 0.15;
-    h = (height * 0.7 - gap) / 2; // 调整高度以适应屏幕
+    h = (height * 0.7 - gap) / 2;
   }
   
   for (let i = 0; i < 10; i++) {
@@ -96,12 +161,11 @@ function draw() {
   
   if (!hasSelected) {
     drawSelection();
-    checkOKGesture(); // 改名: Peace -> OK
+    checkOKGesture(); // ✅ 随时检测OK手势
   } else {
     drawBeautifulReport();
   }
   
-  // 显示保存反馈消息
   if (saveMessageTimer > 0) {
     drawSaveMessage();
     saveMessageTimer--;
@@ -117,41 +181,36 @@ function updateFingerPosition() {
   }
 }
 
-// ✅ 新函数：检测OK手势
+// ✅ OK手势检测 - 不需要Ready状态，随时可以确认
 function checkOKGesture() {
-  if (hands.length === 0 || !current || !current.ready) {
+  // ✅ 只要有current就可以OK确认，不需要ready状态
+  if (hands.length === 0 || !current) {
     okConfirmTimer = 0;
     return;
   }
   
   let hand = hands[0];
   
-  // OK手势检测：拇指和食指形成圆圈，其他三指伸直
-  let thumb = hand.keypoints[4];      // 拇指尖
-  let index = hand.keypoints[8];       // 食指尖
-  let middle = hand.keypoints[12];     // 中指尖
-  let ring = hand.keypoints[16];       // 无名指尖
-  let pinky = hand.keypoints[20];      // 小指尖
-  let wrist = hand.keypoints[0];       // 手腕
+  let thumb = hand.keypoints[4];
+  let index = hand.keypoints[8];
+  let middle = hand.keypoints[12];
+  let ring = hand.keypoints[16];
+  let pinky = hand.keypoints[20];
+  let wrist = hand.keypoints[0];
   
-  // 1. 拇指和食指距离要近（形成圆圈）
   let thumbIndexDist = dist(thumb.x, thumb.y, index.x, index.y);
-  
-  // 2. 其他三指要伸直（距离手腕较远）
   let middleDist = dist(middle.x, middle.y, wrist.x, wrist.y);
   let ringDist = dist(ring.x, ring.y, wrist.x, wrist.y);
   let pinkyDist = dist(pinky.x, pinky.y, wrist.x, wrist.y);
   
-  // OK手势判断
-  let isOK = thumbIndexDist < 60 && // 拇指食指靠近
-             middleDist > 100 &&     // 中指伸直
-             ringDist > 90 &&        // 无名指伸直
-             pinkyDist > 80;         // 小指伸直
+  let isOK = thumbIndexDist < 60 && 
+             middleDist > 100 && 
+             ringDist > 90 && 
+             pinkyDist > 80;
   
   if (isOK) {
     okConfirmTimer++;
     
-    // 显示确认进度
     push();
     fill(255, 200, 0);
     noStroke();
@@ -163,7 +222,6 @@ function checkOKGesture() {
     let dots = '.'.repeat((okConfirmTimer / 10) % 4);
     text('Confirming' + dots, width/2, height - 70);
     
-    // 进度条
     let progress = constrain(okConfirmTimer / 60, 0, 1);
     fill(255, 200, 0, 100);
     rect(width/2 - 100, height - 35, 200, 8, 4);
@@ -172,7 +230,6 @@ function checkOKGesture() {
     
     pop();
     
-    // 60帧 = 1秒后确认
     if (okConfirmTimer > 60) {
       confirmSelection();
     }
@@ -182,108 +239,87 @@ function checkOKGesture() {
 }
 
 function drawSelection() {
-  // ✅ 优化的标题区域 - 使用渐变背景
   push();
-  // 顶部渐变背景
-  for (let i = 0; i < height * 0.15; i++) {
-    let alpha = map(i, 0, height * 0.15, 80, 0);
-    stroke(100, 150, 200, alpha);
-    line(0, i, width, i);
-  }
-  
-  // 标题
-  fill(50, 80, 120);
+  fill(100, 150, 200, 30);
   noStroke();
+  rect(0, 0, width, height * 0.15);
+  
+  fill(50, 80, 120);
   textAlign(CENTER, CENTER);
-  textSize(42);
+  textSize(36);
   textStyle(BOLD);
   text('🍦 Point at Your Favorite Ice Cream', width/2, height * 0.06);
   
-  // 状态栏
-  textSize(18);
+  textSize(16);
   textStyle(NORMAL);
   fill(80, 110, 150);
   let status = hands.length > 0 ? '👆 Hand detected ✓' : '👆 Show your hand';
-  text(status + ' | Hold 3s to select | 👌 OK sign to confirm', width/2, height * 0.11);
+  text(status + ' | Hold 3s for Ready | 👌 OK anytime to confirm', width/2, height * 0.11);
   pop();
   
-  // 绘制图片
   for (let box of boxes) {
     push();
     
-    // 图片阴影效果
     if (current === box) {
-      drawingContext.shadowBlur = 20;
-      drawingContext.shadowColor = 'rgba(100, 150, 255, 0.5)';
+      drawingContext.shadowBlur = 15;
+      drawingContext.shadowColor = 'rgba(100, 150, 255, 0.4)';
     }
     
     image(box.img, box.x, box.y, box.w, box.h);
     drawingContext.shadowBlur = 0;
     
-    // Ready状态显示
+    // ✅ 只有Ready的时候才显示Ready提示
     if (box.ready) {
-      // 半透明覆盖层
-      fill(255, 180, 0, 200);
+      fill(255, 180, 0, 180);
       noStroke();
       rect(box.x, box.y, box.w, box.h);
       
-      // 文字提示
       fill(255);
       stroke(0);
-      strokeWeight(3);
-      textSize(24);
+      strokeWeight(2);
+      textSize(22);
       textStyle(BOLD);
-      text('Ready!', box.x + box.w/2, box.y + box.h/2 - 15);
+      text('Ready!', box.x + box.w/2, box.y + box.h/2 - 12);
       
-      textSize(18);
-      textStyle(NORMAL);
-      text('👌 Show OK sign', box.x + box.w/2, box.y + box.h/2 + 15);
+      textSize(16);
+      text('👌 OK to confirm', box.x + box.w/2, box.y + box.h/2 + 12);
       
-      // 边框高亮
       noFill();
       stroke(255, 180, 0);
-      strokeWeight(5);
-      rect(box.x - 2, box.y - 2, box.w + 4, box.h + 4, 8);
+      strokeWeight(4);
+      rect(box.x - 2, box.y - 2, box.w + 4, box.h + 4, 6);
+    }
+    // ✅ 如果是current但还没ready，显示简单的高亮边框
+    else if (current === box) {
+      noFill();
+      stroke(100, 150, 255);
+      strokeWeight(3);
+      rect(box.x - 2, box.y - 2, box.w + 4, box.h + 4, 6);
     }
     
     pop();
   }
   
-  // 绘制轨迹
   if (path.length > 1) {
-    stroke(255, 100, 150, 180);
-    strokeWeight(4);
+    stroke(255, 100, 150, 150);
+    strokeWeight(3);
     noFill();
     beginShape();
-    for (let p of path) {
-      curveVertex(p.x, p.y); // 使用曲线让轨迹更平滑
-    }
-    if (current && hands.length > 0) {
-      curveVertex(fingerX, fingerY);
-    }
+    for (let p of path) vertex(p.x, p.y);
+    if (current && hands.length > 0) vertex(fingerX, fingerY);
     endShape();
   }
   
-  // 手指指示器
   if (hands.length > 0) {
-    push();
     noFill();
     stroke(0, 255, 150);
-    strokeWeight(5);
-    circle(fingerX, fingerY, 50);
+    strokeWeight(4);
+    circle(fingerX, fingerY, 40);
     
-    // 十字标记
     stroke(0, 255, 150);
-    strokeWeight(3);
-    line(fingerX - 20, fingerY, fingerX + 20, fingerY);
-    line(fingerX, fingerY - 20, fingerX, fingerY + 20);
-    
-    // 外圈动画
-    let pulseSize = 50 + sin(frameCount * 0.1) * 10;
-    stroke(0, 255, 150, 100);
     strokeWeight(2);
-    circle(fingerX, fingerY, pulseSize);
-    pop();
+    line(fingerX - 15, fingerY, fingerX + 15, fingerY);
+    line(fingerX, fingerY - 15, fingerX, fingerY + 15);
   }
   
   updatePointing();
@@ -315,7 +351,9 @@ function updatePointing() {
       startTime = millis();
       path.push({x: fingerX, y: fingerY});
     } else {
+      // ✅ 继续累积时间
       current.time += deltaTime;
+      // ✅ 满3秒才设置ready为true
       if (millis() - startTime > READY_THRESHOLD) {
         current.ready = true;
       }
@@ -328,8 +366,9 @@ function updatePointing() {
   }
 }
 
+// ✅ 确认选择 - 不需要检查ready状态
 function confirmSelection() {
-  if (current && current.ready && !hasSelected) {
+  if (current && !hasSelected) {
     selectedFlavor = current;
     hasSelected = true;
     console.log('Selected:', selectedFlavor.name);
@@ -337,57 +376,46 @@ function confirmSelection() {
 }
 
 function drawBeautifulReport() {
-  // 渐变背景
-  for (let i = 0; i < height; i++) {
-    let inter = map(i, 0, height, 0, 1);
-    let c = lerpColor(color(250, 248, 245), color(255, 250, 240), inter);
-    stroke(c);
-    line(0, i, width, i);
-  }
+  background(250, 248, 245);
   
-  // 画所有图片（暗淡）
   for (let box of boxes) {
     tint(255, box === selectedFlavor ? 255 : 60);
     image(box.img, box.x, box.y, box.w, box.h);
   }
   noTint();
   
-  // 选中的图片 - 发光效果
   if (selectedFlavor) {
     push();
-    drawingContext.shadowBlur = 35;
-    drawingContext.shadowColor = 'rgba(0, 200, 100, 0.7)';
-    strokeWeight(8);
+    drawingContext.shadowBlur = 25;
+    drawingContext.shadowColor = 'rgba(0, 200, 100, 0.6)';
+    strokeWeight(6);
     stroke(0, 220, 120);
     noFill();
-    rect(selectedFlavor.x - 5, selectedFlavor.y - 5, 
-         selectedFlavor.w + 10, selectedFlavor.h + 10, 12);
+    rect(selectedFlavor.x - 4, selectedFlavor.y - 4, 
+         selectedFlavor.w + 8, selectedFlavor.h + 8, 10);
     pop();
     
-    // 选择标签
     push();
     fill(0, 220, 120);
     noStroke();
-    textSize(32);
+    textSize(28);
     textStyle(BOLD);
-    text('✓ Your Choice', selectedFlavor.x + selectedFlavor.w/2, selectedFlavor.y - 40);
+    text('✓ Your Choice', selectedFlavor.x + selectedFlavor.w/2, selectedFlavor.y - 35);
     pop();
   }
   
-  // 主标题 - 优化位置
   push();
   fill(100, 80, 60);
   noStroke();
   textAlign(CENTER);
-  textSize(52);
+  textSize(48);
   textStyle(BOLD);
   text('🍦', width/2, height * 0.08);
   
-  textSize(38);
+  textSize(34);
   text('Your Ice Cream Journey', width/2, height * 0.13);
   pop();
   
-  // 统计数据
   let total = 0;
   let maxBox = boxes[0];
   for (let box of boxes) {
@@ -395,105 +423,84 @@ function drawBeautifulReport() {
     if (box.time > maxBox.time) maxBox = box;
   }
   
-  // 卡片式设计 - 优化位置避免遮挡
-  let cardY = height * 0.2; // 从20%开始
-  let cardGap = height * 0.09; // 动态间距
+  let cardY = height * 0.2;
+  let cardGap = height * 0.09;
   
-  // 确保卡片不会太靠下
-  if (cardY + cardGap * 4 > height * 0.85) {
-    cardGap = (height * 0.65) / 4;
-  }
-  
-  // 卡片1：你的选择
-  drawCard(width/2 - 260, cardY, 500, 65, 
+  drawCard(width/2 - 240, cardY, 480, 60, 
            '💝 You chose', 
            selectedFlavor.name,
            color(255, 200, 200));
   
-  // 卡片2：纠结时长
-  drawCard(width/2 - 260, cardY + cardGap, 500, 65,
-           '⏱️ Time spent thinking',
+  drawCard(width/2 - 240, cardY + cardGap, 480, 60,
+           '⏱️ Time spent',
            (total / 1000).toFixed(1) + ' seconds',
            color(200, 220, 255));
   
-  // 卡片3：最吸引你的
   if (maxBox.time > 0) {
-    drawCard(width/2 - 260, cardY + cardGap * 2, 500, 65,
-             '👀 You stared most at',
+    drawCard(width/2 - 240, cardY + cardGap * 2, 480, 60,
+             '👀 You stared at',
              maxBox.name + ' (' + (maxBox.time / 1000).toFixed(1) + 's)',
              color(255, 240, 200));
   }
   
-  // 卡片4：改变主意
   if (abandoned.length > 0) {
     let uniqueAbandoned = [...new Set(abandoned)];
-    drawCard(width/2 - 260, cardY + cardGap * 3, 500, 65,
-             '🤔 You almost picked',
+    drawCard(width/2 - 240, cardY + cardGap * 3, 480, 60,
+             '🤔 Almost picked',
              uniqueAbandoned.join(', '),
              color(230, 200, 255));
   } else {
-    drawCard(width/2 - 260, cardY + cardGap * 3, 500, 65,
-             '🎯 Decision style',
+    drawCard(width/2 - 240, cardY + cardGap * 3, 480, 60,
+             '🎯 Decision',
              'Quick & Decisive!',
              color(200, 255, 200));
   }
   
-  // 底部提示
   fill(120);
   noStroke();
   textAlign(CENTER);
-  textSize(18);
-  textStyle(NORMAL);
+  textSize(16);
   text('Press S to save | Press C to try again', width/2, height - 50);
 }
 
 function drawCard(x, y, w, h, label, value, bgColor) {
   push();
   
-  // 卡片阴影
-  drawingContext.shadowBlur = 18;
-  drawingContext.shadowColor = 'rgba(0, 0, 0, 0.15)';
+  drawingContext.shadowBlur = 12;
+  drawingContext.shadowColor = 'rgba(0, 0, 0, 0.1)';
   
-  // 卡片背景
   fill(bgColor);
   noStroke();
-  rect(x, y, w, h, 15);
+  rect(x, y, w, h, 12);
   
-  // 重置阴影
   drawingContext.shadowBlur = 0;
   
-  // 标签
-  fill(100, 80, 60);
+  fill(80, 60, 50);
   textAlign(LEFT);
-  textSize(17);
+  textSize(15);
   textStyle(NORMAL);
-  text(label, x + 25, y + 24);
+  text(label, x + 20, y + 22);
   
-  // 值
-  fill(50, 40, 30);
-  textSize(22);
+  fill(40, 30, 20);
+  textSize(20);
   textStyle(BOLD);
-  text(value, x + 25, y + 48);
+  text(value, x + 20, y + 45);
   
   pop();
 }
 
 function drawSaveMessage() {
   push();
-  
-  // 计算淡出效果
   let alpha = map(saveMessageTimer, 0, 120, 0, 255);
   
-  // 背景
   fill(0, 200, 100, alpha * 0.9);
   noStroke();
   rectMode(CENTER);
-  rect(width/2, 150, 350, 80, 15);
+  rect(width/2, 150, 320, 70, 12);
   
-  // 文字
   fill(255, alpha);
   textAlign(CENTER, CENTER);
-  textSize(26);
+  textSize(24);
   textStyle(BOLD);
   text(saveMessage, width/2, 150);
   
@@ -501,7 +508,6 @@ function drawSaveMessage() {
 }
 
 function keyPressed() {
-  // C键：重置
   if (key === 'c' || key === 'C') {
     boxes.forEach(b => { b.time = 0; b.ready = false; });
     path = [];
@@ -509,21 +515,17 @@ function keyPressed() {
     current = null;
     hasSelected = false;
     selectedFlavor = null;
-    okConfirmTimer = 0; // 改名
+    okConfirmTimer = 0;
     saveMessage = '';
     saveMessageTimer = 0;
   }
   
-  // S键：保存
   if ((key === 's' || key === 'S') && hasSelected) {
     saveCanvas('my-ice-cream-choice-' + Date.now(), 'png');
-    
-    // 显示保存成功消息
-    saveMessage = '✓ Saved successfully!';
+    saveMessage = '✓ Saved!';
     saveMessageTimer = 120;
   } else if ((key === 's' || key === 'S') && !hasSelected) {
-    // 用户还没选择就按了S键
-    saveMessage = '⚠️ Make a choice first!';
+    saveMessage = '⚠️ Choose first!';
     saveMessageTimer = 120;
   }
 }
