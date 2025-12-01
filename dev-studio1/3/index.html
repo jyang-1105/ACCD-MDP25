@@ -1,125 +1,237 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ice Cream Tracker</title>
-  
-  <script src="libraries/p5.min.js"></script>
-  <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
-  
+  <title>Ice Cream Selector</title>
   <style>
-    body { 
-      margin: 0; 
-      padding: 0; 
-      overflow: hidden; 
-      font-family: Arial, sans-serif;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
     
-    #video-container {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      width: 200px;
-      height: 150px;
-      border: 3px solid #00ff00;
-      border-radius: 8px;
+    body {
       overflow: hidden;
-      z-index: 9999;
-      background: black;
+      font-family: 'Arial', sans-serif;
     }
     
-    #webcam {
+    /* ✅ 主页样式 */
+    #home-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      z-index: 10000;
+      transition: opacity 0.5s ease;
+      background: white; /* ✅ 整个主页纯白背景 */
+    }
+    
+    #home-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    /* ✅ 图片区域 - 占上方4/5，纯白背景 */
+    #image-section {
       width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transform: scaleX(-1);
+      height: 80vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+      background: white; /* ✅ 改为纯白色 */
     }
     
-    /* ✅ 完全居中的加载屏幕 */
+    #home-image {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      object-position: center;
+    }
+    
+    /* ✅ 按钮区域 - 占下方1/5，纯白背景 */
+    #button-section {
+      width: 100%;
+      height: 20vh;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    #start-button {
+      background: linear-gradient(135deg, #ff8a65 0%, #ff7043 100%);
+      color: white;
+      border: none;
+      padding: 20px 55px;
+      font-size: 24px;
+      font-weight: bold;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 8px 25px rgba(255, 112, 67, 0.4);
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+    
+    #start-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 35px rgba(255, 112, 67, 0.5);
+      background: linear-gradient(135deg, #ff9575 0%, #ff8053 100%);
+    }
+    
+    #start-button:active {
+      transform: translateY(-1px);
+    }
+    
+    /* 加载屏幕样式 */
     #loading-screen {
       position: fixed;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
+      width: 100vw;
+      height: 100vh;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      z-index: 10000;
-      transition: opacity 0.5s;
-    }
-    
-    .loading-content {
-      text-align: center;
-      display: flex;
+      display: none;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease;
+    }
+    
+    #loading-screen.active {
+      display: flex;
     }
     
     .ice-cream-icon {
       font-size: 80px;
-      margin-bottom: 20px;
       animation: bounce 1s infinite;
     }
     
     @keyframes bounce {
       0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-15px); }
+      50% { transform: translateY(-20px); }
     }
     
-    h2 {
-      font-size: 32px;
-      margin: 10px 0;
-      font-weight: 600;
+    #loading-text {
+      color: white;
+      font-size: 28px;
+      margin-top: 30px;
+      font-weight: bold;
     }
     
-    /* ✅ 进度条容器 - 确保居中 */
-    .progress-container {
+    #progress-container {
       width: 300px;
-      height: 10px;
-      background: rgba(255, 255, 255, 0.2);
+      height: 8px;
+      background: rgba(255,255,255,0.3);
       border-radius: 10px;
+      margin-top: 25px;
       overflow: hidden;
-      margin: 30px auto 15px auto; /* 添加 auto 左右边距 */
     }
     
     #progress-bar {
-      height: 100%;
-      background: linear-gradient(90deg, #00f2fe 0%, #4facfe 100%);
       width: 0%;
-      transition: width 0.3s ease;
+      height: 100%;
+      background: white;
       border-radius: 10px;
+      transition: width 0.3s ease;
     }
     
     #progress-text {
-      font-size: 28px;
-      font-weight: bold;
-      margin-top: 10px;
-      text-align: center; /* 确保文字居中 */
+      color: white;
+      font-size: 18px;
+      margin-top: 15px;
+      font-weight: 500;
+    }
+    
+    /* Webcam preview */
+    #webcam {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 200px;
+      height: 150px;
+      border: 3px solid #4CAF50;
+      border-radius: 10px;
+      z-index: 1000;
+      transform: scaleX(-1);
+      display: none;
+    }
+    
+    #canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
     }
   </style>
 </head>
 <body>
-  <!-- ✅ 居中的加载屏幕 -->
-  <div id="loading-screen">
-    <div class="loading-content">
-      <div class="ice-cream-icon">🍦</div>
-      <h2>Loading Ice Cream Tracker</h2>
-      <div class="progress-container">
-        <div id="progress-bar"></div>
-      </div>
-      <div id="progress-text">0%</div>
+  <!-- ✅ 主页 -->
+  <div id="home-screen">
+    <!-- 图片区域 - 4/5 (80vh)，完整显示图片，纯白背景 -->
+    <div id="image-section">
+      <img id="home-image" src="home.png" alt="Choose your flavor">
+    </div>
+    
+    <!-- 按钮区域 - 1/5 (20vh)，纯白背景 -->
+    <div id="button-section">
+      <button id="start-button">Start the Journey</button>
     </div>
   </div>
   
-  <div id="video-container">
-    <video id="webcam" autoplay playsinline></video>
+  <!-- 加载屏幕 -->
+  <div id="loading-screen">
+    <div class="ice-cream-icon">🍦</div>
+    <div id="loading-text">Loading Ice Cream Magic...</div>
+    <div id="progress-container">
+      <div id="progress-bar"></div>
+    </div>
+    <div id="progress-text">0%</div>
   </div>
   
+  <!-- Webcam preview -->
+  <video id="webcam" autoplay playsinline muted></video>
+  
+  <!-- Canvas container -->
+  <div id="canvas-container"></div>
+  
+  <!-- p5.js and ML5.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
   <script src="sketch.js"></script>
+  
+  <script>
+    // 主页按钮点击事件
+    document.getElementById('start-button').addEventListener('click', function() {
+      console.log('用户点击了开始按钮');
+      
+      // 隐藏主页
+      document.getElementById('home-screen').classList.add('hidden');
+      
+      // 延迟后显示加载屏幕
+      setTimeout(() => {
+        document.getElementById('home-screen').style.display = 'none';
+        document.getElementById('loading-screen').classList.add('active');
+        
+        console.log('显示加载屏幕，开始加载资源');
+        
+        // ✅ 触发p5.js开始显示内容
+        if (window.startP5) {
+          window.startP5();
+          console.log('已调用startP5()');
+        } else {
+          console.error('startP5函数未找到！');
+        }
+      }, 500);
+    });
+  </script>
 </body>
 </html>

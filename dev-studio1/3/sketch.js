@@ -1,3 +1,11 @@
+// ✅ p5.js会自动调用preload，我们只需要控制何时显示内容
+let canStart = false;
+
+// ✅ 提供给HTML调用的启动函数
+window.startP5 = function() {
+  canStart = true;
+};
+
 let imgs = [];
 let boxes = [];
 let video;
@@ -33,6 +41,8 @@ let showTutorial = true;
 let tutorialPage = 0;
 let okHandImg;
 let pointHandImg;
+// ✅ 教程手势检测
+let tutorialGestureTimer = 0;
 
 const names = ['Strawberry', 'Chocolate', 'Mango', 'Mint', 'Lemon',
                'Pistachio', 'Raspberry', 'Hazelnut', 'Coconut', 'Vanilla'];
@@ -42,8 +52,9 @@ const files = ['strawberry.png', 'chocolate.png', 'mango.png', 'mint.png', 'lemo
 
 const READY_THRESHOLD = 3000;
 
+// ✅ p5.js会自动调用这个函数
 function preload() {
-  console.log('开始加载...');
+  console.log('开始加载资源...');
   
   for (let i = 0; i < files.length; i++) {
     loadImage(files[i], 
@@ -51,6 +62,7 @@ function preload() {
         imgs.push(img);
         loadedAssets++;
         updateLoadingProgress();
+        console.log(`加载成功: ${files[i]}`);
       },
       () => {
         console.error(`加载失败: ${files[i]}`);
@@ -66,6 +78,7 @@ function preload() {
       okHandImg = img;
       loadedAssets++;
       updateLoadingProgress();
+      console.log('OK手势图加载成功');
     },
     () => {
       console.error('OK手势图加载失败');
@@ -79,6 +92,7 @@ function preload() {
       pointHandImg = img;
       loadedAssets++;
       updateLoadingProgress();
+      console.log('指向手势图加载成功');
     },
     () => {
       console.error('指向手势图加载失败');
@@ -87,9 +101,11 @@ function preload() {
     }
   );
   
+  // ✅ ML5 handPose初始化
   handPose = ml5.handPose(() => {
     loadedAssets++;
     updateLoadingProgress();
+    console.log('HandPose模型加载完成');
   });
 }
 
@@ -106,19 +122,24 @@ function updateLoadingProgress() {
   if (progressBar) {
     progressBar.style.width = loadingProgress + '%';
   }
+  
+  console.log(`加载进度: ${loadingProgress}% (${loadedAssets}/${totalAssets})`);
 }
 
 function setup() {
-  createCanvas(windowWidth, windowHeight);
+  let canvas = createCanvas(windowWidth, windowHeight);
+  canvas.parent('canvas-container');
   
   fingerX = width / 2;
   fingerY = height / 2;
   lastFingerX = fingerX;
   lastFingerY = fingerY;
   
+  // ✅ 等待资源加载完成
   let checkLoading = setInterval(() => {
     if (loadedAssets >= totalAssets) {
       clearInterval(checkLoading);
+      console.log('所有资源加载完成，初始化应用...');
       initApp();
     }
   }, 100);
@@ -129,6 +150,11 @@ function setup() {
 
 function initApp() {
   setupBoxes();
+  
+  // 确保教程从第一页开始
+  tutorialPage = 0;
+  showTutorial = true;
+  console.log('初始化完成，教程页面设置为:', tutorialPage);
   
   video = createCapture(VIDEO);
   video.size(640, 480);
@@ -151,6 +177,7 @@ function initApp() {
         setTimeout(() => {
           loadingScreen.style.display = 'none';
           showTutorial = true;
+          console.log('进入教程页面');
         }, 500);
       }
     }, 300);
@@ -191,10 +218,16 @@ function gotHands(results) {
 }
 
 function draw() {
+  // ✅ 在用户点击开始之前不绘制任何内容
+  if (!canStart) {
+    return;
+  }
+  
   background(248, 250, 252);
   
   if (showTutorial) {
     drawTutorial();
+    checkTutorialGesture();
     return;
   }
   
@@ -214,21 +247,112 @@ function draw() {
   }
 }
 
-// ✅ 简洁清爽的教程页面
+// ✅ 检测教程页面的手势
+function checkTutorialGesture() {
+  if (hands.length === 0) {
+    tutorialGestureTimer = 0;
+    return;
+  }
+  
+  let hand = hands[0];
+  let isCorrectGesture = false;
+  
+  if (tutorialPage === 0) {
+    // 第一页：检测指向手势（食指伸出）
+    let indexTip = hand.keypoints[8];
+    let indexBase = hand.keypoints[5];
+    let middleTip = hand.keypoints[12];
+    let ringTip = hand.keypoints[16];
+    let pinkyTip = hand.keypoints[20];
+    let wrist = hand.keypoints[0];
+    
+    // 食指伸直
+    let indexExtended = dist(indexTip.x, indexTip.y, wrist.x, wrist.y) > 
+                        dist(indexBase.x, indexBase.y, wrist.x, wrist.y) + 60;
+    
+    // 其他手指收起
+    let middleFolded = dist(middleTip.x, middleTip.y, wrist.x, wrist.y) < 120;
+    let ringFolded = dist(ringTip.x, ringTip.y, wrist.x, wrist.y) < 110;
+    let pinkyFolded = dist(pinkyTip.x, pinkyTip.y, wrist.x, wrist.y) < 100;
+    
+    isCorrectGesture = indexExtended && middleFolded && ringFolded && pinkyFolded;
+    
+  } else {
+    // 第二页：检测OK手势
+    let thumb = hand.keypoints[4];
+    let index = hand.keypoints[8];
+    let middle = hand.keypoints[12];
+    let ring = hand.keypoints[16];
+    let pinky = hand.keypoints[20];
+    let wrist = hand.keypoints[0];
+    
+    let thumbIndexDist = dist(thumb.x, thumb.y, index.x, index.y);
+    let middleDist = dist(middle.x, middle.y, wrist.x, wrist.y);
+    let ringDist = dist(ring.x, ring.y, wrist.x, wrist.y);
+    let pinkyDist = dist(pinky.x, pinky.y, wrist.x, wrist.y);
+    
+    isCorrectGesture = thumbIndexDist < 60 && 
+                       middleDist > 100 && 
+                       ringDist > 90 && 
+                       pinkyDist > 80;
+  }
+  
+  if (isCorrectGesture) {
+    tutorialGestureTimer++;
+    
+    // ✅ 绘制进度提示
+    push();
+    fill(100, 200, 150, 200);
+    noStroke();
+    rectMode(CENTER);
+    rect(width/2, height * 0.75, 300, 80, 20);
+    
+    fill(255);
+    textAlign(CENTER, CENTER);
+    textSize(24);
+    textStyle(BOLD);
+    text('Great! Keep holding...', width/2, height * 0.74);
+    
+    // 进度条
+    let progress = constrain(tutorialGestureTimer / 90, 0, 1);
+    fill(255, 255, 255, 80);
+    rectMode(CORNER);
+    rect(width/2 - 120, height * 0.77, 240, 8, 4);
+    fill(255);
+    rect(width/2 - 120, height * 0.77, 240 * progress, 8, 4);
+    
+    pop();
+    
+    // 持续1.5秒后进入下一页
+    if (tutorialGestureTimer > 90) {
+      if (tutorialPage === 0) {
+        tutorialPage = 1;
+      } else {
+        showTutorial = false;
+      }
+      tutorialGestureTimer = 0;
+    }
+  } else {
+    tutorialGestureTimer = 0;
+  }
+}
+
 function drawTutorial() {
-  // 纯色背景
   background(245, 238, 228);
+  
+  // 调试信息
+  if (frameCount % 60 === 0) {
+    console.log('教程页面:', tutorialPage, '(0=指向手势, 1=OK手势)');
+  }
   
   push();
   
-  // 左侧图片区域
   let leftX = width * 0.3;
   let centerY = height * 0.5;
   
   if (tutorialPage === 0) {
     // 第一页：指向手势
     
-    // 左侧：图片
     if (pointHandImg) {
       let imgW = min(width * 0.28, 350);
       let imgH = imgW * (pointHandImg.height / pointHandImg.width);
@@ -237,30 +361,25 @@ function drawTutorial() {
       image(pointHandImg, leftX, centerY, imgW, imgH);
     }
     
-    // 右侧：文字内容
     let rightX = width * 0.58;
     
-    // Step标签
     fill(200, 140, 90);
     textAlign(LEFT, CENTER);
     textSize(20);
     textStyle(NORMAL);
     text('STEP 1', rightX, height * 0.32);
     
-    // 主标题
     fill(70, 60, 50);
     textSize(48);
     textStyle(BOLD);
     text('Point to Select', rightX, height * 0.41);
     
-    // 说明1
     fill(100, 85, 70);
     textSize(24);
     textStyle(NORMAL);
     text('Point your finger 👆 at your', rightX, height * 0.52);
     text('favorite ice cream', rightX, height * 0.57);
     
-    // 说明2
     fill(120, 100, 85);
     textSize(20);
     text('Hold for 3 seconds to get ready', rightX, height * 0.65);
@@ -268,7 +387,6 @@ function drawTutorial() {
   } else {
     // 第二页：OK手势
     
-    // 左侧：图片
     if (okHandImg) {
       let imgW = min(width * 0.28, 350);
       let imgH = imgW * (okHandImg.height / okHandImg.width);
@@ -277,52 +395,40 @@ function drawTutorial() {
       image(okHandImg, leftX, centerY, imgW, imgH);
     }
     
-    // 右侧：文字内容
     let rightX = width * 0.58;
     
-    // Step标签
     fill(200, 140, 90);
     textAlign(LEFT, CENTER);
     textSize(20);
     textStyle(NORMAL);
     text('STEP 2', rightX, height * 0.32);
     
-    // 主标题
     fill(70, 60, 50);
     textSize(48);
     textStyle(BOLD);
     text('Confirm with OK', rightX, height * 0.41);
     
-    // 说明1
     fill(100, 85, 70);
     textSize(24);
     textStyle(NORMAL);
     text('Make OK sign 👌 to confirm', rightX, height * 0.52);
     text('your choice', rightX, height * 0.57);
     
-    // 说明2
     fill(120, 100, 85);
     textSize(20);
     text('You can confirm anytime!', rightX, height * 0.65);
   }
   
-  // 底部按钮
-  let btnW = 260;
-  let btnH = 65;
-  let btnX = width/2 - btnW/2;
-  let btnY = height * 0.85;
-  
-  // 按钮
-  fill(210, 140, 90);
-  noStroke();
-  rect(btnX, btnY, btnW, btnH, 33);
-  
-  // 按钮文字
-  fill(255);
+  // ✅ 提示文字改为"做相应手势继续"
+  fill(140, 120, 100);
   textAlign(CENTER, CENTER);
-  textSize(26);
-  textStyle(BOLD);
-  text('Click to Continue', width/2, btnY + btnH/2);
+  textSize(22);
+  textStyle(NORMAL);
+  if (tutorialPage === 0) {
+    text('Point your finger 👆 to continue', width/2, height * 0.88);
+  } else {
+    text('Make OK sign 👌 to start', width/2, height * 0.88);
+  }
   
   // 页面指示器
   let dotY = height * 0.94;
@@ -341,6 +447,7 @@ function drawTutorial() {
   pop();
 }
 
+// ✅ 缩放速度再慢一半
 function updateBoxSizes() {
   let maxTime = 0;
   for (let box of boxes) {
@@ -359,8 +466,9 @@ function updateBoxSizes() {
       box.maxScale = targetScale;
     }
     
+    // ✅ 从0.015改为0.0075（再慢一半）
     let currentScale = box.w / box.baseW;
-    let newScale = lerp(currentScale, box.maxScale, 0.03);
+    let newScale = lerp(currentScale, box.maxScale, 0.0075);
     
     box.w = box.baseW * newScale;
     box.h = box.baseH * newScale;
@@ -737,7 +845,9 @@ function drawSaveMessage() {
 }
 
 function mouseClicked() {
-  if (showTutorial) {
+  // 只在教程显示且用户真正点击时才响应
+  if (showTutorial && canStart) {
+    console.log('点击翻页，当前页:', tutorialPage);
     if (tutorialPage === 0) {
       tutorialPage = 1;
     } else {
