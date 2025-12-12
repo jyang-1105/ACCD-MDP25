@@ -1,4 +1,4 @@
-// 🎨 ICE CREAM SELECTOR WITH AUDIO - Simple 3-Sound Version
+// 🍦 BACIO DI SCELTA - GELATO SELECTOR WITH AUDIO - Simple 3-Sound Version
 let canStart = false;
 window.startP5 = function() { canStart = true; };
 
@@ -7,7 +7,7 @@ let fingerX = 0, fingerY = 0, path = [], current = null, startTime = 0, abandone
 let selectedFlavor = null, hasSelected = false, totalViewTime = 0, switchCount = 0, viewedAll = false;
 let okConfirmTimer = 0;
 let saveMessage = '', saveMessageTimer = 0;
-let loadingProgress = 0, totalAssets = 13, loadedAssets = 0;
+let loadingProgress = 0, totalAssets = 11, loadedAssets = 0;  // 8个冰淇淋 + 2个手势 + 1个模型
 let lastFingerX = 0, lastFingerY = 0;
 
 let showTutorial = true;
@@ -20,7 +20,7 @@ const BUFFER_DURATION = 180;
 let confetti = [], bubbles = [], promptBubbles = [];
 
 let funParticles = [];
-let flavorEmojis = ['🍓', '🍫', '🥭', '🌿', '🍋', '🥜', '🫐', '🌰', '🥥', '🌼'];
+let flavorEmojis = ['🍫', '🍪', '🥛', '🫐', '🍋', '🌿', '🥜', '🍓'];
 let reactionEmojis = ['😍', '🤤', '😋', '🥳', '✨', '💖', '🌟', '🎉', '👑', '💯'];
 let floatingEmojis = [];
 let iceCreamFacts = [];
@@ -74,10 +74,10 @@ const prompts = {
   // 30-45秒：幽默催促
   playfulPush: [
     "Still thinking?! 🤯",
-    "It's just ice cream! 😂",
+    "It's just gelato! 😂",
     "Plot twist: pick one! 🎬",
     "Any day now... 😅",
-    "The ice cream's melting! 🫠",
+    "The gelato's melting! 🫠",
     "Flip a coin? 🪙",
     "Close your eyes and pick! 🙈",
     "They're all good, promise! 💯"
@@ -109,35 +109,44 @@ const prompts = {
   ]
 };
 
-const names = ['Strawberry', 'Chocolate', 'Mango', 'Mint', 'Lemon', 'Pistachio', 'Raspberry', 'Hazelnut', 'Coconut', 'Vanilla'];
-const files = [
-  'assets/images/strawberry.png', 
-  'assets/images/chocolate.png', 
-  'assets/images/mango.png', 
-  'assets/images/mint.png', 
-  'assets/images/lemon.png', 
-  'assets/images/pistachio.png', 
-  'assets/images/raspberry.png', 
-  'assets/images/hazelnut.png', 
-  'assets/images/coconut.png', 
-  'assets/images/vanilla.png'
+const names = [
+  '3 Cioccolati', 
+  'Crema & Biscotti', 
+  'Crema Torino', 
+  'Lampone', 
+  'Limone', 
+  'Mint Chocolate Chip', 
+  'Mousse di Pistacchio', 
+  'Strawberry Cheesecake'
 ];
+
+const files = [
+  'assets/images/3 Cioccolati.png', 
+  'assets/images/Crema & Biscotti.png', 
+  'assets/images/Crema Torino.png', 
+  'assets/images/Lampone.png', 
+  'assets/images/Limone.png', 
+  'assets/images/Mint Chocolate Chip.png', 
+  'assets/images/Mousse di Pistacchio.png', 
+  'assets/images/Strawberry Cheesecake.png'
+];
+
 const READY_THRESHOLD = 3000;
 let lastPromptTime = 0;
 const promptInterval = 4000;
 let usedPrompts = [];
 
-const iceCreamTrivia = [
-  "Ice cream was served at England's King Charles I wedding in 1633!",
-  "Vanilla is the world's most popular ice cream flavor.",
-  "It takes 12 pounds of milk to make 1 gallon of ice cream.",
-  "Americans eat an average of 48 pints of ice cream per year!",
-  "The ice cream cone was invented at the 1904 World's Fair.",
-  "It takes about 50 licks to finish a single scoop cone.",
+const gelatoTrivia = [
+  "Gelato originated in Renaissance Italy in the 16th century!",
+  "Gelato has less fat than ice cream (4-8% vs 14-25%).",
+  "Real gelato is served at a warmer temperature than ice cream.",
+  "Italians consume an average of 12 liters of gelato per year!",
+  "The word 'gelato' simply means 'frozen' in Italian.",
+  "Gelato has a denser texture because it's churned slower.",
   "Brain freeze happens when cold hits your palate's nerves.",
-  "Chocolate ice cream was actually invented before vanilla.",
-  "Ice cream was once a food reserved only for royalty!",
-  "The world's most expensive sundae costs over $1,000."
+  "Florence and Sicily both claim to have invented gelato.",
+  "Traditional gelato was once a luxury reserved for nobility!",
+  "Bacio di Latte means 'Kiss of Milk' in Italian."
 ];
 
 function preload() {
@@ -169,7 +178,10 @@ function setup() {
     if (loadedAssets >= totalAssets) { clearInterval(checkLoading); initApp(); }
   }, 100);
   
-  textAlign(CENTER, CENTER); frameRate(60);
+  // 设置默认字体和对齐
+  textAlign(CENTER, CENTER); 
+  textFont('Georgia');  // 设置优雅的衬线字体为默认
+  frameRate(60);
   
   // 🚀 性能优化：减少背景元素数量
   for (let i = 0; i < 15; i++) bubbles.push(new BackgroundBubble()); // 从25减到15
@@ -265,7 +277,7 @@ function initApp() {
     }, 300);
   }, 500);
   
-  iceCreamFacts = shuffle(iceCreamTrivia);
+  iceCreamFacts = shuffle(gelatoTrivia);
 }
 
 // 🔊 Show start screen with audio permission
@@ -305,15 +317,45 @@ function showStartScreen() {
 
 function setupBoxes() {
   boxes = [];
-  let baseW = width * 0.15, baseH = height * 0.32, gap = width * 0.03;
-  let startX = (width - (baseW * 5 + gap * 4)) / 2, startY = height * 0.2;
-  for (let i = 0; i < 10; i++) {
-    let col = i % 5, row = floor(i / 5);
+  
+  // 🎨 2行4列布局 - 8个冰淇淋正好放满
+  let cols = 4;  // 4列
+  let rows = 2;  // 2行（8个冰淇淋）
+  
+  let cardW = width * 0.20;  // 卡片宽度 20%
+  let imageH = cardW * (300 / 444);  // 图片高度（保持3:2比例）
+  let labelH = 45;  // 标签高度（稍微高一点，因为名称较长）
+  let cardH = imageH + labelH;  // 总卡片高度 = 图片 + 标签
+  
+  let gap = width * 0.03;  // 间距 3%
+  
+  // 计算起始位置（居中）
+  let totalWidth = cardW * cols + gap * (cols - 1);
+  let totalHeight = cardH * rows + gap * (rows - 1);
+  let startX = (width - totalWidth) / 2;
+  let startY = (height - totalHeight) / 2 + 10;  // 稍微往下一点（从-20改为+10）
+  
+  for (let i = 0; i < 8; i++) {  // 改为8个
+    let col = i % cols;  // 4列
+    let row = floor(i / cols);  // 行号
+    
     boxes.push({
-      x: startX + col * (baseW + gap), y: startY + row * (baseH + gap),
-      baseW: baseW, baseH: baseH, w: baseW, h: baseH,
-      baseX: startX + col * (baseW + gap), baseY: startY + row * (baseH + gap),
-      name: names[i], img: imgs[i], time: 0, ready: false, maxScale: 1.0, viewed: false,
+      x: startX + col * (cardW + gap), 
+      y: startY + row * (cardH + gap),
+      baseW: cardW, 
+      baseH: imageH,  // 只是图片高度
+      w: cardW, 
+      h: imageH,
+      cardH: cardH,  // 保存完整卡片高度（图片+标签）
+      labelH: labelH,  // 保存标签高度
+      baseX: startX + col * (cardW + gap), 
+      baseY: startY + row * (cardH + gap),
+      name: names[i], 
+      img: imgs[i], 
+      time: 0, 
+      ready: false, 
+      maxScale: 1.0, 
+      viewed: false,
       emoji: flavorEmojis[i]
     });
   }
@@ -641,7 +683,7 @@ function drawTutorial() {
     fill(200, 140, 90); textAlign(LEFT, CENTER); textSize(20); textStyle(NORMAL); text('STEP 1', rightX, height * 0.32);
     fill(70, 60, 50); textSize(48); textStyle(BOLD); text('Point to Select', rightX, height * 0.41);
     fill(100, 85, 70); textSize(24); textStyle(NORMAL);
-    text('Point your finger 👆 at your', rightX, height * 0.52); text('favorite ice cream', rightX, height * 0.57);
+    text('Point your finger 👆 at your', rightX, height * 0.52); text('favorite gelato', rightX, height * 0.57);
     fill(120, 100, 85); textSize(20); text('Hold for 3 seconds to get ready', rightX, height * 0.65);
     fill(140, 120, 100); textAlign(CENTER, CENTER); textSize(22); textStyle(NORMAL);
     text('Point your finger 👆 to continue', width/2, height * 0.88);
@@ -734,48 +776,133 @@ function checkOKGesture() {
 }
 
 function drawSelection() {
+  // 顶部标题栏
+  // 顶部标题栏（简化版）
   push();
-  fill(255, 255, 255, 230); noStroke(); rect(0, 0, width, height * 0.16);
-  fill(80, 100, 140); textAlign(CENTER, CENTER); textSize(40); textStyle(BOLD);
-  text('🍦 Point at Your Favorite Ice Cream', width/2, height * 0.065);
-  textSize(16); textStyle(NORMAL); fill(120, 140, 180);
-  let status = hands.length > 0 ? '✓ Hand detected' : '👆 Show your hand';
-  text(status + ' • Hold 3s for Ready • 👌 OK anytime', width/2, height * 0.115);
+  fill(255, 255, 255, 230); 
+  noStroke(); 
+  rect(0, 0, width, height * 0.12);  // 缩小高度从0.16到0.12
+  
+  // 🎨 项目标题 - Bacio di Scelta
+  textFont('Georgia');
+  textStyle('italic');
+  textSize(42);
+  fill(80, 100, 140);
+  text('Bacio di Scelta', width/2, height * 0.045);  // 调整位置
+  
+  // 副标题
+  textFont('Arial');
+  textStyle(NORMAL);
+  textSize(16);
+  fill(120, 140, 180);
+  text('Point at Your Favorite Gelato', width/2, height * 0.085);  // 调整位置
+  
   pop();
+  
+  // 绘制所有卡片
   for (let box of boxes) {
     push();
-    if (current === box) {
-      drawingContext.shadowBlur = 12; drawingContext.shadowColor = 'rgba(100, 150, 255, 0.3)';
-    }
-    image(box.img, box.x, box.y, box.w, box.h);
+    
+    // 🎨 卡片背景和阴影
+    drawingContext.shadowBlur = 8;
+    drawingContext.shadowColor = 'rgba(0, 0, 0, 0.1)';
+    fill(255);
+    noStroke();
+    rect(box.x, box.y, box.w, box.cardH, 12);  // 整个卡片圆角
     drawingContext.shadowBlur = 0;
-    if (box.ready) {
-      fill(255, 200, 100, 200); noStroke(); rect(box.x, box.y, box.w, box.h);
-      fill(255); stroke(80, 60, 40); strokeWeight(2);
-      let textSize1 = map(box.w, box.baseW, box.baseW * 1.3, 20, 26); 
-      textSize(textSize1); textStyle(BOLD); text('Ready!', box.x + box.w/2, box.y + box.h/2 - 12);
-      let textSize2 = map(box.w, box.baseW, box.baseW * 1.3, 14, 18); 
-      textSize(textSize2); text('👌 OK', box.x + box.w/2, box.y + box.h/2 + 12);
-      noFill(); stroke(255, 200, 100); strokeWeight(4); 
-      rect(box.x - 2, box.y - 2, box.w + 4, box.h + 4);
-    } else if (current === box) {
-      noFill(); stroke(100, 150, 255); strokeWeight(3); 
-      rect(box.x - 2, box.y - 2, box.w + 4, box.h + 4);
+    
+    // 🎨 绘制图片（带圆角）
+    if (current === box) {
+      drawingContext.shadowBlur = 12; 
+      drawingContext.shadowColor = 'rgba(100, 150, 255, 0.3)';
     }
+    
+    // 使用clip创建圆角图片效果
+    push();
+    drawingContext.save();
+    drawingContext.beginPath();
+    drawingContext.roundRect(box.x, box.y, box.w, box.h, [12, 12, 0, 0]);  // 上方圆角
+    drawingContext.clip();
+    image(box.img, box.x, box.y, box.w, box.h);
+    drawingContext.restore();
+    pop();
+    
+    drawingContext.shadowBlur = 0;
+    
+    // 🎨 绘制名称标签
+    let labelY = box.y + box.h;
+    fill(255);
+    noStroke();
+    rect(box.x, labelY, box.w, box.labelH, [0, 0, 12, 12]);  // 下方圆角
+    
+    // 标签文字 - 优雅的衬线字体
+    fill(70, 60, 80);
+    textAlign(CENTER, CENTER);
+    textFont('Georgia');  // 使用Georgia衬线字体（优雅、易读）
+    textSize(15);  // 稍大一点以配合衬线字体
+    textStyle(NORMAL);
+    // 修复对齐：直接居中，不使用宽度限制（避免错位）
+    text(box.name, box.x + box.w/2, labelY + box.labelH/2);
+    
+    // Ready状态覆盖
+    if (box.ready) {
+      // 半透明黄色覆盖整个卡片
+      fill(255, 200, 100, 200); 
+      noStroke(); 
+      rect(box.x, box.y, box.w, box.h, [12, 12, 0, 0]);
+      
+      // Ready文字
+      fill(255); 
+      stroke(80, 60, 40); 
+      strokeWeight(2);
+      textSize(20); 
+      textStyle(BOLD); 
+      text('Ready!', box.x + box.w/2, box.y + box.h/2 - 10);
+      textSize(16); 
+      text('👌 OK', box.x + box.w/2, box.y + box.h/2 + 12);
+      
+      // Ready边框
+      noFill(); 
+      stroke(255, 200, 100); 
+      strokeWeight(3); 
+      rect(box.x, box.y, box.w, box.cardH, 12);  // 整个卡片的边框
+    } else if (current === box) {
+      // 选中状态边框
+      noFill(); 
+      stroke(100, 150, 255); 
+      strokeWeight(3); 
+      rect(box.x, box.y, box.w, box.cardH, 12);
+    }
+    
     pop();
   }
+  
+  // 绘制手指轨迹
   if (path.length > 1) {
-    stroke(255, 120, 150, 120); strokeWeight(2); noFill(); beginShape();
-    for (let i = max(0, path.length - 30); i < path.length; i++) vertex(path[i].x, path[i].y);
+    stroke(255, 120, 150, 120); 
+    strokeWeight(2); 
+    noFill(); 
+    beginShape();
+    for (let i = max(0, path.length - 30); i < path.length; i++) {
+      vertex(path[i].x, path[i].y);
+    }
     if (current && hands.length > 0) vertex(fingerX, fingerY);
     endShape();
   }
-  push(); textAlign(CENTER, CENTER); textSize(45);
-  drawingContext.shadowBlur = 10; drawingContext.shadowColor = 'rgba(0, 0, 0, 0.4)';
-  drawingContext.shadowOffsetX = 2; drawingContext.shadowOffsetY = 2;
-  if (hands.length > 0) fill(255, 255, 255, 255); else fill(255, 255, 255, 150);
+  
+  // 绘制手指指示器
+  push(); 
+  textAlign(CENTER, CENTER); 
+  textSize(40);  // 稍微小一点
+  drawingContext.shadowBlur = 10; 
+  drawingContext.shadowColor = 'rgba(0, 0, 0, 0.4)';
+  drawingContext.shadowOffsetX = 2; 
+  drawingContext.shadowOffsetY = 2;
+  if (hands.length > 0) fill(255, 255, 255, 255); 
+  else fill(255, 255, 255, 150);
   text('👆', fingerX, fingerY - 22);
   pop();
+  
   updatePointing();
 }
 
@@ -783,6 +910,7 @@ function updatePointing() {
   if (hands.length === 0) { current = null; return; }
   let found = null;
   for (let box of boxes) {
+    // 只检测图片区域（不包括标签）
     if (fingerX > box.baseX && fingerX < box.baseX + box.baseW && 
         fingerY > box.baseY && fingerY < box.baseY + box.baseH) {
       found = box; break;
@@ -1081,7 +1209,7 @@ function keyPressed() {
     showStartScreen();
   }
   if ((key === 's' || key === 'S') && hasSelected) {
-    saveCanvas('ice-cream-choice-' + Date.now(), 'png');
+    saveCanvas('bacio-di-scelta-' + Date.now(), 'png');
     saveMessage = '✓ Saved Successfully!'; saveMessageTimer = 120;
   } else if ((key === 's' || key === 'S') && !hasSelected) {
     saveMessage = '⚠️ Choose first!'; saveMessageTimer = 120;

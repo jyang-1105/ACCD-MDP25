@@ -1,0 +1,112 @@
+/* Minimalist Reset */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', Helvetica, Arial, sans-serif; /* Clean font */
+    color: #e0e0e0; /* Soft white text */
+    background-color: #121212; /* Deep grey background */
+    line-height: 1.6;
+}
+
+#canvas-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    opacity: 0.4; /* Make background subtle */
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 60px 20px;
+}
+
+header {
+    margin-bottom: 60px;
+    text-align: left;
+}
+
+h1 {
+    font-weight: 600;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    letter-spacing: -1px;
+}
+
+.subtitle {
+    font-weight: 300;
+    color: #888;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+/* Video Styling */
+.video-wrapper {
+    width: 100%;
+    margin-bottom: 40px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+video {
+    width: 100%;
+    display: block;
+}
+
+/* Content Styling */
+h2 {
+    font-weight: 400;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+}
+
+.pattern-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.pattern-item h3 {
+    font-size: 1.1rem;
+    color: #fff;
+    margin-bottom: 5px;
+}
+
+.pattern-item p {
+    font-size: 0.9rem;
+    color: #aaa;
+    margin: 5px 0;
+}
+
+.tech-stack {
+    margin-top: 50px;
+    display: flex;
+    gap: 10px;
+}
+
+.tech-stack span {
+    font-size: 0.75rem;
+    background: #222;
+    padding: 5px 12px;
+    border-radius: 20px;
+    color: #666;
+    border: 1px solid #333;
+}
+
+footer {
+    margin-top: 80px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #444;
+}
