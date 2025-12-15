@@ -1,109 +1,33 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ice Cream Hesitation Study</title>
-  <script src="libraries/p5.min.js"></script>
+  <meta charset="UTF-8" />
+  <title>Forest Signaling Map</title>
+
+  <!-- Load p5.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+
+  <!-- If you use p5.sound, uncomment the line below -->
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/addons/p5.sound.min.js"></script> -->
+
   <style>
-    body { 
-      margin: 0; 
-      padding: 0; 
-      overflow: hidden; 
-      font-family: Arial, sans-serif;
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f8f8f8;
+      font-family: sans-serif;
     }
-    canvas { 
-      display: block; 
-    }
-    
-    /* 开始追踪按钮 */
-    #start-tracking-btn {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 15px 30px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      border-radius: 50px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-      transition: all 0.3s;
-      z-index: 10000;
-      animation: pulse 2s infinite;
-    }
-    
-    #start-tracking-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-    }
-    
-    @keyframes pulse {
-      0%, 100% { box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
-      50% { box-shadow: 0 4px 25px rgba(102, 126, 234, 0.7); }
-    }
-    
-    /* 提示信息 */
-    #info-banner {
-      position: fixed;
-      top: 80px;
-      right: 20px;
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 15px 20px;
-      border-radius: 10px;
-      max-width: 300px;
-      font-size: 14px;
-      z-index: 9999;
-      display: none;
-    }
-    
-    #info-banner.show {
+    canvas {
       display: block;
-      animation: slideIn 0.5s;
-    }
-    
-    @keyframes slideIn {
-      from { transform: translateX(350px); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
+      margin: 0 auto;
     }
   </style>
 </head>
+
 <body>
-  <!-- 开始眼球追踪按钮 -->
-  <button id="start-tracking-btn" onclick="startEyeTracking()">
-    👁️ Start Eye Tracking
-  </button>
-  
-  <!-- 信息提示 -->
-  <div id="info-banner">
-    <strong>Eye Tracking Mode</strong><br>
-    You'll be redirected to calibrate your eye tracking, then return here to browse ice cream flavors naturally.
-  </div>
-  
+
+  <!-- Load your p5 sketch -->
   <script src="sketch.js"></script>
-  
-  <script>
-    // GazeRecorder Study 链接
-    const GAZERECORDER_URL = 'https://app.gazerecorder.com/Study/Test?StudyID=7c039dc7c0f0dc5035f98b057885875f&lang=en&RespondentID=null';
-    
-    function startEyeTracking() {
-      // 显示提示
-      document.getElementById('info-banner').classList.add('show');
-      
-      // 2秒后跳转
-      setTimeout(() => {
-        window.location.href = GAZERECORDER_URL;
-      }, 2000);
-    }
-    
-    // 检测是否从 GazeRecorder 返回
-    if (document.referrer.includes('gazerecorder.com')) {
-      console.log('Eye tracking session active');
-      // 可以显示特殊提示
-    }
-  </script>
+
 </body>
 </html>

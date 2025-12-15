@@ -121,14 +121,14 @@ const names = [
 ];
 
 const files = [
-  'assets/images/3 Cioccolati.png', 
-  'assets/images/Crema & Biscotti.png', 
-  'assets/images/Crema Torino.png', 
-  'assets/images/Lampone.png', 
-  'assets/images/Limone.png', 
-  'assets/images/Mint Chocolate Chip.png', 
-  'assets/images/Mousse di Pistacchio.png', 
-  'assets/images/Strawberry Cheesecake.png'
+  'assets/images/Crema Torino.png',           // 位置1: 3 Cioccolati - 棕色+黄碎粒
+  'assets/images/3 Cioccolati.png',           // 位置2: Crema & Biscotti - 深棕巧克力
+  'assets/images/Crema & Biscotti.png',       // 位置3: Crema Torino - 黑白Oreo
+  'assets/images/Strawberry Cheesecake.png',  // 位置4: Lampone - 红色+金碎粒
+  'assets/images/Lampone.png',                // 位置5: Limone - 红色+VEGAN
+  'assets/images/Mousse di Pistacchio.png',   // 位置6: Mint Chocolate Chip - 米黄奶油
+  'assets/images/Limone.png',                 // 位置7: Mousse di Pistacchio - 浅米+VEGAN
+  'assets/images/Mint Chocolate Chip.png'     // 位置8: Strawberry Cheesecake - 薄荷绿
 ];
 
 const READY_THRESHOLD = 3000;
