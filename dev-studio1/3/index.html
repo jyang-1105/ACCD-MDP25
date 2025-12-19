@@ -272,9 +272,20 @@
   </div>
   
   <!-- Audio Elements - Simple 3-Sound System -->
-  <audio id="bg-music" src="assets/sounds/bg-music.mp3" loop></audio>
-  <audio id="start-sound" src="assets/sounds/start-sound.mp3"></audio>
-  <audio id="success-sound" src="assets/sounds/success-sound.mp3"></audio>
+  <!-- 使用 <source> 标签确保浏览器兼容性 -->
+  <audio id="bg-music" preload="auto" loop>
+    <source src="assets/sounds/bg-music.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+  <audio id="start-sound" preload="auto">
+    <source src="assets/sounds/start-sound.wav" type="audio/wav">
+    <source src="assets/sounds/start-sound.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+  <audio id="success-sound" preload="auto">
+    <source src="assets/sounds/success-sound.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
   
   <!-- Audio Controls - Mute Button -->
   <div id="audio-controls">
@@ -284,6 +295,9 @@
   <!-- p5.js Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   
+  <!-- p5.sound Library for Audio -->
+  <script src="libraries/p5.sound.min.js"></script>
+  
   <!-- ML5.js Library for Hand Tracking -->
   <script src="https://unpkg.com/ml5@1/dist/ml5.min.js"></script>
   
@@ -291,11 +305,45 @@
   <script src="sketch.js"></script>
   
   <script>
-    // Start p5.js after page loads
+    // 添加调试信息
+    console.log('🎬 Page loaded, initializing...');
+    
+    // 检查音频文件是否可访问
     window.addEventListener('load', function() {
+      console.log('🔍 Checking audio elements...');
+      
+      const bgMusic = document.getElementById('bg-music');
+      const startSound = document.getElementById('start-sound');
+      const successSound = document.getElementById('success-sound');
+      
+      if (bgMusic) {
+        console.log('✅ bg-music element found');
+        console.log('   Source:', bgMusic.querySelector('source')?.src || 'no source');
+      } else {
+        console.error('❌ bg-music element NOT found');
+      }
+      
+      if (startSound) {
+        console.log('✅ start-sound element found');
+        console.log('   Source:', startSound.querySelector('source')?.src || 'no source');
+      } else {
+        console.error('❌ start-sound element NOT found');
+      }
+      
+      if (successSound) {
+        console.log('✅ success-sound element found');
+        console.log('   Source:', successSound.querySelector('source')?.src || 'no source');
+      } else {
+        console.error('❌ success-sound element NOT found');
+      }
+      
+      // Start p5.js after page loads
       setTimeout(function() {
         if (typeof window.startP5 === 'function') {
+          console.log('🚀 Starting p5.js...');
           window.startP5();
+        } else {
+          console.error('❌ window.startP5 function not found');
         }
       }, 100);
     });

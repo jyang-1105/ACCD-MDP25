@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32 Multi-Channel Controller - Project Portfolio</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; }
+        header { text-align: center; padding: 40px 0; border-bottom: 2px solid #eaeaea; margin-bottom: 30px; }
+        h1 { margin: 0; color: #222; }
+        h2 { color: #0056b3; border-left: 5px solid #0056b3; padding-left: 10px; margin-top: 40px; }
+        .content-box { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .media-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        .media-item { background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        img, video { width: 100%; height: auto; border-radius: 4px; display: block; }
+        .caption { font-size: 0.9em; color: #666; margin-top: 10px; text-align: center; font-weight: bold; }
+        .highlight { background-color: #e3f2fd; padding: 2px 5px; border-radius: 3px; color: #0d47a1; font-weight: bold; }
+        .problem-box { background-color: #fff3cd; border-left: 5px solid #ffc107; padding: 15px; margin: 15px 0; }
+        @media (max-width: 600px) { .media-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>ESP32 Multi-Channel Controller</h1>
+        <p>Interactive Generative Art with Analog & Digital Inputs</p>
+        <p style="color: #666; font-size: 0.9em;">Processing & Arduino Serial Communication Project</p>
+    </header>
+
+    <div class="content-box">
+        <h2>🎥 Final Results</h2>
+        <p>This project successfully demonstrates the control of three distinct visual parameters in Processing using physical hardware: Color, Position, and Object Scale.</p>
+        
+        <div class="media-grid">
+            <div class="media-item">
+                <video controls>
+                    <source src="video_joystick.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <div class="caption">Demo 1: Joystick controlling Color (X-Axis) and Position (Y-Axis).</div>
+            </div>
+
+            <div class="media-item">
+                <video controls>
+                    <source src="video_sensor.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <div class="caption">Demo 2: Ultrasonic Sensor controlling Object Scale (Distance).</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-box">
+        <h2>🛠️ Project Overview</h2>
+        <h3>The Goal</h3>
+        <p>The objective was to build a multi-channel controller that allows a user to change various parameters in a Processing sketch. A key requirement was to experiment with sensors <strong>other than potentiometers</strong>.</p>
+
+        <h3>Hardware Components</h3>
+        <ul>
+            <li><strong>Microcontroller:</strong> ESP32 (Adafruit HUZZAH32)</li>
+            <li><strong>Sensor 1 (Analog):</strong> XY Joystick Module (Controls Position and Color).</li>
+            <li><strong>Sensor 2 (Digital):</strong> HC-SR04 Ultrasonic Distance Sensor (Controls Size).</li>
+        </ul>
+    </div>
+
+    <div class="content-box">
+        <h2>⚠️ The Process & Troubleshooting</h2>
+        <p>Integrating the digital ultrasonic sensor with the analog joystick presented significant technical challenges. Below is the breakdown of how I solved them.</p>
+
+        <div class="problem-box">
+            <strong>The Problem: Unstable Sensor Readings</strong><br>
+            Initially, the HC-SR04 ultrasonic sensor was returning `0` values consistently. After researching the datasheet, I realized the sensor requires <strong>5V</strong> to operate, but the ESP32 GPIO pins only provide <strong>3.3V</strong>.
+        </div>
+
+        <p><strong>The Solution:</strong></p>
+        <p>I re-routed the sensor's VCC connection. Instead of using the breadboard's 3V rail, <span class="highlight">I connected the sensor directly to the ESP32's USB pin.</span> This bypassed the voltage regulator and provided the necessary 5V from the USB connection, resulting in stable distance readings.</p>
+
+        <p><strong>Secondary Issue (Signal Interference):</strong></p>
+        <p>I also discovered that Pin 13 is connected to the on-board LED, which interfered with the sensor's Trigger signal. I re-mapped the Trigger to <strong>Pin 14</strong> to ensure clean data transmission.</p>
+    </div>
+
+    <div class="content-box">
+        <h2>🔌 Circuit Setup</h2>
+        <p>The image below shows the final wiring configuration. Note the orange wire connecting the sensor to the USB pin for 5V power.</p>
+        
+        <div class="media-item" style="max-width: 800px; margin: 0 auto;">
+            <img src="circuit_photo.png" alt="Final Breadboard Wiring Diagram">
+            <div class="caption">Final Build: ESP32 with Joystick and Ultrasonic Sensor</div>
+        </div>
+    </div>
+
+    <div class="content-box">
+        <h2>💻 Code Logic</h2>
+        <p><strong>Arduino Side:</strong> The code reads three values in a loop: Distance (cm), X-Axis (0-4095), and Y-Axis (0-4095). It formats these into a single string (e.g., <code>"15,2048,1023"</code>) and sends it via Serial.</p>
+        <p><strong>Processing Side:</strong> The sketch reads the string, splits the data by commas, and maps the values to visual parameters:</p>
+        <ul>
+            <li><code>Distance</code> → Maps to Circle Diameter (50px - 300px).</li>
+            <li><code>Joystick X</code> → Maps to RGB Color values.</li>
+            <li><code>Joystick Y</code> → Maps to Vertical Position (Y-coordinate).</li>
+        </ul>
+    </div>
+
+    <footer style="text-align: center; padding: 20px; color: #888; font-size: 0.8em;">
+        &copy; 2025 Student Project
+    </footer>
+
+</body>
+</html>
