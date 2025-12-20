@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardboard DJ - Project Documentation</title>
+    <style>
+        /* Minimalist White Theme */
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #ffffff;
+            color: #333333;
+            margin: 0;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #000000;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 50px;
+            font-size: 1.1em;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 30px;
+        }
+        h2 {
+            color: #111;
+            margin-top: 40px;
+            font-size: 1.5em;
+            border-left: 4px solid #333;
+            padding-left: 15px;
+        }
+        h3 {
+            color: #444;
+            font-size: 1.2em;
+            margin-top: 25px;
+        }
+        p {
+            color: #444;
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 10px;
+            color: #444;
+        }
+        strong {
+            color: #000;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+            color: #d63384;
+        }
+        
+        /* Controls Section Style */
+        .controls-box {
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            padding: 25px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .control-item {
+            margin-bottom: 15px;
+        }
+        .control-title {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            color: #222;
+        }
+
+        /* Gallery Layout */
+        .gallery {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+        .gallery-item {
+            display: flex;
+            flex-direction: column;
+        }
+        img, video {
+            width: 100%;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background-color: #eee;
+        }
+        .caption {
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: #888;
+            text-align: center;
+        }
+        .full-width {
+            grid-column: span 2;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 60px;
+            text-align: center;
+            font-size: 0.8em;
+            color: #999;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 600px) {
+            .gallery { grid-template-columns: 1fr; }
+            .full-width { grid-column: span 1; }
+            body { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Cardboard DJ</h1>
+    <div class="subtitle">ESP32 Based Motion Music Controller</div>
+
+    <h2>1. About the Project</h2>
+    <p>
+        This is a DIY MIDI controller built using recycled cardboard and electronic components. 
+        I used an <strong>ESP32 board</strong> to read analog sensors (joystick and potentiometer) and digital inputs (buttons), sending the data to a computer via serial communication. 
+        A custom program written in <strong>Processing</strong> receives this data and plays corresponding audio samples in real-time, effectively turning a cardboard box into a functional drum machine.
+    </p>
+
+    <h2>2. Working Principle</h2>
+    <p>The system architecture consists of four layers:</p>
+    <ul>
+        <li>
+            <strong>Input Layer:</strong> The joystick and potentiometer act as variable resistors, outputting voltage between 0V and 3.3V. The button sends a binary high/low signal.
+        </li>
+        <li>
+            <strong>Processing Layer (ESP32):</strong> The microcontroller's ADC converts the analog voltage into digital values ranging from 0 to 4095.
+        </li>
+        <li>
+            <strong>Communication Layer:</strong> The ESP32 transmits data to the computer via USB Serial at a baud rate of 115200. The data format is a string: <code>X, Y, Button, Knob</code>.
+        </li>
+        <li>
+            <strong>Software Layer:</strong> The computer program parses the string. To ensure accuracy, I implemented a <strong>Deadzone Algorithm</strong>. Sound is only triggered when joystick values exceed specific thresholds (< 500 or > 3600), preventing accidental triggers due to sensor drift.
+        </li>
+    </ul>
+
+    <h2>3. Controls & Functions</h2>
+    <p>The mapping between hardware inputs and sound effects is as follows:</p>
+    
+    <div class="controls-box">
+        <div class="control-item">
+            <span class="control-title">Joystick (4-Way Trigger)</span>
+            <ul>
+                <li><strong>UP:</strong> Closed Hi-Hat</li>
+                <li><strong>DOWN:</strong> Open Hi-Hat</li>
+                <li><strong>LEFT:</strong> Synth FX Sound</li>
+                <li><strong>RIGHT:</strong> Crash Cymbal</li>
+            </ul>
+        </div>
+
+        <div class="control-item">
+            <span class="control-title">Red Button</span>
+            Kick Drum (The main beat)
+        </div>
+
+        <div class="control-item">
+            <span class="control-title">Blue Knob</span>
+            Master Volume Control
+        </div>
+    </div>
+
+    <h2>4. Project Gallery</h2>
+    
+    <div class="gallery">
+        <div class="gallery-item">
+            <img src="wiring.png" alt="Breadboard Wiring Diagram">
+            <div class="caption">Figure 1: Circuit wiring and breadboard connections.</div>
+        </div>
+
+        <div class="gallery-item">
+            <img src="inside.png" alt="Internal Hardware View">
+            <div class="caption">Figure 2: Internal hardware assembly.</div>
+        </div>
+
+        <div class="gallery-item full-width">
+            <video controls>
+                <source src="demo.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <div class="caption">Video: Live performance demonstration.</div>
+        </div>
+    </div>
+
+    <footer>
+        Created for Class Project | Powered by ESP32 & Processing
+    </footer>
+
+</div>
+
+</body>
+</html>
