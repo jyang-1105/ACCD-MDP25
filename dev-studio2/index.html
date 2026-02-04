@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>情感字体变形实验 (Visual Specimen)</title>
+    <!-- 引入 P5.js 库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000; /* 纯黑背景 */
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            overflow: hidden; /* 防止滚动条 */
+            display: flex;
+            justify-content: center;
+            align-items: flex-end; /* 底部对齐控制栏 */
+            height: 100vh;
+        }
+
+        /* 顶部标题样式 */
+        #header {
+            position: absolute;
+            top: 30px;
+            width: 100%;
+            text-align: center;
+            color: #444;
+            letter-spacing: 4px;
+            font-size: 12px;
+            text-transform: uppercase;
+            pointer-events: none; /* 让鼠标穿透标题 */
+            z-index: 10;
+        }
+
+        /* 底部按钮容器样式 */
+        #controls {
+            margin-bottom: 50px;
+            display: flex;
+            gap: 15px;
+            z-index: 20; /* 确保按钮在画布上层 */
+            background: rgba(20, 20, 20, 0.8);
+            padding: 15px 30px;
+            border-radius: 50px;
+            border: 1px solid #333;
+            backdrop-filter: blur(5px); /* 毛玻璃效果 */
+        }
+
+        /* 按钮通用样式 */
+        button {
+            background: transparent;
+            border: 1px solid #555;
+            color: #888;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        button:hover {
+            border-color: #fff;
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        /* 激活状态的按钮样式 */
+        button.active {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        /* 不同情感激活时的特定颜色 */
+        button[data-emo="joy"].active { background: #FFD700; border-color: #FFD700; box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+        button[data-emo="sad"].active { background: #4da6ff; border-color: #4da6ff; box-shadow: 0 0 20px rgba(77, 166, 255, 0.5); }
+        button[data-emo="angry"].active { background: #ff3333; border-color: #ff3333; box-shadow: 0 0 20px rgba(255, 51, 51, 0.5); }
+        button[data-emo="anxious"].active { background: #00ff88; border-color: #00ff88; box-shadow: 0 0 20px rgba(0, 255, 136, 0.3); }
+
+   
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0; 
+        }
+    </style>
+</head>
+<body>
+
+  
+    <div id="header">Emotional Encryption /// Specimen Tool V1.0</div>
+
+    
+    <div id="controls">
+        <button class="active" data-emo="neutral" onclick="changeEmotion('neutral')">Neutral</button>
+        <button data-emo="joy" onclick="changeEmotion('joy')">Joy</button>
+        <button data-emo="sad" onclick="changeEmotion('sad')">Sad</button>
+        <button data-emo="angry" onclick="changeEmotion('angry')">Angry</button>
+        <button data-emo="anxious" onclick="changeEmotion('anxious')">Anxiety</button>
+    </div>
+
+    <script>
+        let pg;             
+        let particles = []; 
+        let currentEmo = "neutral"; 
+        const sampleText = "AFFECT"; 
+
+    
+        const palettes = {
+            neutral: [200, 200, 200], // 浅灰
+            joy: [255, 215, 0],       // 金色
+            sad: [100, 150, 255],     // 蓝色
+            angry: [255, 50, 50],     // 红色
+            anxious: [50, 255, 100]   // 绿色
+        };
+
+        // === P5.js 初始化函数 ===
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            
+            // [关键修复] 强制像素密度为 1
+            // 解决高清屏(Retina)下像素采样错位导致画面空白的问题
+            pixelDensity(1); 
+            
+            // 创建离屏图形缓冲区
+            pg = createGraphics(width, height);
+            
+            // 初始生成文字粒子
+            generateParticles(sampleText);
+        }
+
+        // === P5.js 绘图循环 ===
+        function draw() {
+            background(10); // 深色背景 (覆盖上一帧)
+
+            // 遍历并更新每一个粒子
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update(currentEmo);
+                particles[i].draw(currentEmo);
+            }
+        }
+
+        // === 交互逻辑: 切换情感 ===
+        // 这个函数被 HTML 按钮的 onclick 事件调用
+        window.changeEmotion = function(emotion) {
+            currentEmo = emotion;
+            
+            // 1. 更新按钮的视觉样式 (Class切换)
+            document.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`button[data-emo="${emotion}"]`).classList.add('active');
+            
+            // 2. 给粒子一个随机冲量，让切换过程更生动
+            particles.forEach(p => {
+                p.vx = random(-2, 2);
+                p.vy = random(-2, 2);
+            });
+        }
+
+        // === 核心算法: 粒子生成器 (Rasterizer) ===
+        function generateParticles(txt) {
+            particles = []; // 清空现有粒子
+            
+            // 1. 在离屏画布上绘制纯白文字
+            pg.clear();
+            pg.background(0, 0); // 透明背景
+            pg.fill(255);
+            pg.noStroke();
+            pg.textAlign(CENTER, CENTER);
+            
+            // 自适应字号：根据屏幕大小调整
+            let fontSize = min(width, height) * 0.25; 
+            pg.textSize(fontSize);
+            pg.textStyle(BOLD);
+            pg.text(txt, width/2, height/2);
+            
+            // 2. 读取离屏画布的像素数据
+            pg.loadPixels();
+            
+            // 3. 扫描像素并生成粒子
+            // step = 采样步长。值越小粒子越密(性能开销大)，值越大粒子越稀疏。
+            let step = 4; 
+            if (width > 1500) step = 5; // 大屏幕稍微稀疏一点以保证流畅
+
+            for (let y = 0; y < height; y += step) {
+                for (let x = 0; x < width; x += step) {
+                    // 计算像素在数组中的索引 (RGBA 4个通道)
+                    let index = (x + y * width) * 4;
+                    
+                    // 检查 Alpha 通道 (index+3)。如果 > 128 说明这里有字
+                    if (pg.pixels[index + 3] > 128) {
+                        particles.push(new Particle(x, y));
+                    }
+                }
+            }
+            console.log(`生成了 ${particles.length} 个粒子`);
+        }
+
+        // === 窗口大小改变时重置 ===
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+            pg = createGraphics(width, height);
+            generateParticles(sampleText);
+        }
+
+        // === 粒子类 (Particle Class) ===
+        // 定义了每一个像素点的行为
+        class Particle {
+            constructor(x, y) {
+                this.ox = x; // 原始位置 X (Original X)
+                this.oy = y; // 原始位置 Y (Original Y)
+                this.x = x;  // 当前位置 X
+                this.y = y;  // 当前位置 Y
+                
+                this.vx = 0; // 速度 X
+                this.vy = 0; // 速度 Y
+                
+                this.size = random(2, 4); // 粒子大小
+            }
+
+            // 更新位置逻辑
+            update(emo) {
+                let t = millis() * 0.001; // 时间因子
+
+                // 物理阻尼：让之前的冲量慢慢停下来
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vx *= 0.9;
+                this.vy *= 0.9;
+
+                // --- 5种情感的物理模拟 ---
+
+                if (emo === 'neutral') {
+                    // 1. 平静 (Neutral): 回归原位 + 微弱呼吸
+                    this.x = lerp(this.x, this.ox, 0.1);
+                    this.y = lerp(this.y, this.oy + sin(t + this.ox * 0.05) * 3, 0.1);
+                } 
+                else if (emo === 'joy') {
+                    // 2. 喜悦 (Joy): 向外膨胀 (Bloom)
+                    let dx = this.ox - width/2;
+                    let dy = this.oy - height/2;
+                    let distCenter = sqrt(dx*dx + dy*dy);
+                    let pulse = sin(t * 3 - distCenter * 0.02) * 15; // 脉冲波
+                    
+                    // 计算目标位置
+                    let targetX = this.ox + (dx * 0.1) + (dx/distCenter) * pulse;
+                    let targetY = this.oy + (dy * 0.1) + (dy/distCenter) * pulse;
+
+                    this.x = lerp(this.x, targetX, 0.1);
+                    this.y = lerp(this.y, targetY, 0.1);
+                } 
+                else if (emo === 'sad') {
+                    // 3. 悲伤 (Sad): 融化流淌 (Melting)
+                    // noise() 决定流淌的区域和速度
+                    let n = noise(this.ox * 0.01, t * 0.5);
+                    if (n > 0.45) {
+                        this.y += 2; // 下落速度
+                    }
+                    
+                    // 左右轻微液体摆动
+                    this.x = lerp(this.x, this.ox + sin(t + this.oy * 0.05) * 5, 0.1);
+
+                    // 循环机制：掉到底部后回到原位
+                    if (this.y > height) {
+                        this.y = this.oy;
+                        this.x = this.ox; 
+                    }
+                } 
+                else if (emo === 'angry') {
+                    // 4. 愤怒 (Angry): 高频震动 (Shaking) + 随机爆炸
+                    this.x = this.ox + random(-3, 3);
+                    this.y = this.oy + random(-3, 3);
+                    
+                    // 随机发生的剧烈位移
+                    if (random(1) < 0.02) {
+                        this.x += random(-30, 30);
+                        this.y += random(-30, 30);
+                    }
+                } 
+                else if (emo === 'anxious') {
+                    // 5. 焦虑 (Anxiety): 故障拉扯 (Glitch)
+                    // 偶尔水平大幅度位移
+                    if (random(1) < 0.1) {
+                        this.x = this.ox + random(-50, 50);
+                    } else {
+                        this.x = lerp(this.x, this.ox, 0.5); // 快速归位
+                    }
+                    // 垂直方向轻微压缩颤抖
+                    this.y = this.oy + sin(t * 50) * 1;
+                }
+            }
+
+            // 绘制逻辑
+            draw(emo) {
+                noStroke();
+                let c = palettes[emo]; // 获取当前颜色的RGB数组
+                let alpha = 255;       // 透明度
+
+                // --- 针对不同情感的特殊绘制 ---
+
+                if (emo === 'sad') {
+                    // 悲伤：下落过程中逐渐变透明
+                    alpha = map(this.y, this.oy, height, 255, 0);
+                    fill(c[0], c[1], c[2], alpha);
+                    rect(this.x, this.y, this.size, this.size);
+                } 
+                else if (emo === 'anxious') {
+                    // 焦虑：随机不绘制(丢帧效果) + 扫描线形状
+                    if (random(1) > 0.8) return; 
+                    fill(c[0], c[1], c[2], 200);
+                    rect(this.x, this.y, 6, 1); // 扁平长条
+                }
+                else if (emo === 'joy' && random(1) < 0.15) {
+                    // 喜悦：随机闪烁成十字星
+                    fill(c[0], c[1], c[2], alpha);
+                    // 绘制十字
+                    rect(this.x - 4, this.y, 8, 2);
+                    rect(this.x, this.y - 4, 2, 8);
+                } 
+                else if (emo === 'angry') {
+                    // 愤怒：尖锐碎片
+                    fill(c[0], c[1], c[2]);
+                    rect(this.x, this.y, random(2, 8), random(2, 8));
+                } 
+                else {
+                    // 默认 (Neutral): 圆点
+                    fill(c[0], c[1], c[2], alpha);
+                    ellipse(this.x, this.y, this.size, this.size);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
