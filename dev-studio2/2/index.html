@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotional Encryption - Writing System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #2a2520;
+            font-family: 'Georgia', serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Header */
+        #header {
+            background: transparent;
+            color: rgba(212, 197, 169, 0.4);
+            padding: 25px;
+            text-align: center;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        #header h1 {
+            font-size: 12px;
+            font-weight: normal;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+
+        #header p {
+            font-size: 9px;
+            color: rgba(168, 152, 118, 0.3);
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        /* Main Container - Full Screen */
+        #container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Canvas Panel - Full Screen Background */
+        #canvas-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Input Panel - Bottom Overlay */
+        #input-panel {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 800px;
+            background: rgba(42, 37, 32, 0.95);
+            padding: 25px 30px;
+            border-radius: 12px 12px 0 0;
+            border: 1px solid rgba(106, 95, 79, 0.3);
+            border-bottom: none;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(20px);
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 80px;
+            max-height: 150px;
+            padding: 15px;
+            font-family: 'Georgia', serif;
+            font-size: 14px;
+            line-height: 1.6;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(168, 152, 118, 0.2);
+            border-radius: 6px;
+            resize: vertical;
+            color: #d4c5a9;
+            transition: all 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: rgba(168, 152, 118, 0.5);
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        textarea::placeholder {
+            color: rgba(168, 152, 118, 0.4);
+            font-style: italic;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            background: rgba(74, 63, 47, 0.6);
+            color: #d4c5a9;
+            border: 1px solid rgba(106, 95, 79, 0.4);
+            border-radius: 6px;
+            font-family: 'Georgia', serif;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: rgba(74, 63, 47, 0.9);
+            border-color: rgba(168, 152, 118, 0.6);
+        }
+
+        button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Emotion Display */
+        #emotion-info {
+            margin-top: 15px;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 2px solid rgba(168, 152, 118, 0.4);
+            border-radius: 4px;
+            display: none;
+        }
+
+        #emotion-info.show {
+            display: block;
+        }
+
+        #emotion-info p {
+            font-size: 11px;
+            color: rgba(212, 197, 169, 0.8);
+            line-height: 1.6;
+        }
+
+        #emotion-info strong {
+            color: #d4c5a9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Loading indicator */
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(168, 152, 118, 0.6);
+            font-size: 11px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            display: none;
+            z-index: 50;
+        }
+
+        #loading.show {
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            #input-panel {
+                width: 100%;
+                border-radius: 0;
+                padding: 20px;
+            }
+            
+            textarea {
+                min-height: 60px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div id="header">
+        <h1>Emotional Encryption</h1>
+        <p>An Experimental Writing System / Archaeological Typography</p>
+    </div>
+
+    <!-- Main Container -->
+    <div id="container">
+        <!-- Canvas Panel - Full Screen -->
+        <div id="canvas-panel">
+            <div id="canvas-container"></div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading">Analyzing...</div>
+
+        <!-- Input Panel - Bottom -->
+        <div id="input-panel">
+            <textarea id="textInput" placeholder="Write your thoughts here..."></textarea>
+            
+            <button id="analyzeBtn" onclick="analyzeAndRender()">Transform</button>
+            
+            <!-- Emotion Detection Result -->
+            <div id="emotion-info">
+                <p id="emotion-result"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === Global Variables ===
+        let pg;
+        let particles = [];
+        let currentEmo = "neutral";
+        let currentText = "";
+        let canvasParent;
+
+        // === Emotion Color Palettes (Artifact Style) ===
+        const emotionStyles = {
+            neutral: {
+                color: [180, 180, 185],
+                bg: [42, 37, 32],
+                name: "Neutral"
+            },
+            repression: {
+                color: [180, 180, 185],
+                bg: [42, 37, 32],
+                name: "Repression / Anxiety"
+            },
+            anger: {
+                color: [120, 35, 30],
+                bg: [42, 37, 32],
+                name: "Anger / Rage"
+            },
+            joy: {
+                color: [200, 160, 60],
+                bg: [42, 37, 32],
+                name: "Joy / Exuberance"
+            },
+            melancholy: {
+                color: [80, 95, 110],
+                bg: [42, 37, 32],
+                name: "Melancholy / Sadness"
+            },
+            mystery: {
+                color: [90, 70, 100],
+                bg: [42, 37, 32],
+                name: "Mystery / Unknown"
+            },
+            love: {
+                color: [160, 100, 110],       // Main color (medium pink)
+                color2: [200, 130, 140],      // Light pink for alternating hearts
+                bg: [42, 37, 32],
+                name: "Love / Romance"
+            }
+        };
+
+        // === P5.js Setup ===
+        function setup() {
+            canvasParent = document.getElementById('canvas-container');
+            let canvas = createCanvas(windowWidth, windowHeight);
+            canvas.parent(canvasParent);
+            pixelDensity(1);
+            
+            pg = createGraphics(width, height);
+            
+            // Initial placeholder
+            generateParticles("WRITE\nSOMETHING");
+        }
+
+        // === P5.js Draw Loop ===
+        function draw() {
+            let style = emotionStyles[currentEmo];
+            background(style.bg[0], style.bg[1], style.bg[2]);
+
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update(currentEmo);
+                particles[i].draw(currentEmo);
+            }
+        }
+
+        // === Window Resize ===
+        function windowResized() {
+            let newWidth = canvasParent.offsetWidth;
+            let newHeight = canvasParent.offsetHeight;
+            resizeCanvas(newWidth, newHeight);
+            pg = createGraphics(width, height);
+            if (currentText) {
+                generateParticles(currentText);
+            }
+        }
+
+        // === Analyze Text with AI ===
+        async function analyzeAndRender() {
+            const textInput = document.getElementById('textInput').value.trim();
+            
+            if (!textInput) {
+                alert('Please enter some text first.');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('analyzeBtn').disabled = true;
+
+            try {
+                // Call emotion detection
+                const emotion = await detectEmotion(textInput);
+                
+                // Update UI
+                currentEmo = emotion;
+                currentText = textInput;
+                
+                document.getElementById('emotion-result').innerHTML = 
+                    `<strong>${emotionStyles[emotion].name}</strong>`;
+                document.getElementById('emotion-info').classList.add('show');
+                
+                // Generate particles
+                generateParticles(formatText(textInput));
+                
+            } catch (error) {
+                console.error('Analysis error:', error);
+                alert('Error analyzing text. Please try again.');
+            } finally {
+                document.getElementById('loading').classList.remove('show');
+                document.getElementById('analyzeBtn').disabled = false;
+            }
+        }
+
+        // === AI Emotion Detection ===
+        async function detectEmotion(text) {
+            // OPTION 1: Simple keyword matching (no API needed)
+            // Uncomment this for standalone version
+            /*
+            const keywords = {
+                joy: ['happy', 'joy', 'excited', 'love', 'celebration', 'wonderful', 'amazing', 'beautiful'],
+                melancholy: ['sad', 'cry', 'miss', 'lost', 'lonely', 'grief', 'sorrow', 'tears'],
+                anger: ['angry', 'hate', 'furious', 'mad', 'rage', 'frustrat', 'annoyed'],
+                repression: ['anxious', 'worry', 'nervous', 'stress', 'pressure', 'overwhelm', 'trapped'],
+                mystery: ['strange', 'mysterious', 'unknown', 'curious', 'weird', 'uncanny']
+            };
+            
+            const lowerText = text.toLowerCase();
+            let scores = {};
+            
+            for (let emotion in keywords) {
+                scores[emotion] = keywords[emotion].filter(word => 
+                    lowerText.includes(word)
+                ).length;
+            }
+            
+            let maxEmotion = 'neutral';
+            let maxScore = 0;
+            
+            for (let emotion in scores) {
+                if (scores[emotion] > maxScore) {
+                    maxScore = scores[emotion];
+                    maxEmotion = emotion;
+                }
+            }
+            
+            return maxEmotion;
+            */
+
+            // OPTION 2: Using Claude API
+            // You'll need to add your API key
+            try {
+                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': 'YOUR_API_KEY_HERE', // Replace with your actual API key
+                        'anthropic-version': '2023-06-01'
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-3-5-sonnet-20241022',
+                        max_tokens: 100,
+                        messages: [{
+                            role: 'user',
+                            content: `Analyze the emotional tone of this text and respond with ONLY ONE of these emotions: repression, anger, joy, melancholy, mystery, or love. 
+
+"love" should be used for romantic expressions, affection, tenderness, intimate feelings, or expressions of deep care for someone.
+
+Do not explain, just give the emotion name.
+
+Text: "${text}"`
+                        }]
+                    })
+                });
+
+                const data = await response.json();
+                const emotion = data.content[0].text.toLowerCase().trim();
+                
+                // Validate response
+                const validEmotions = ['repression', 'anger', 'joy', 'melancholy', 'mystery', 'love'];
+                if (validEmotions.includes(emotion)) {
+                    return emotion;
+                }
+                
+                return 'neutral';
+                
+            } catch (error) {
+                console.error('API Error:', error);
+                // Fallback to keyword matching
+                return keywordFallback(text);
+            }
+        }
+
+        // Fallback keyword detection
+        function keywordFallback(text) {
+            const keywords = {
+                love: ['love', 'adore', 'cherish', 'darling', 'sweetheart', 'heart', 'kiss', 'embrace', 'romance', 'affection', 'forever', 'soulmate', 'you mean', 'my everything', 'comfort'],
+                joy: ['happy', 'joy', 'excited', 'celebration', 'wonderful', 'amazing', 'beautiful', 'laugh'],
+                melancholy: ['sad', 'cry', 'miss', 'lost', 'lonely', 'grief', 'sorrow', 'tears', 'empty'],
+                anger: ['angry', 'hate', 'furious', 'mad', 'rage', 'frustrat', 'annoyed', 'damn'],
+                repression: ['anxious', 'worry', 'nervous', 'stress', 'pressure', 'overwhelm', 'trapped', 'fear'],
+                mystery: ['strange', 'mysterious', 'unknown', 'curious', 'weird', 'uncanny', 'secret']
+            };
+            
+            const lowerText = text.toLowerCase();
+            let scores = {};
+            
+            for (let emotion in keywords) {
+                scores[emotion] = keywords[emotion].filter(word => 
+                    lowerText.includes(word)
+                ).length;
+            }
+            
+            let maxEmotion = 'neutral';
+            let maxScore = 0;
+            
+            for (let emotion in scores) {
+                if (scores[emotion] > maxScore) {
+                    maxScore = scores[emotion];
+                    maxEmotion = emotion;
+                }
+            }
+            
+            return maxEmotion;
+        }
+
+        // === Format Text for Display ===
+        function formatText(text) {
+            // Clean text
+            text = text.trim();
+            
+            // Break long text into multiple lines based on character count
+            let words = text.split(' ');
+            let lines = [];
+            let currentLine = '';
+            
+            // Calculate characters per line based on text length
+            let totalChars = text.length;
+            let charsPerLine;
+            
+            // Love emotion needs balanced line length - ensure all text fits on screen
+            if (currentEmo === 'love') {
+                if (totalChars < 30) {
+                    charsPerLine = 50;
+                } else if (totalChars < 80) {
+                    charsPerLine = 80; // Increased from 60 - fit whole sentence in 1 line
+                } else if (totalChars < 150) {
+                    charsPerLine = 90; 
+                } else if (totalChars < 250) {
+                    charsPerLine = 100;
+                } else {
+                    charsPerLine = 110;
+                }
+            } else {
+                // Normal line breaking for other emotions
+                if (totalChars < 50) {
+                    charsPerLine = 30;
+                } else if (totalChars < 150) {
+                    charsPerLine = 40;
+                } else if (totalChars < 300) {
+                    charsPerLine = 50;
+                } else {
+                    charsPerLine = 60;
+                }
+            }
+            
+            for (let i = 0; i < words.length; i++) {
+                let testLine = currentLine + words[i] + ' ';
+                
+                if (testLine.length > charsPerLine && currentLine.length > 0) {
+                    lines.push(currentLine.trim());
+                    currentLine = words[i] + ' ';
+                } else {
+                    currentLine = testLine;
+                }
+            }
+            
+            if (currentLine.trim().length > 0) {
+                lines.push(currentLine.trim());
+            }
+            
+            console.log(`formatText - Input: "${text.substring(0, 50)}..." (${totalChars} chars)`);
+            console.log(`formatText - Lines generated: ${lines.length}, charsPerLine: ${charsPerLine}`);
+            console.log(`formatText - Lines:`, lines);
+            
+            // Limit maximum lines - slightly more for love to show complete sentences
+            let maxLines = currentEmo === 'love' ? 6 : 8; // Love: max 6 lines
+            if (lines.length > maxLines) {
+                console.log(`formatText - Truncating from ${lines.length} to ${maxLines} lines`);
+                lines = lines.slice(0, maxLines);
+                lines[maxLines - 1] += '...';
+            }
+            
+            return lines.join('\n');
+        }
+
+        // === Generate Particles from Text ===
+        function generateParticles(txt) {
+            particles = [];
+            
+            pg.clear();
+            pg.background(0, 0);
+            pg.fill(255);
+            pg.noStroke();
+            pg.textAlign(CENTER, CENTER);
+            
+            // Calculate appropriate font size based on text characteristics
+            let lines = txt.split('\n');
+            let lineCount = lines.length;
+            let longestLine = Math.max(...lines.map(l => l.length));
+            let totalChars = txt.length; // Define totalChars first
+            
+            // Adaptive font sizing algorithm
+            let fontSize;
+            
+            // Special handling for love emotion - needs bigger font for heart visibility
+            if (currentEmo === 'love') {
+                // Love emotion uses MUCH larger fonts because hearts need space
+                // But also needs to fit on screen width
+                
+                if (lineCount <= 1) {
+                    // Single line - calculate based on screen width
+                    fontSize = min(width / longestLine * 1.2, height * 0.16);
+                } else if (lineCount <= 2) {
+                    fontSize = min(width / longestLine * 1.2, height * 0.13);
+                } else if (lineCount <= 3) {
+                    fontSize = min(width / longestLine * 1.2, height * 0.11);
+                } else if (lineCount <= 4) {
+                    fontSize = min(width / longestLine * 1.3, height * 0.09);
+                } else if (lineCount <= 5) {
+                    fontSize = min(width / longestLine * 1.4, height * 0.08);
+                } else {
+                    fontSize = min(width / longestLine * 1.5, height * 0.07);
+                }
+                
+                // Love: minimal character density penalty (hearts need to be big)
+                if (totalChars > 300) {
+                    fontSize *= 0.95;
+                } else if (totalChars > 200) {
+                    fontSize *= 0.97;
+                }
+            } else {
+                // Normal font sizing for other emotions
+                if (lineCount <= 2 && longestLine < 30) {
+                    // Short text - large font
+                    fontSize = min(width, height) * 0.12;
+                } else if (lineCount <= 3 && longestLine < 50) {
+                    // Medium short text
+                    fontSize = min(width, height) * 0.08;
+                } else if (lineCount <= 5 && longestLine < 70) {
+                    // Medium text
+                    fontSize = min(width, height) * 0.06;
+                } else if (lineCount <= 7) {
+                    // Long text
+                    fontSize = min(width, height) * 0.045;
+                } else {
+                    // Very long text
+                    fontSize = min(width, height) * 0.035;
+                }
+                
+                // Character density adjustment
+                if (totalChars > 300) {
+                    fontSize *= 0.85;
+                } else if (totalChars > 200) {
+                    fontSize *= 0.9;
+                }
+            }
+            
+            // Set boundaries - higher minimum for love
+            if (currentEmo === 'love') {
+                fontSize = constrain(fontSize, 30, 150); // Love needs bigger minimum
+            } else {
+                fontSize = constrain(fontSize, 16, 120);
+            }
+            
+            pg.textSize(fontSize);
+            pg.textStyle(NORMAL);
+            
+            // Love emotion needs more line spacing for heart visibility
+            if (currentEmo === 'love') {
+                pg.textLeading(fontSize * 1.6); // More spacing for love
+            } else {
+                pg.textLeading(fontSize * 1.3); // Normal spacing
+            }
+            
+            pg.text(txt, width/2, height/2);
+            
+            pg.loadPixels();
+            
+            // Adaptive sampling density based on text amount
+            let step = 3;
+            
+            // For love emotion, use denser particles for clearer heart shape
+            if (currentEmo === 'love') {
+                step = 8; // Even fewer hearts with more spacing - very visible
+            } else if (totalChars > 200) {
+                step = 4; // Fewer particles for long text (performance)
+            } else if (width > 1500) {
+                step = 4; // Large screens
+            }
+
+            for (let y = 0; y < height; y += step) {
+                for (let x = 0; x < width; x += step) {
+                    let index = (x + y * width) * 4;
+                    
+                    if (pg.pixels[index + 3] > 128) {
+                        particles.push(new Particle(x, y, particles.length));
+                    }
+                }
+            }
+            
+            console.log(`Generated ${particles.length} particles for ${lineCount} lines, longest: ${longestLine} chars, fontSize: ${fontSize.toFixed(1)}`);
+        }
+
+        // === Particle Class ===
+        class Particle {
+            constructor(x, y, id) {
+                this.ox = x;
+                this.oy = y;
+                this.x = x;
+                this.y = y;
+                this.vx = 0;
+                this.vy = 0;
+                this.size = random(2, 4);
+                this.id = id; // Unique identifier for heart mapping
+            }
+
+            update(emo) {
+                let t = millis() * 0.001;
+
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vx *= 0.9;
+                this.vy *= 0.9;
+
+                if (emo === 'neutral') {
+                    this.x = lerp(this.x, this.ox, 0.1);
+                    this.y = lerp(this.y, this.oy + sin(t + this.ox * 0.05) * 2, 0.1);
+                }
+                else if (emo === 'repression') {
+                    // Eroding, fading
+                    this.x = lerp(this.x, this.ox, 0.05);
+                    this.y = lerp(this.y, this.oy, 0.05);
+                }
+                else if (emo === 'joy') {
+                    // Expanding outward
+                    let dx = this.ox - width/2;
+                    let dy = this.oy - height/2;
+                    let dist = sqrt(dx*dx + dy*dy);
+                    let pulse = sin(t * 3 - dist * 0.02) * 12;
+                    
+                    let targetX = this.ox + (dx * 0.08) + (dx/dist) * pulse;
+                    let targetY = this.oy + (dy * 0.08) + (dy/dist) * pulse;
+
+                    this.x = lerp(this.x, targetX, 0.1);
+                    this.y = lerp(this.y, targetY, 0.1);
+                }
+                else if (emo === 'melancholy') {
+                    // Melting downward
+                    let n = noise(this.ox * 0.01, t * 0.5);
+                    if (n > 0.45) {
+                        this.y += 1.5;
+                    }
+                    
+                    this.x = lerp(this.x, this.ox + sin(t + this.oy * 0.05) * 4, 0.1);
+
+                    if (this.y > height) {
+                        this.y = this.oy;
+                        this.x = this.ox;
+                    }
+                }
+                else if (emo === 'anger') {
+                    // Shaking violently
+                    this.x = this.ox + random(-4, 4);
+                    this.y = this.oy + random(-4, 4);
+                    
+                    if (random(1) < 0.02) {
+                        this.x += random(-40, 40);
+                        this.y += random(-40, 40);
+                    }
+                }
+                else if (emo === 'mystery') {
+                    // Glitch displacement
+                    if (random(1) < 0.08) {
+                        this.x = this.ox + random(-60, 60);
+                    } else {
+                        this.x = lerp(this.x, this.ox, 0.5);
+                    }
+                    this.y = this.oy + sin(t * 50) * 1;
+                }
+                else if (emo === 'love') {
+                    // Gentle floating with text shape intact
+                    let t = millis() * 0.001;
+                    
+                    // Soft breathing motion
+                    let floatX = sin(t + this.ox * 0.01) * 2;
+                    let floatY = cos(t * 0.8 + this.oy * 0.01) * 3;
+                    
+                    this.x = lerp(this.x, this.ox + floatX, 0.1);
+                    this.y = lerp(this.y, this.oy + floatY, 0.1);
+                }
+            }
+
+            draw(emo) {
+                let style = emotionStyles[emo];
+                let c = style.color;
+                
+                noStroke();
+
+                if (emo === 'repression') {
+                    // Random pixel deletion
+                    if (random(1) < 0.3) return;
+                    fill(c[0], c[1], c[2], random(100, 200));
+                    rect(this.x, this.y, this.size, this.size);
+                }
+                else if (emo === 'melancholy') {
+                    let alpha = map(this.y, this.oy, height, 255, 50);
+                    fill(c[0], c[1], c[2], alpha);
+                    rect(this.x, this.y, this.size, this.size);
+                }
+                else if (emo === 'mystery') {
+                    if (random(1) > 0.85) return;
+                    fill(c[0], c[1], c[2], 180);
+                    rect(this.x, this.y, 6, 1);
+                }
+                else if (emo === 'anger') {
+                    fill(c[0], c[1], c[2]);
+                    rect(this.x, this.y, random(2, 7), random(2, 7));
+                }
+                else if (emo === 'joy') {
+                    fill(c[0], c[1], c[2]);
+                    if (random(1) < 0.1) {
+                        // Star sparkle
+                        rect(this.x - 4, this.y, 8, 2);
+                        rect(this.x, this.y - 4, 2, 8);
+                    } else {
+                        ellipse(this.x, this.y, this.size, this.size);
+                    }
+                }
+                else if (emo === 'love') {
+                    // Use alternating colors for better text readability
+                    let style = emotionStyles[emo];
+                    
+                    // Alternate between two pink colors based on position
+                    // Creates a checkerboard pattern for better letter distinction
+                    let useColor2 = (floor(this.ox / 10) + floor(this.oy / 10)) % 2 === 0;
+                    let heartColor = useColor2 ? style.color2 : style.color;
+                    
+                    fill(heartColor[0], heartColor[1], heartColor[2], 230);
+                    noStroke();
+                    
+                    // Very large hearts with good spacing
+                    let s = this.size * 3.5;
+                    
+                    // Left lobe (circle)
+                    ellipse(this.x - s * 0.25, this.y - s * 0.15, s * 0.7, s * 0.7);
+                    // Right lobe (circle)
+                    ellipse(this.x + s * 0.25, this.y - s * 0.15, s * 0.7, s * 0.7);
+                    // Bottom point (triangle)
+                    triangle(
+                        this.x - s * 0.55, this.y - s * 0.1,
+                        this.x + s * 0.55, this.y - s * 0.1,
+                        this.x, this.y + s * 0.7
+                    );
+                }
+                else {
+                    fill(c[0], c[1], c[2]);
+                    ellipse(this.x, this.y, this.size, this.size);
+                }
+            }
+            
+            // Helper function to draw heart shape
+            drawHeart(x, y, size) {
+                push();
+                translate(x, y);
+                
+                // Simple heart using two circles and a triangle
+                let s = size;
+                let c = emotionStyles['love'].color;
+                
+                // Top two bumps
+                fill(c[0], c[1], c[2], 220);
+                ellipse(-s * 0.35, -s * 0.3, s, s);
+                ellipse(s * 0.35, -s * 0.3, s, s);
+                
+                // Bottom point
+                triangle(-s * 0.7, -s * 0.3, 
+                        s * 0.7, -s * 0.3, 
+                        0, s * 0.8);
+                
+                pop();
+            }
+        }
+
+        // Make function globally accessible
+        window.analyzeAndRender = analyzeAndRender;
+    </script>
+</body>
+</html>
