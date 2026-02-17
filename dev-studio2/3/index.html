@@ -67,7 +67,7 @@
             transition: transform 0.3s ease;
         }
 
-        /* Prompt Questions - Single Question Display */
+
         #prompt-questions {
             margin-bottom: 15px;
             color: rgba(212, 197, 169, 0.8);
@@ -189,6 +189,7 @@
 
         <!-- Input Panel - Bottom -->
         <div id="input-panel">
+
             <!-- Prompt Question - Single Question Display -->
             <div id="prompt-questions">
                 <p id="current-prompt"></p>
@@ -218,8 +219,7 @@
         let currentBgColor = [42, 37, 32];  // Start color
         let targetBgColor = [42, 37, 32];   // Target color
         let bgTransitionSpeed = 0.05;       // Smooth transition speed
-        
-        // === Prompt Questions System ===
+
         const promptQuestions = [
             "How do you feel right now?",
             "What's on your mind?",
@@ -608,7 +608,7 @@
 
             try {
                 // Call emotion detection
-                const emotion = await detectEmotion(textInput);
+                const emotion = detectEmotion(textInput);
                 
                 // Calculate emotion intensity
                 emotionIntensity = calculateIntensity(textInput);
@@ -639,105 +639,108 @@
             }
         }
 
-        // === AI Emotion Detection ===
-        async function detectEmotion(text) {
-            // OPTION 1: Simple keyword matching (no API needed)
-            // Uncomment this for standalone version
-            /*
-            const keywords = {
-                joy: ['happy', 'joy', 'excited', 'love', 'celebration', 'wonderful', 'amazing', 'beautiful'],
-                melancholy: ['sad', 'cry', 'miss', 'lost', 'lonely', 'grief', 'sorrow', 'tears'],
-                anger: ['angry', 'hate', 'furious', 'mad', 'rage', 'frustrat', 'annoyed'],
-                repression: ['anxious', 'worry', 'nervous', 'stress', 'pressure', 'overwhelm', 'trapped'],
-                mystery: ['strange', 'mysterious', 'unknown', 'curious', 'weird', 'uncanny']
-            };
-            
-            const lowerText = text.toLowerCase();
-            let scores = {};
-            
-            for (let emotion in keywords) {
-                scores[emotion] = keywords[emotion].filter(word => 
-                    lowerText.includes(word)
-                ).length;
-            }
-            
-            let maxEmotion = 'neutral';
-            let maxScore = 0;
-            
-            for (let emotion in scores) {
-                if (scores[emotion] > maxScore) {
-                    maxScore = scores[emotion];
-                    maxEmotion = emotion;
-                }
-            }
-            
-            return maxEmotion;
-            */
-
-            // OPTION 2: Using Claude API
-            // You'll need to add your API key
-            try {
-                const response = await fetch('https://api.anthropic.com/v1/messages', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-api-key': 'YOUR_API_KEY_HERE', // Replace with your actual API key
-                        'anthropic-version': '2023-06-01'
-                    },
-                    body: JSON.stringify({
-                        model: 'claude-3-5-sonnet-20241022',
-                        max_tokens: 100,
-                        messages: [{
-                            role: 'user',
-                            content: `Analyze the emotional tone of this text and respond with ONLY ONE of these emotions: repression, anger, joy, melancholy, mystery, or love. 
-
-Definitions:
-- "repression" = anxiety, worry, stress, nervous, pressure, fear, overwhelm, dread
-- "love" = romantic expressions, affection, tenderness, intimate feelings, deep care
-- "melancholy" = sadness, grief, longing, loss, emptiness
-- "anger" = rage, frustration, hate, fury
-- "joy" = happiness, celebration, achievement, excitement
-- "mystery" = strange, unknown, uncanny, curious
-
-Do not explain, just give the emotion name.
-
-Text: "${text}"`
-                        }]
-                    })
-                });
-
-                const data = await response.json();
-                const emotion = data.content[0].text.toLowerCase().trim();
-                
-                // Validate response
-                const validEmotions = ['repression', 'anger', 'joy', 'melancholy', 'mystery', 'love'];
-                if (validEmotions.includes(emotion)) {
-                    return emotion;
-                }
-                
-                return 'neutral';
-                
-            } catch (error) {
-                console.error('API Error:', error);
-                // Fallback to keyword matching
-                return keywordFallback(text);
-            }
+        // === Emotion Detection (keyword-based) ===
+        function detectEmotion(text) {
+            return keywordFallback(text);
         }
 
         // Fallback keyword detection
         function keywordFallback(text) {
+            // Normalize: lowercase + unify all apostrophe variants
+            const lowerText = text.toLowerCase()
+                .replace(/[\u2018\u2019\u02bc\u0060\u00b4]/g, "'");
+            
             const keywords = {
-                love: ['love', 'adore', 'cherish', 'darling', 'sweetheart', 'heart', 'kiss', 'embrace', 'romance', 'affection', 'forever', 'soulmate', 'you mean', 'my everything', 'comfort'],
-                joy: ['happy', 'joy', 'excited', 'celebration', 'wonderful', 'amazing', 'beautiful', 'laugh', 'achieve', 'dream'],
-                melancholy: ['sad', 'cry', 'miss', 'lost', 'lonely', 'grief', 'sorrow', 'tears', 'empty', 'gone'],
-                anger: ['angry', 'hate', 'furious', 'mad', 'rage', 'frustrat', 'annoyed', 'damn', 'unacceptable'],
-                repression: ['anxious', 'anxiety', 'worr', 'nervous', 'stress', 'pressure', 'overwhelm', 'trapped', 'fear', 'dread', 'panic'],
-                mystery: ['strange', 'mysterious', 'unknown', 'curious', 'weird', 'uncanny', 'secret']
+                melancholy: [
+                    'sad', 'sadness', 'cry', 'crying', 'cried', 'tears', 'weep',
+                    'grief', 'sorrow', 'miserable',
+                    'miss', 'missing', 'lost', 'gone', 'empty', 'emptiness', 'void', 'hollow',
+                    'lonely', 'loneliness', 'alone', 'isolated', 'abandoned', 'forgotten',
+                    'pain', 'painful', 'hurt', 'hurts', 'hurting',
+                    'ache', 'aching', 'sore', 'wound', 'wounded',
+                    'suffer', 'suffering', 'unbearable',
+                    'exhausted', 'drained', 'depleted', 'worn out', 'worn down',
+                    'numb', 'feel nothing', 'feeling nothing',
+                    'heavy', 'burden', 'broken', 'shattered', 'crushed',
+                    'hopeless', 'pointless', 'meaningless', 'worthless',
+                    'giving up', 'give up', 'no reason',
+                    'tired of', 'so tired', 'not okay', 'not fine',
+                    'invisible', 'disappear', 'no one understands', 'no one cares',
+                    'falling apart', 'fell apart', 'fall apart',
+                    'body feels', 'body feel', 'feel weak', 'feeling weak',
+                    'body hurts', 'everything hurts', 'it hurts',
+                    'no energy', 'no motivation', 'hard to get up'
+                ],
+                repression: [
+                    "can't sleep", 'cant sleep', 'cannot sleep', 'can not sleep',
+                    "can't rest", 'cant rest', 'cannot rest',
+                    "can't relax", 'cant relax', 'cannot relax',
+                    'sleepless', 'insomnia', 'awake at', 'up all night',
+                    'lying awake', 'wide awake', 'staring at the ceiling',
+                    "mind won't stop", 'mind wont stop', 'thoughts racing', 'overthinking',
+                    'keep thinking', 'keeps thinking',
+                    'anxious', 'anxiety', 'worry', 'worried', 'worrying',
+                    'nervous', 'on edge', 'uneasy', 'restless', 'tense',
+                    'fear', 'scared', 'afraid', 'terrified', 'dread', 'dreading', 'panic',
+                    'stressed', 'stress', 'pressure', 'overwhelmed', 'too much',
+                    "can't handle", 'cant handle', 'cannot handle',
+                    "can't cope", 'cant cope', 'cannot cope',
+                    'falling behind', 'deadline',
+                    'trapped', 'stuck', 'suffocating',
+                    "can't breathe", 'cant breathe', 'chest tight',
+                    'frozen', 'paralyzed', 'helpless', 'powerless',
+                    'holding back', 'pretending', 'fake smile', 'hiding', 'mask',
+                    'still awake', 'another night', '3am', '4am', '2am',
+                    'middle of the night', 'late at night', 'dark and quiet'
+                ],
+                anger: [
+                    'angry', 'anger', 'furious', 'fuming', 'livid', 'outraged',
+                    'rage', 'raging', 'enraged', 'seething',
+                    'hate', 'hatred', 'despise', 'loathe',
+                    'frustrated', 'frustration', 'annoyed', 'irritated', 'pissed',
+                    'fed up', 'sick of', 'had enough', 'enough is enough',
+                    'unfair', 'unjust', 'unacceptable', 'ridiculous', 'outrageous',
+                    'betrayed', 'lied to', 'manipulated', 'cheated',
+                    'want to scream', 'want to yell', 'could scream', 'could explode',
+                    'about to snap', 'losing it', 'lose my mind'
+                ],
+                joy: [
+                    'happy', 'happiness', 'joy', 'joyful', 'delighted', 'cheerful', 'glad',
+                    'excited', 'excitement', 'thrilled', 'ecstatic', 'elated',
+                    'over the moon', 'on top of the world',
+                    'proud', 'pride', 'achieved', 'accomplished', 'finally', 'made it',
+                    'i did it', 'success', 'dream came true',
+                    'grateful', 'thankful', 'blessed', 'lucky',
+                    'laugh', 'laughing', 'smile', 'smiling',
+                    'wonderful', 'amazing', 'fantastic', 'incredible',
+                    'love this', 'love it', 'best day', 'relief', 'relieved'
+                ],
+                love: [
+                    'love you', 'i love', 'in love', 'fell in love',
+                    'adore', 'cherish', 'treasure',
+                    'darling', 'sweetheart', 'my love', 'my heart', 'soulmate',
+                    'kiss', 'embrace', 'hold you', 'arms around',
+                    'miss you', 'missing you', 'think of you', 'think about you',
+                    'always thinking', 'you are always', "you're always",
+                    'need you', 'want you', 'only you', 'just you',
+                    'feel safe', 'feels like home', 'comfort',
+                    'forever', 'never leave', 'stay with you', 'grow old'
+                ],
+                mystery: [
+                    'strange', 'odd', 'weird', 'bizarre', 'peculiar', 'uncanny',
+                    'not sure', 'unsure', 'uncertain',
+                    "don't know", 'dont know',
+                    "can't explain", 'cant explain',
+                    'something feels', 'something seems', 'something off',
+                    "doesn't feel right", 'doesnt feel right', 'feels wrong', 'feels off',
+                    'surreal', 'unreal', 'dreamlike', 'not real',
+                    'disoriented', 'floating', 'in between', 'limbo', 'drifting',
+                    'mysterious', 'secret', 'hidden', 'unknown', 'unexplained',
+                    'haunting', 'haunted', 'curious'
+                ]
             };
             
-            const lowerText = text.toLowerCase();
             let scores = {};
-            
             for (let emotion in keywords) {
                 scores[emotion] = keywords[emotion].filter(word => 
                     lowerText.includes(word)
@@ -746,7 +749,6 @@ Text: "${text}"`
             
             let maxEmotion = 'neutral';
             let maxScore = 0;
-            
             for (let emotion in scores) {
                 if (scores[emotion] > maxScore) {
                     maxScore = scores[emotion];
