@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Emotional Encryption - Writing System</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+    
     <style>
         * {
             margin: 0;
@@ -13,18 +16,16 @@
         }
 
         body {
-            background: #2a2520;
-            font-family: 'Georgia', serif;
+            background: #1a1816; /* 深邃的底色 */
+            font-family: 'Cormorant Garamond', serif;
             overflow: hidden;
             height: 100vh;
+            color: #d4c5a9;
         }
 
-        /* Header - Hidden */
-        #header {
-            display: none;
-        }
+        /* Header - 保持隐藏 */
+        #header { display: none; }
 
-        /* Main Container - Full Screen */
         #container {
             width: 100%;
             height: 100vh;
@@ -33,7 +34,6 @@
             position: relative;
         }
 
-        /* Canvas Panel - Full Screen Background */
         #canvas-panel {
             position: absolute;
             top: 0;
@@ -43,166 +43,158 @@
             z-index: 1;
         }
 
-        #canvas-container {
-            width: 100%;
-            height: 100%;
-        }
+        #canvas-container { width: 100%; height: 100%; }
 
-        /* Input Panel - Bottom Overlay */
+        /* 优化后的输入面板：进一步下移，压紧内边距 */
         #input-panel {
             position: fixed;
-            bottom: 0;
+            bottom: 20px; /* 从 40px 下移到 20px */
             left: 50%;
             transform: translateX(-50%);
-            width: 90%;
-            max-width: 800px;
-            background: rgba(42, 37, 32, 0.95);
-            padding: 25px 30px;
-            border-radius: 12px 12px 0 0;
-            border: 1px solid rgba(106, 95, 79, 0.3);
-            border-bottom: none;
-            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(20px);
+            width: 85%;
+            max-width: 600px; 
+            background: rgba(30, 27, 24, 0.6);
+            padding: 20px 35px 25px 35px; /* 微调内边距，使其更紧凑 */
+            border-radius: 20px;
+            border: 1px solid rgba(212, 197, 169, 0.1);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
             z-index: 100;
-            transition: transform 0.3s ease;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-
+        /* 提示词：优雅、纤细 */
         #prompt-questions {
-            margin-bottom: 15px;
-            color: rgba(212, 197, 169, 0.8);
-            font-size: 14px;
-            line-height: 1.8;
+            margin-bottom: 15px; /* 缩减下边距 */
+            font-size: 20px;
             font-style: italic;
             text-align: center;
-            min-height: 25px;
+            opacity: 0.8;
+            letter-spacing: 1px;
+            min-height: 30px;
         }
 
+        /* 破除表单感：让输入框融入背景 */
         textarea {
             width: 100%;
-            min-height: 80px;
-            max-height: 150px;
-            padding: 15px;
-            font-family: 'Georgia', serif;
-            font-size: 14px;
+            min-height: 40px;
+            max-height: 120px;
+            padding: 5px 0 10px 0;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 18px;
             line-height: 1.6;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(168, 152, 118, 0.2);
-            border-radius: 6px;
-            resize: vertical;
-            color: #d4c5a9;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid rgba(212, 197, 169, 0.2);
+            border-radius: 0;
+            resize: none;
+            color: #f0e6d2;
             transition: all 0.3s;
+            text-align: center; 
         }
 
         textarea:focus {
             outline: none;
-            border-color: rgba(168, 152, 118, 0.5);
-            background: rgba(0, 0, 0, 0.5);
+            border-bottom: 1px solid rgba(212, 197, 169, 0.8);
+            background: transparent;
         }
 
         textarea::placeholder {
-            color: rgba(168, 152, 118, 0.4);
+            color: rgba(212, 197, 169, 0.3);
             font-style: italic;
         }
 
+        /* 按钮：极简的等宽字体指令感 */
         button {
+            display: block;
             width: 100%;
-            padding: 12px;
-            margin-top: 15px;
-            background: rgba(74, 63, 47, 0.6);
-            color: #d4c5a9;
-            border: 1px solid rgba(106, 95, 79, 0.4);
-            border-radius: 6px;
-            font-family: 'Georgia', serif;
-            font-size: 11px;
+            background: transparent;
+            color: rgba(212, 197, 169, 0.6);
+            border: none;
+            margin-top: 20px; /* 稍微缩紧与上方输入框的距离 */
+            padding: 10px;
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 4px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.4s ease;
+            position: relative;
         }
 
-        button:hover {
-            background: rgba(74, 63, 47, 0.9);
-            border-color: rgba(168, 152, 118, 0.6);
+        button::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 1px;
+            background-color: #d4c5a9;
+            transition: width 0.4s ease;
         }
 
-        button:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
+        button:hover { color: #d4c5a9; }
+        button:hover::after { width: 40px; }
+        button:disabled { opacity: 0.2; cursor: not-allowed; }
 
-        /* Emotion Display - Hidden */
-        #emotion-info {
-            display: none !important;
-        }
-
-        /* Loading indicator */
+        /* Loading 提示 */
         #loading {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: rgba(168, 152, 118, 0.6);
-            font-size: 11px;
-            letter-spacing: 3px;
+            color: rgba(212, 197, 169, 0.8);
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 5px;
             text-transform: uppercase;
             display: none;
             z-index: 50;
+            animation: pulse 1.5s infinite alternate;
         }
 
-        #loading.show {
-            display: block;
+        #loading.show { display: block; }
+
+        @keyframes pulse {
+            from { opacity: 0.3; }
+            to { opacity: 1; }
         }
 
-        /* Responsive */
+        /* 移动端适配 */
         @media (max-width: 768px) {
             #input-panel {
-                width: 100%;
-                border-radius: 0;
-                padding: 20px;
+                width: 95%;
+                bottom: 15px; /* 移动端贴得更近一点 */
+                padding: 15px 20px 20px 20px;
+                border-radius: 15px;
             }
-            
-            textarea {
-                min-height: 60px;
-                font-size: 13px;
-            }
+            textarea { font-size: 16px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Header -->
     <div id="header">
         <h1>Emotional Encryption</h1>
         <p>An Experimental Writing System / Archaeological Typography</p>
     </div>
 
-    <!-- Main Container -->
     <div id="container">
-        <!-- Canvas Panel - Full Screen -->
         <div id="canvas-panel">
             <div id="canvas-container"></div>
         </div>
 
-        <!-- Loading Indicator -->
-        <div id="loading">Analyzing...</div>
+        <div id="loading">Decrypting...</div>
 
-        <!-- Input Panel - Bottom -->
         <div id="input-panel">
-
-            <!-- Prompt Question - Single Question Display -->
             <div id="prompt-questions">
                 <p id="current-prompt"></p>
             </div>
             
             <textarea id="textInput" placeholder="Type your answer here..."></textarea>
-            
             <button id="analyzeBtn" onclick="analyzeAndRender()">Send</button>
-            
-            <!-- Emotion Detection Result -->
-            <div id="emotion-info">
-                <p id="emotion-result"></p>
-            </div>
         </div>
     </div>
 
@@ -213,13 +205,14 @@
         let currentEmo = "neutral";
         let currentText = "";
         let canvasParent;
-        let emotionIntensity = 0.5; // Emotion intensity (0-1)
+        let emotionIntensity = 0.5; 
         
         // Background color transition system
-        let currentBgColor = [42, 37, 32];  // Start color
-        let targetBgColor = [42, 37, 32];   // Target color
-        let bgTransitionSpeed = 0.05;       // Smooth transition speed
-
+        let currentBgColor = [26, 24, 22];  
+        let targetBgColor = [26, 24, 22];   
+        let bgTransitionSpeed = 0.02;       
+        
+        // === Prompt Questions System ===
         const promptQuestions = [
             "How do you feel right now?",
             "What's on your mind?",
@@ -233,225 +226,79 @@
         
         let currentPromptIndex = 0;
         
-        // Display first prompt on load
         function updatePrompt() {
             document.getElementById('current-prompt').textContent = promptQuestions[currentPromptIndex];
         }
         
-        // Cycle to next prompt after transformation
         function nextPrompt() {
             currentPromptIndex = (currentPromptIndex + 1) % promptQuestions.length;
             updatePrompt();
         }
 
+        // === Emotion Styles ===
+        const emotionStyles = {
+            neutral: { color: [180, 180, 185], bg: [26, 24, 22], name: "Neutral" },
+            repression: { color: [150, 150, 155], bg: [15, 15, 18], name: "Repression / Anxiety" },
+            anger: { color: [160, 40, 35], bg: [35, 10, 10], name: "Anger / Rage" },
+            joy: { color: [240, 180, 70], bg: [35, 25, 10], name: "Joy / Exuberance" },
+            melancholy: { color: [70, 100, 130], bg: [10, 15, 28], name: "Melancholy / Sadness" },
+            mystery: { color: [110, 80, 120], bg: [18, 10, 25], name: "Mystery / Unknown" },
+            love: { color: [180, 100, 115], color2: [220, 140, 150], bg: [30, 15, 20], name: "Love / Romance" }
+        };
+
         // === Advanced Tone Intensity Analyzer ===
-        // Captures not just word count, but the FORCE of expression
         function calculateIntensity(text) {
-            const analysis = {
-                wordCount: 0,
-                punctuation: { exclamation: 0, question: 0, multiPunct: 0 },
-                typography: { capsWords: 0, capsRatio: 0 },
-                emotionalDragging: { repeatedChars: 0, elongatedWords: [] },
-                intensifiers: { words: [], count: 0 },
-                rawScores: {},
-                finalIntensity: 0
-            };
-            
-            // === 1. WORD COUNT (Base Input Volume) ===
-            // Longer text = more sustained emotion
+            const analysis = { wordCount: 0, punctuation: { exclamation: 0, question: 0, multiPunct: 0 }, typography: { capsWords: 0, capsRatio: 0 }, emotionalDragging: { repeatedChars: 0 }, intensifiers: { count: 0 }, finalIntensity: 0 };
             const words = text.trim().split(/\s+/).filter(w => w.length > 0);
             analysis.wordCount = words.length;
             
-            // Progressive scaling: short bursts vs sustained expression
             let wordScore = 0;
-            if (analysis.wordCount <= 3) {
-                wordScore = analysis.wordCount * 0.03; // 0-0.09 for very short
-            } else if (analysis.wordCount <= 10) {
-                wordScore = 0.09 + (analysis.wordCount - 3) * 0.02; // 0.09-0.23
-            } else {
-                wordScore = 0.23 + Math.min((analysis.wordCount - 10) * 0.01, 0.17); // Max 0.4
-            }
-            analysis.rawScores.wordCount = wordScore;
+            if (analysis.wordCount <= 3) wordScore = analysis.wordCount * 0.03;
+            else if (analysis.wordCount <= 10) wordScore = 0.09 + (analysis.wordCount - 3) * 0.02;
+            else wordScore = 0.23 + Math.min((analysis.wordCount - 10) * 0.01, 0.17);
             
-            // === 2. PUNCTUATION (Emotional Markers) ===
-            // Multiple marks = exponential intensity
             analysis.punctuation.exclamation = (text.match(/!/g) || []).length;
             analysis.punctuation.question = (text.match(/\?/g) || []).length;
-            
-            // Detect clustered punctuation (!!!, ???, !?!?)
             const multiPunctPatterns = text.match(/[!?]{2,}/g) || [];
-            analysis.punctuation.multiPunct = multiPunctPatterns.length;
             
-            let punctScore = 0;
-            // Single exclamation/question
-            punctScore += analysis.punctuation.exclamation * 0.12;
-            punctScore += analysis.punctuation.question * 0.08;
-            
-            // BONUS for clusters: !! = +0.25, !!! = +0.4
+            let punctScore = (analysis.punctuation.exclamation * 0.12) + (analysis.punctuation.question * 0.08);
             multiPunctPatterns.forEach(cluster => {
                 if (cluster.length >= 3) punctScore += 0.4;
                 else if (cluster.length === 2) punctScore += 0.25;
             });
+            punctScore = Math.min(punctScore, 0.5);
             
-            punctScore = Math.min(punctScore, 0.5); // Cap at 0.5
-            analysis.rawScores.punctuation = punctScore;
-            
-            // === 3. TYPOGRAPHY (Visual Shouting) ===
-            // ALL CAPS = yelling/emphasis
             const capsWords = text.match(/\b[A-Z]{2,}\b/g) || [];
-            analysis.typography.capsWords = capsWords.length;
-            
-            // Calculate CAPS ratio (percentage of text in caps)
             const totalChars = text.replace(/\s/g, '').length;
             const capsChars = text.replace(/[^A-Z]/g, '').length;
             analysis.typography.capsRatio = totalChars > 0 ? capsChars / totalChars : 0;
             
-            let typoScore = 0;
-            // Per-word CAPS scoring
-            typoScore += analysis.typography.capsWords * 0.15;
+            let typoScore = capsWords.length * 0.15;
+            if (analysis.typography.capsRatio > 0.3) typoScore += 0.25;
+            else if (analysis.typography.capsRatio > 0.5) typoScore += 0.4;
+            typoScore = Math.min(typoScore, 0.45);
             
-            // BONUS if >30% of text is CAPS
-            if (analysis.typography.capsRatio > 0.3) {
-                typoScore += 0.25;
-            } else if (analysis.typography.capsRatio > 0.5) {
-                typoScore += 0.4; // Half or more text is CAPS
-            }
-            
-            typoScore = Math.min(typoScore, 0.45); // Cap at 0.45
-            analysis.rawScores.typography = typoScore;
-            
-            // === 4. EMOTIONAL DRAGGING (Repeated Characters) ===
-            // "sooooo", "noooo", "yessss" = stretching emotion
             const repeatedPatterns = text.match(/([a-z])\1{2,}/gi) || [];
-            analysis.emotionalDragging.repeatedChars = repeatedPatterns.length;
-            
-            // Extract the actual elongated words for context
-            repeatedPatterns.forEach(pattern => {
-                const wordMatch = text.match(new RegExp(`\\b\\w*${pattern}\\w*\\b`, 'i'));
-                if (wordMatch) analysis.emotionalDragging.elongatedWords.push(wordMatch[0]);
-            });
-            
             let dragScore = 0;
             repeatedPatterns.forEach(pattern => {
-                const repeatLength = pattern.length;
-                if (repeatLength >= 5) dragScore += 0.3; // "ooooo" = very intense
-                else if (repeatLength >= 3) dragScore += 0.2; // "ooo" = moderate
-                else dragScore += 0.1; // "oo" = slight
+                if (pattern.length >= 5) dragScore += 0.3;
+                else if (pattern.length >= 3) dragScore += 0.2;
+                else dragScore += 0.1;
             });
+            dragScore = Math.min(dragScore, 0.4);
             
-            dragScore = Math.min(dragScore, 0.4); // Cap at 0.4
-            analysis.rawScores.emotionalDragging = dragScore;
+            const extremeMatches = text.match(/\b(extremely|absolutely|completely|totally|utterly|entirely)\b/gi) || [];
+            const highMatches = text.match(/\b(very|really|so|super|incredibly|amazingly|terribly)\b/gi) || [];
+            let intensifierScore = (extremeMatches.length * 0.25) + (highMatches.length * 0.15);
+            intensifierScore = Math.min(intensifierScore, 0.45);
             
-            // === 5. INTENSIFIERS (Degree Adverbs) ===
-            // Words that amplify emotion
-            const intensifierPatterns = {
-                extreme: /\b(extremely|absolutely|completely|totally|utterly|entirely)\b/gi,
-                high: /\b(very|really|so|super|incredibly|amazingly|terribly)\b/gi,
-                medium: /\b(quite|pretty|fairly|rather|somewhat)\b/gi
-            };
-            
-            const extremeMatches = text.match(intensifierPatterns.extreme) || [];
-            const highMatches = text.match(intensifierPatterns.high) || [];
-            const mediumMatches = text.match(intensifierPatterns.medium) || [];
-            
-            analysis.intensifiers.words = [
-                ...extremeMatches.map(w => ({ word: w, level: 'extreme' })),
-                ...highMatches.map(w => ({ word: w, level: 'high' })),
-                ...mediumMatches.map(w => ({ word: w, level: 'medium' }))
-            ];
-            analysis.intensifiers.count = analysis.intensifiers.words.length;
-            
-            let intensifierScore = 0;
-            intensifierScore += extremeMatches.length * 0.25; // "extremely" = +0.25
-            intensifierScore += highMatches.length * 0.15;    // "very" = +0.15
-            intensifierScore += mediumMatches.length * 0.08;  // "quite" = +0.08
-            
-            intensifierScore = Math.min(intensifierScore, 0.45); // Cap at 0.45
-            analysis.rawScores.intensifiers = intensifierScore;
-            
-            // === FINAL INTENSITY CALCULATION ===
-            const totalScore = 
-                wordScore + 
-                punctScore + 
-                typoScore + 
-                dragScore + 
-                intensifierScore;
-            
-            // Map to 0.15-1.0 range with curve
-            // Low scores stay low, high scores saturate near 1.0
+            const totalScore = wordScore + punctScore + typoScore + dragScore + intensifierScore;
             let finalIntensity = 0.15 + (totalScore * 0.85);
-            finalIntensity = Math.pow(finalIntensity, 0.9); // Slight curve for natural feel
+            finalIntensity = Math.pow(finalIntensity, 0.9);
             finalIntensity = Math.max(0.15, Math.min(1.0, finalIntensity));
-            
-            analysis.finalIntensity = finalIntensity;
-            
-            // === CONSOLE LOGGING ===
-            console.log(`
-╔════════════════════════════════════════════════════════════╗
-║          TONE INTENSITY ANALYSIS                           ║
-╠════════════════════════════════════════════════════════════╣
-║ TEXT: "${text.substring(0, 40)}${text.length > 40 ? '...' : ''}"
-╠════════════════════════════════════════════════════════════╣
-║ 1. Word Count: ${analysis.wordCount} words → ${wordScore.toFixed(3)}
-║ 2. Punctuation:
-║    • Exclamations: ${analysis.punctuation.exclamation}
-║    • Questions: ${analysis.punctuation.question}
-║    • Clusters: ${analysis.punctuation.multiPunct} → ${punctScore.toFixed(3)}
-║ 3. Typography:
-║    • CAPS words: ${analysis.typography.capsWords}
-║    • CAPS ratio: ${(analysis.typography.capsRatio * 100).toFixed(1)}% → ${typoScore.toFixed(3)}
-║ 4. Emotional Dragging:
-║    • Repeated chars: ${analysis.emotionalDragging.repeatedChars}
-║    • Words: [${analysis.emotionalDragging.elongatedWords.join(', ')}] → ${dragScore.toFixed(3)}
-║ 5. Intensifiers:
-║    • Count: ${analysis.intensifiers.count}
-║    • Words: [${analysis.intensifiers.words.map(i => i.word).join(', ')}] → ${intensifierScore.toFixed(3)}
-╠════════════════════════════════════════════════════════════╣
-║ TOTAL RAW SCORE: ${totalScore.toFixed(3)}
-║ ★ FINAL INTENSITY: ${finalIntensity.toFixed(3)} ★
-╚════════════════════════════════════════════════════════════╝
-            `);
             
             return finalIntensity;
         }
-        const emotionStyles = {
-            neutral: {
-                color: [180, 180, 185],
-                bg: [42, 37, 32],
-                name: "Neutral"
-            },
-            repression: {
-                color: [150, 150, 155],
-                bg: [38, 38, 40],  // Slightly cooler grey
-                name: "Repression / Anxiety"
-            },
-            anger: {
-                color: [160, 40, 35],
-                bg: [48, 30, 28],  // Dark red-tinted
-                name: "Anger / Rage"
-            },
-            joy: {
-                color: [240, 180, 70],
-                bg: [45, 40, 30],  // Warm golden-brown
-                name: "Joy / Exuberance"
-            },
-            melancholy: {
-                color: [70, 100, 130],
-                bg: [32, 35, 40],  // Cool blue-grey
-                name: "Melancholy / Sadness"
-            },
-            mystery: {
-                color: [110, 80, 120],
-                bg: [38, 32, 42],  // Deep purple-tinted
-                name: "Mystery / Unknown"
-            },
-            love: {
-                color: [180, 100, 115],
-                color2: [220, 140, 150],
-                bg: [45, 35, 38],  // Warm rose-tinted
-                name: "Love / Romance"
-            }
-        };
 
         // === P5.js Setup ===
         function setup() {
@@ -461,111 +308,76 @@
             pixelDensity(1);
             
             pg = createGraphics(width, height);
+            currentBgColor = [...emotionStyles['neutral'].bg]; 
             
-            // Initial placeholder
             generateParticles("WRITE\nSOMETHING");
-            
-            // Display first prompt question
             updatePrompt();
         }
 
         // === P5.js Draw Loop ===
         function draw() {
             let style = emotionStyles[currentEmo];
-            let t = millis() * 0.001; // Time for animation
+            let t = millis() * 0.001; 
             
             // === SMOOTH BACKGROUND TRANSITION ===
-            // Update target color when emotion changes
             targetBgColor = style.bg;
-            
-            // Lerp current color towards target
             currentBgColor[0] = lerp(currentBgColor[0], targetBgColor[0], bgTransitionSpeed);
             currentBgColor[1] = lerp(currentBgColor[1], targetBgColor[1], bgTransitionSpeed);
             currentBgColor[2] = lerp(currentBgColor[2], targetBgColor[2], bgTransitionSpeed);
             
-            // Draw smoothly transitioning background
             background(currentBgColor[0], currentBgColor[1], currentBgColor[2]);
             
             // === Emotion-Specific Background Effects ===
-            
             if (currentEmo === 'anger') {
-                // Deep red flicker - low frequency pulsing
-                let flicker = sin(t * 0.5) * 0.5 + 0.5; // 0 to 1
-                let intensity = flicker * 15; // Subtle intensity
-                fill(120, 20, 20, intensity);
+                let flicker = sin(t * 0.5) * 0.5 + 0.5;
+                fill(120, 20, 20, flicker * 15);
                 rect(0, 0, width, height);
-                
-                // Random sharp flashes (rare)
                 if (random(1) < 0.01) {
                     fill(150, 30, 30, 30);
                     rect(0, 0, width, height);
                 }
             }
-            
             else if (currentEmo === 'love') {
-                // Soft pink gradient pulse from center
                 let pulse = sin(t * 0.8) * 0.5 + 0.5;
                 let gradient = drawingContext.createRadialGradient(
-                    width/2, height/2, 0,
-                    width/2, height/2, width * 0.8
+                    width/2, height/2, 0, width/2, height/2, width * 0.8
                 );
                 gradient.addColorStop(0, `rgba(200, 130, 140, ${pulse * 0.08})`);
                 gradient.addColorStop(1, 'rgba(42, 37, 32, 0)');
                 drawingContext.fillStyle = gradient;
                 drawingContext.fillRect(0, 0, width, height);
             }
-            
             else if (currentEmo === 'melancholy') {
-                // Blue-grey noise overlay
                 for (let i = 0; i < 50; i++) {
                     let x = random(width);
                     let y = random(height);
-                    let size = random(1, 3);
-                    let alpha = random(5, 15);
-                    fill(80, 100, 120, alpha);
+                    fill(80, 100, 120, random(5, 15));
                     noStroke();
-                    ellipse(x, y, size);
+                    ellipse(x, y, random(1, 3));
                 }
-                
-                // Slow downward gradient
                 let gradient = drawingContext.createLinearGradient(0, 0, 0, height);
                 gradient.addColorStop(0, 'rgba(42, 37, 32, 0)');
                 gradient.addColorStop(1, 'rgba(60, 75, 90, 0.15)');
                 drawingContext.fillStyle = gradient;
                 drawingContext.fillRect(0, 0, width, height);
             }
-            
-            // Joy has no background effect - clean particles only
-            
             else if (currentEmo === 'repression') {
-                // Static noise overlay - anxiety texture
                 for (let i = 0; i < 100; i++) {
-                    let x = random(width);
-                    let y = random(height);
-                    let alpha = random(3, 10);
-                    stroke(200, 200, 200, alpha);
-                    point(x, y);
+                    stroke(200, 200, 200, random(3, 10));
+                    point(random(width), random(height));
                 }
-                
-                // Breathing vignette
                 let vignette = sin(t * 0.6) * 0.3 + 0.7;
                 let gradient = drawingContext.createRadialGradient(
-                    width/2, height/2, width * 0.3,
-                    width/2, height/2, width * 0.8
+                    width/2, height/2, width * 0.3, width/2, height/2, width * 0.8
                 );
                 gradient.addColorStop(0, 'rgba(42, 37, 32, 0)');
                 gradient.addColorStop(1, `rgba(20, 20, 22, ${vignette * 0.3})`);
                 drawingContext.fillStyle = gradient;
                 drawingContext.fillRect(0, 0, width, height);
             }
-            
             else if (currentEmo === 'mystery') {
-                // Shifting purple haze
-                let shift = sin(t * 0.4) * 20 + 90;
-                fill(shift, 70, 100, 8);
+                fill(sin(t * 0.4) * 20 + 90, 70, 100, 8);
                 rect(0, 0, width, height);
-                
-                // Scanline effect
                 if (frameCount % 2 === 0) {
                     stroke(110, 90, 120, 15);
                     strokeWeight(1);
@@ -575,26 +387,20 @@
                 }
             }
 
-            // Draw particles on top of background effects
             for (let i = 0; i < particles.length; i++) {
                 particles[i].update(currentEmo);
                 particles[i].draw(currentEmo);
             }
         }
 
-        // === Window Resize ===
         function windowResized() {
-            let newWidth = canvasParent.offsetWidth;
-            let newHeight = canvasParent.offsetHeight;
-            resizeCanvas(newWidth, newHeight);
+            resizeCanvas(windowWidth, windowHeight);
             pg = createGraphics(width, height);
-            if (currentText) {
-                generateParticles(currentText);
-            }
+            if (currentText) generateParticles(currentText);
         }
 
-        // === Analyze Text with AI ===
-        async function analyzeAndRender() {
+        // === Analyze Text (纯本地运算版本) ===
+        function analyzeAndRender() {
             const textInput = document.getElementById('textInput').value.trim();
             
             if (!textInput) {
@@ -602,151 +408,93 @@
                 return;
             }
 
-            // Show loading
             document.getElementById('loading').classList.add('show');
             document.getElementById('analyzeBtn').disabled = true;
 
-            try {
-                // Call emotion detection
-                const emotion = detectEmotion(textInput);
-                
-                // Calculate emotion intensity
-                emotionIntensity = calculateIntensity(textInput);
-                
-                // Update UI
-                currentEmo = emotion;
-                currentText = textInput;
-                
-                document.getElementById('emotion-result').innerHTML = 
-                    `<strong>${emotionStyles[emotion].name}</strong>`;
-                document.getElementById('emotion-info').classList.add('show');
-                
-                // Generate particles
-                generateParticles(formatText(textInput));
-                
-                // Move to next prompt question
-                nextPrompt();
-                
-                // Clear textarea for next input
-                document.getElementById('textInput').value = '';
-                
-            } catch (error) {
-                console.error('Analysis error:', error);
-                alert('Error analyzing text. Please try again.');
-            } finally {
-                document.getElementById('loading').classList.remove('show');
-                document.getElementById('analyzeBtn').disabled = false;
-            }
+            setTimeout(() => {
+                try {
+                    const emotion = detectEmotion(textInput);
+                    emotionIntensity = calculateIntensity(textInput);
+                    
+                    currentEmo = emotion;
+                    currentText = textInput;
+                    
+                    // 已移除更新和显示 emotion-info 的相关代码
+                    
+                    generateParticles(formatText(textInput));
+                    nextPrompt();
+                    document.getElementById('textInput').value = '';
+                    
+                } catch (error) {
+                    console.error('Analysis error:', error);
+                } finally {
+                    document.getElementById('loading').classList.remove('show');
+                    document.getElementById('analyzeBtn').disabled = false;
+                }
+            }, 600); 
         }
 
-        // === Emotion Detection (keyword-based) ===
+        // === 超级扩充版：本地情绪词库检测 ===
         function detectEmotion(text) {
-            return keywordFallback(text);
-        }
-
-        // Fallback keyword detection
-        function keywordFallback(text) {
-            // Normalize: lowercase + unify all apostrophe variants
-            const lowerText = text.toLowerCase()
-                .replace(/[\u2018\u2019\u02bc\u0060\u00b4]/g, "'");
+            const cleanText = text.toLowerCase().replace(/['"’]/g, '');
             
-            const keywords = {
-                melancholy: [
-                    'sad', 'sadness', 'cry', 'crying', 'cried', 'tears', 'weep',
-                    'grief', 'sorrow', 'miserable',
-                    'miss', 'missing', 'lost', 'gone', 'empty', 'emptiness', 'void', 'hollow',
-                    'lonely', 'loneliness', 'alone', 'isolated', 'abandoned', 'forgotten',
-                    'pain', 'painful', 'hurt', 'hurts', 'hurting',
-                    'ache', 'aching', 'sore', 'wound', 'wounded',
-                    'suffer', 'suffering', 'unbearable',
-                    'exhausted', 'drained', 'depleted', 'worn out', 'worn down',
-                    'numb', 'feel nothing', 'feeling nothing',
-                    'heavy', 'burden', 'broken', 'shattered', 'crushed',
-                    'hopeless', 'pointless', 'meaningless', 'worthless',
-                    'giving up', 'give up', 'no reason',
-                    'tired of', 'so tired', 'not okay', 'not fine',
-                    'invisible', 'disappear', 'no one understands', 'no one cares',
-                    'falling apart', 'fell apart', 'fall apart',
-                    'body feels', 'body feel', 'feel weak', 'feeling weak',
-                    'body hurts', 'everything hurts', 'it hurts',
-                    'no energy', 'no motivation', 'hard to get up'
-                ],
+            const dictionary = {
                 repression: [
-                    "can't sleep", 'cant sleep', 'cannot sleep', 'can not sleep',
-                    "can't rest", 'cant rest', 'cannot rest',
-                    "can't relax", 'cant relax', 'cannot relax',
-                    'sleepless', 'insomnia', 'awake at', 'up all night',
-                    'lying awake', 'wide awake', 'staring at the ceiling',
-                    "mind won't stop", 'mind wont stop', 'thoughts racing', 'overthinking',
-                    'keep thinking', 'keeps thinking',
-                    'anxious', 'anxiety', 'worry', 'worried', 'worrying',
-                    'nervous', 'on edge', 'uneasy', 'restless', 'tense',
-                    'fear', 'scared', 'afraid', 'terrified', 'dread', 'dreading', 'panic',
-                    'stressed', 'stress', 'pressure', 'overwhelmed', 'too much',
-                    "can't handle", 'cant handle', 'cannot handle',
-                    "can't cope", 'cant cope', 'cannot cope',
-                    'falling behind', 'deadline',
-                    'trapped', 'stuck', 'suffocating',
-                    "can't breathe", 'cant breathe', 'chest tight',
-                    'frozen', 'paralyzed', 'helpless', 'powerless',
-                    'holding back', 'pretending', 'fake smile', 'hiding', 'mask',
-                    'still awake', 'another night', '3am', '4am', '2am',
-                    'middle of the night', 'late at night', 'dark and quiet'
+                    'anxious', 'anxiety', 'worry', 'worried', 'nervous', 'stress', 'pressure', 
+                    'overwhelm', 'trapped', 'stuck', 'fear', 'scared', 'terrify', 'dread', 'panic',
+                    'cant breathe', 'cannot breathe', 'suffocat', 'cant sleep', 'cannot sleep', 
+                    'insomnia', 'awake at night', 'overthink', 'racing thought', 'on edge', 
+                    'too much', 'cant handle', 'losing it', 'break down', 'paralyz', 'heavy chest', 
+                    'bottled up', 'hide', 'hiding', 'restless', 'burnout'
+                ],
+                melancholy: [
+                    'sad', 'cry', 'tears', 'weep', 'grief', 'sorrow', 'heartbreak', 'miss you', 
+                    'lost', 'gone', 'empty', 'hollow', 'lonely', 'alone', 'abandon', 'pain', 
+                    'hurt', 'ache', 'suffer', 'numb', 'exhausted', 'drained', 'broken', 'shatter', 
+                    'hopeless', 'pointless', 'meaningless', 'worthless', 'tired of', 'not okay', 
+                    'fall apart', 'cant go on', 'giving up', 'depress', 'darkness', 'despair'
                 ],
                 anger: [
-                    'angry', 'anger', 'furious', 'fuming', 'livid', 'outraged',
-                    'rage', 'raging', 'enraged', 'seething',
-                    'hate', 'hatred', 'despise', 'loathe',
-                    'frustrated', 'frustration', 'annoyed', 'irritated', 'pissed',
-                    'fed up', 'sick of', 'had enough', 'enough is enough',
-                    'unfair', 'unjust', 'unacceptable', 'ridiculous', 'outrageous',
-                    'betrayed', 'lied to', 'manipulated', 'cheated',
-                    'want to scream', 'want to yell', 'could scream', 'could explode',
-                    'about to snap', 'losing it', 'lose my mind'
+                    'angry', 'anger', 'hate', 'furious', 'rage', 'mad', 'outrag', 'frustrat', 
+                    'annoy', 'irritat', 'livid', 'unfair', 'unacceptable', 'ridiculous', 'betray', 
+                    'sick of', 'fed up', 'had enough', 'scream', 'explode', 'damn', 'pissed', 
+                    'bullshit', 'destroy', 'revenge', 'resent', 'boiling', 'punch', 'shut up'
                 ],
                 joy: [
-                    'happy', 'happiness', 'joy', 'joyful', 'delighted', 'cheerful', 'glad',
-                    'excited', 'excitement', 'thrilled', 'ecstatic', 'elated',
-                    'over the moon', 'on top of the world',
-                    'proud', 'pride', 'achieved', 'accomplished', 'finally', 'made it',
-                    'i did it', 'success', 'dream came true',
-                    'grateful', 'thankful', 'blessed', 'lucky',
-                    'laugh', 'laughing', 'smile', 'smiling',
-                    'wonderful', 'amazing', 'fantastic', 'incredible',
-                    'love this', 'love it', 'best day', 'relief', 'relieved'
+                    'happy', 'happiness', 'joy', 'excit', 'thrill', 'wonder', 'amaz', 'fantastic', 
+                    'great', 'celebrat', 'proud', 'achiev', 'dream', 'finally', 'made it', 
+                    'grateful', 'thankful', 'blessed', 'laugh', 'smile', 'relief', 'perfect', 
+                    'beautiful', 'sunshine', 'alive', 'win', 'won', 'delight'
                 ],
                 love: [
-                    'love you', 'i love', 'in love', 'fell in love',
-                    'adore', 'cherish', 'treasure',
-                    'darling', 'sweetheart', 'my love', 'my heart', 'soulmate',
-                    'kiss', 'embrace', 'hold you', 'arms around',
-                    'miss you', 'missing you', 'think of you', 'think about you',
-                    'always thinking', 'you are always', "you're always",
-                    'need you', 'want you', 'only you', 'just you',
-                    'feel safe', 'feels like home', 'comfort',
-                    'forever', 'never leave', 'stay with you', 'grow old'
+                    'love', 'adore', 'cherish', 'darling', 'sweetheart', 'kiss', 'embrace', 
+                    'romance', 'affection', 'forever', 'soulmate', 'think of you', 'think about you', 
+                    'only you', 'need you', 'want you', 'my heart', 'comfort', 'you mean', 'safe', 
+                    'together', 'hold me', 'butterfly', 'warm'
                 ],
                 mystery: [
-                    'strange', 'odd', 'weird', 'bizarre', 'peculiar', 'uncanny',
-                    'not sure', 'unsure', 'uncertain',
-                    "don't know", 'dont know',
-                    "can't explain", 'cant explain',
-                    'something feels', 'something seems', 'something off',
-                    "doesn't feel right", 'doesnt feel right', 'feels wrong', 'feels off',
-                    'surreal', 'unreal', 'dreamlike', 'not real',
-                    'disoriented', 'floating', 'in between', 'limbo', 'drifting',
-                    'mysterious', 'secret', 'hidden', 'unknown', 'unexplained',
-                    'haunting', 'haunted', 'curious'
+                    'strange', 'mysterious', 'unknown', 'curious', 'weird', 'uncanny', 'secret', 
+                    'hidden', 'something feels', 'doesnt feel right', 'cant explain', 'not sure what', 
+                    'surreal', 'disorient', 'confus', 'foggy', 'blur', 'ghost', 'haunt', 'deja vu', 
+                    'glitch', 'dreaming', 'unreal'
                 ]
             };
-            
-            let scores = {};
-            for (let emotion in keywords) {
-                scores[emotion] = keywords[emotion].filter(word => 
-                    lowerText.includes(word)
-                ).length;
+
+            let scores = { melancholy: 0, repression: 0, anger: 0, joy: 0, love: 0, mystery: 0 };
+            let matchedSomething = false;
+
+            for (let emotion in dictionary) {
+                dictionary[emotion].forEach(word => {
+                    if (cleanText.includes(word)) {
+                        scores[emotion] += 1;
+                        if (word.includes(' ')) scores[emotion] += 2; 
+                        matchedSomething = true;
+                    }
+                });
             }
-            
+
+            if (!matchedSomething) return 'neutral';
+
             let maxEmotion = 'neutral';
             let maxScore = 0;
             for (let emotion in scores) {
@@ -755,53 +503,34 @@
                     maxEmotion = emotion;
                 }
             }
-            
             return maxEmotion;
         }
 
         // === Format Text for Display ===
         function formatText(text) {
-            // Clean text
             text = text.trim();
-            
-            // Break long text into multiple lines based on character count
             let words = text.split(' ');
             let lines = [];
             let currentLine = '';
             
-            // Calculate characters per line based on text length
             let totalChars = text.length;
             let charsPerLine;
             
-            // Love emotion needs balanced line length - ensure all text fits on screen
             if (currentEmo === 'love') {
-                if (totalChars < 30) {
-                    charsPerLine = 50;
-                } else if (totalChars < 80) {
-                    charsPerLine = 80; // Increased from 60 - fit whole sentence in 1 line
-                } else if (totalChars < 150) {
-                    charsPerLine = 90; 
-                } else if (totalChars < 250) {
-                    charsPerLine = 100;
-                } else {
-                    charsPerLine = 110;
-                }
+                if (totalChars < 30) charsPerLine = 50;
+                else if (totalChars < 80) charsPerLine = 80; 
+                else if (totalChars < 150) charsPerLine = 90; 
+                else if (totalChars < 250) charsPerLine = 100;
+                else charsPerLine = 110;
             } else {
-                // Normal line breaking for other emotions
-                if (totalChars < 50) {
-                    charsPerLine = 30;
-                } else if (totalChars < 150) {
-                    charsPerLine = 40;
-                } else if (totalChars < 300) {
-                    charsPerLine = 50;
-                } else {
-                    charsPerLine = 60;
-                }
+                if (totalChars < 50) charsPerLine = 30;
+                else if (totalChars < 150) charsPerLine = 40;
+                else if (totalChars < 300) charsPerLine = 50;
+                else charsPerLine = 60;
             }
             
             for (let i = 0; i < words.length; i++) {
                 let testLine = currentLine + words[i] + ' ';
-                
                 if (testLine.length > charsPerLine && currentLine.length > 0) {
                     lines.push(currentLine.trim());
                     currentLine = words[i] + ' ';
@@ -809,148 +538,74 @@
                     currentLine = testLine;
                 }
             }
+            if (currentLine.trim().length > 0) lines.push(currentLine.trim());
             
-            if (currentLine.trim().length > 0) {
-                lines.push(currentLine.trim());
-            }
-            
-            console.log(`formatText - Input: "${text.substring(0, 50)}..." (${totalChars} chars)`);
-            console.log(`formatText - Lines generated: ${lines.length}, charsPerLine: ${charsPerLine}`);
-            console.log(`formatText - Lines:`, lines);
-            
-            // Limit maximum lines - slightly more for love to show complete sentences
-            let maxLines = currentEmo === 'love' ? 6 : 8; // Love: max 6 lines
+            let maxLines = currentEmo === 'love' ? 6 : 8; 
             if (lines.length > maxLines) {
-                console.log(`formatText - Truncating from ${lines.length} to ${maxLines} lines`);
                 lines = lines.slice(0, maxLines);
                 lines[maxLines - 1] += '...';
             }
-            
             return lines.join('\n');
         }
 
-        // === Generate Particles from Text ===
+        // === Generate Particles ===
         function generateParticles(txt) {
             particles = [];
-            
             pg.clear();
             pg.background(0, 0);
             pg.fill(255);
             pg.noStroke();
             pg.textAlign(CENTER, CENTER);
             
-            // Calculate appropriate font size based on text characteristics
             let lines = txt.split('\n');
             let lineCount = lines.length;
             let longestLine = Math.max(...lines.map(l => l.length));
-            let totalChars = txt.length; // Define totalChars first
-            
-            // Adaptive font sizing algorithm
+            let totalChars = txt.length; 
             let fontSize;
             
-            // Special handling for love emotion - needs bigger font for heart visibility
             if (currentEmo === 'love') {
-                // Love emotion uses MUCH larger fonts because hearts need space
-                // But also needs to fit on screen width
-                
-                if (lineCount <= 1) {
-                    // Single line - calculate based on screen width
-                    fontSize = min(width / longestLine * 1.2, height * 0.16);
-                } else if (lineCount <= 2) {
-                    fontSize = min(width / longestLine * 1.2, height * 0.13);
-                } else if (lineCount <= 3) {
-                    fontSize = min(width / longestLine * 1.2, height * 0.11);
-                } else if (lineCount <= 4) {
-                    fontSize = min(width / longestLine * 1.3, height * 0.09);
-                } else if (lineCount <= 5) {
-                    fontSize = min(width / longestLine * 1.4, height * 0.08);
-                } else {
-                    fontSize = min(width / longestLine * 1.5, height * 0.07);
-                }
-                
-                // Love: minimal character density penalty (hearts need to be big)
-                if (totalChars > 300) {
-                    fontSize *= 0.95;
-                } else if (totalChars > 200) {
-                    fontSize *= 0.97;
-                }
+                if (lineCount <= 1) fontSize = min(width / longestLine * 1.2, height * 0.16);
+                else if (lineCount <= 2) fontSize = min(width / longestLine * 1.2, height * 0.13);
+                else if (lineCount <= 3) fontSize = min(width / longestLine * 1.2, height * 0.11);
+                else if (lineCount <= 4) fontSize = min(width / longestLine * 1.3, height * 0.09);
+                else if (lineCount <= 5) fontSize = min(width / longestLine * 1.4, height * 0.08);
+                else fontSize = min(width / longestLine * 1.5, height * 0.07);
+                if (totalChars > 300) fontSize *= 0.95;
+                else if (totalChars > 200) fontSize *= 0.97;
+                fontSize = constrain(fontSize, 30, 150); 
             } else {
-                // Normal font sizing for other emotions
-                if (lineCount <= 2 && longestLine < 30) {
-                    // Short text - large font
-                    fontSize = min(width, height) * 0.12;
-                } else if (lineCount <= 3 && longestLine < 50) {
-                    // Medium short text
-                    fontSize = min(width, height) * 0.08;
-                } else if (lineCount <= 5 && longestLine < 70) {
-                    // Medium text
-                    fontSize = min(width, height) * 0.06;
-                } else if (lineCount <= 7) {
-                    // Long text
-                    fontSize = min(width, height) * 0.045;
-                } else {
-                    // Very long text
-                    fontSize = min(width, height) * 0.035;
-                }
-                
-                // Character density adjustment
-                if (totalChars > 300) {
-                    fontSize *= 0.85;
-                } else if (totalChars > 200) {
-                    fontSize *= 0.9;
-                }
-            }
-            
-            // Set boundaries - higher minimum for love
-            if (currentEmo === 'love') {
-                fontSize = constrain(fontSize, 30, 150); // Love needs bigger minimum
-            } else {
+                if (lineCount <= 2 && longestLine < 30) fontSize = min(width, height) * 0.12;
+                else if (lineCount <= 3 && longestLine < 50) fontSize = min(width, height) * 0.08;
+                else if (lineCount <= 5 && longestLine < 70) fontSize = min(width, height) * 0.06;
+                else if (lineCount <= 7) fontSize = min(width, height) * 0.045;
+                else fontSize = min(width, height) * 0.035;
+                if (totalChars > 300) fontSize *= 0.85;
+                else if (totalChars > 200) fontSize *= 0.9;
                 fontSize = constrain(fontSize, 16, 120);
             }
             
+            pg.textFont('Cormorant Garamond');
             pg.textSize(fontSize);
             
-            // Love emotion uses BOLD font for better letter clarity
-            if (currentEmo === 'love') {
-                pg.textStyle(BOLD);
-            } else {
-                pg.textStyle(NORMAL);
-            }
+            if (currentEmo === 'love') pg.textStyle(BOLD);
+            else pg.textStyle(NORMAL);
             
-            // Love emotion needs more line spacing for heart visibility
-            if (currentEmo === 'love') {
-                pg.textLeading(fontSize * 1.6); // More spacing for love
-            } else {
-                pg.textLeading(fontSize * 1.3); // Normal spacing
-            }
+            if (currentEmo === 'love') pg.textLeading(fontSize * 1.6);
+            else pg.textLeading(fontSize * 1.3);
             
             pg.text(txt, width/2, height/2);
-            
             pg.loadPixels();
             
-            // Adaptive sampling density based on text amount
-            let step = 3;
-            
-            // For love emotion, use denser particles for clearer heart shape
-            if (currentEmo === 'love') {
-                step = 4; // Denser particles to preserve letter details
-            } else if (totalChars > 200) {
-                step = 4; // Fewer particles for long text (performance)
-            } else if (width > 1500) {
-                step = 4; // Large screens
-            }
+            let step = currentEmo === 'love' ? 4 : (totalChars > 200 || width > 1500 ? 4 : 3);
 
             for (let y = 0; y < height; y += step) {
                 for (let x = 0; x < width; x += step) {
                     let index = (x + y * width) * 4;
-                    
                     if (pg.pixels[index + 3] > 128) {
                         particles.push(new Particle(x, y, particles.length));
                     }
                 }
             }
-            
-            console.log(`Generated ${particles.length} particles for ${lineCount} lines, longest: ${longestLine} chars, fontSize: ${fontSize.toFixed(1)}`);
         }
 
         // === Particle Class ===
@@ -963,11 +618,9 @@
                 this.vx = 0;
                 this.vy = 0;
                 this.size = random(2, 4);
-                this.id = id;
+                this.id = id; 
                 
-                // SKELETON SYSTEM: 30% of particles are "skeleton" particles
-                // These maintain letter structure with minimal emotional response
-                this.isSkeleton = random(1) < 0.3;
+                this.isCore = random(1) < 0.35; 
             }
 
             update(emo) {
@@ -977,166 +630,129 @@
                 this.y += this.vy;
                 this.vx *= 0.9;
                 this.vy *= 0.9;
+
+                let d = dist(mouseX, mouseY, this.ox, this.oy);
+                let revealRadius = 150; 
                 
-                // === SKELETON PARTICLE SYSTEM ===
-                // Skeleton particles have VERY LOW emotional sensitivity
-                // They anchor the letter structure
-                if (this.isSkeleton) {
-                    // Only subtle breathing motion - no emotion-specific behavior
-                    let breathe = sin(t + this.ox * 0.02) * 0.5;
-                    this.x = lerp(this.x, this.ox, 0.15);
-                    this.y = lerp(this.y, this.oy + breathe, 0.15);
-                    return; // Skip all emotion-specific transformations
-                }
+                if (d < revealRadius) {
+                    let pullStrength = map(d, 0, revealRadius, 0.4, 0.05);
+                    this.x = lerp(this.x, this.ox, pullStrength);
+                    this.y = lerp(this.y, this.oy, pullStrength);
+                } else {
+                    let effectMultiplier = this.isCore ? 0.15 : 1.0; 
 
-                if (emo === 'neutral') {
-                    this.x = lerp(this.x, this.ox, 0.1);
-                    this.y = lerp(this.y, this.oy + sin(t + this.ox * 0.05) * 2, 0.1);
-                }
-                else if (emo === 'repression') {
-                    // INTENSITY EFFECT: Handled in draw() method (particle deletion rate)
-                    // Eroding, fading
-                    this.x = lerp(this.x, this.ox, 0.05);
-                    this.y = lerp(this.y, this.oy, 0.05);
-                }
-                else if (emo === 'joy') {
-                    // INTENSITY EFFECT: Higher intensity = faster pulse, larger expansion
-                    let pulseSpeed = 3 * emotionIntensity; // 0.9 to 3
-                    let pulseRange = 12 * emotionIntensity; // 3.6 to 12
-                    let expansionFactor = 0.08 * emotionIntensity; // 0.024 to 0.08
-                    
-                    // Expanding outward
-                    let dx = this.ox - width/2;
-                    let dy = this.oy - height/2;
-                    let dist = sqrt(dx*dx + dy*dy);
-                    let pulse = sin(t * pulseSpeed - dist * 0.02) * pulseRange;
-                    
-                    let targetX = this.ox + (dx * expansionFactor) + (dx/dist) * pulse;
-                    let targetY = this.oy + (dy * expansionFactor) + (dy/dist) * pulse;
+                    if (emo === 'neutral') {
+                        this.x = lerp(this.x, this.ox, 0.1);
+                        this.y = lerp(this.y, this.oy + sin(t + this.ox * 0.05) * 2 * effectMultiplier, 0.1);
+                    }
+                    else if (emo === 'repression') {
+                        this.x = lerp(this.x, this.ox, 0.05);
+                        this.y = lerp(this.y, this.oy, 0.05);
+                    }
+                    else if (emo === 'joy') {
+                        let pulseSpeed = 3 * emotionIntensity; 
+                        let pulseRange = 12 * emotionIntensity * effectMultiplier; 
+                        let expansionFactor = 0.08 * emotionIntensity * effectMultiplier; 
+                        
+                        let dx = this.ox - width/2;
+                        let dy = this.oy - height/2;
+                        let distFromCenter = sqrt(dx*dx + dy*dy);
+                        let pulse = sin(t * pulseSpeed - distFromCenter * 0.02) * pulseRange;
+                        
+                        let targetX = this.ox + (dx * expansionFactor) + (dx/distFromCenter) * pulse;
+                        let targetY = this.oy + (dy * expansionFactor) + (dy/distFromCenter) * pulse;
 
-                    this.x = lerp(this.x, targetX, 0.1);
-                    this.y = lerp(this.y, targetY, 0.1);
-                }
-                else if (emo === 'melancholy') {
-                    // INTENSITY EFFECT: Higher intensity = faster melting
-                    // Reduced base speed for gentler effect
-                    let meltSpeed = 1.0 * emotionIntensity; // 0.2 to 1.0 (reduced from 0.45 to 1.5)
-                    let threshold = 0.55 - (emotionIntensity * 0.25); // 0.55 to 0.3 (higher threshold = fewer particles melt)
-                    
-                    // Melting downward
-                    let n = noise(this.ox * 0.01, t * 0.5);
-                    if (n > threshold) {
-                        this.y += meltSpeed;
+                        this.x = lerp(this.x, targetX, 0.1);
+                        this.y = lerp(this.y, targetY, 0.1);
                     }
-                    
-                    // Gentler horizontal sway at low intensity
-                    let swayAmount = 4 * emotionIntensity; // 0.8 to 4
-                    this.x = lerp(this.x, this.ox + sin(t + this.oy * 0.05) * swayAmount, 0.1);
+                    else if (emo === 'melancholy') {
+                        let meltSpeed = 1.0 * emotionIntensity; 
+                        let threshold = 0.55 - (emotionIntensity * 0.25); 
+                        
+                        if (!this.isCore) {
+                            let n = noise(this.ox * 0.01, t * 0.5);
+                            if (n > threshold) this.y += meltSpeed;
+                        }
+                        
+                        let swayAmount = 4 * emotionIntensity * effectMultiplier; 
+                        this.x = lerp(this.x, this.ox + sin(t + this.oy * 0.05) * swayAmount, 0.1);
 
-                    if (this.y > height) {
-                        this.y = this.oy;
-                        this.x = this.ox;
+                        if (this.y > height) {
+                            this.y = this.oy;
+                            this.x = this.ox;
+                        }
                     }
-                }
-                else if (emo === 'anger') {
-                    // INTENSITY EFFECT: Higher intensity = more violent shaking
-                    let shakeAmount = 4 * emotionIntensity; // 1.2 to 4
-                    let explosionChance = 0.02 * emotionIntensity; // 0.006 to 0.02
-                    let explosionRange = 40 * emotionIntensity; // 12 to 40
-                    
-                    // Shaking violently
-                    this.x = this.ox + random(-shakeAmount, shakeAmount);
-                    this.y = this.oy + random(-shakeAmount, shakeAmount);
-                    
-                    if (random(1) < explosionChance) {
-                        this.x += random(-explosionRange, explosionRange);
-                        this.y += random(-explosionRange, explosionRange);
+                    else if (emo === 'anger') {
+                        let shakeAmount = 4 * emotionIntensity * effectMultiplier; 
+                        let explosionChance = 0.02 * emotionIntensity; 
+                        let explosionRange = 40 * emotionIntensity; 
+                        
+                        this.x = this.ox + random(-shakeAmount, shakeAmount);
+                        this.y = this.oy + random(-shakeAmount, shakeAmount);
+                        
+                        if (!this.isCore && random(1) < explosionChance) { 
+                            this.x += random(-explosionRange, explosionRange);
+                            this.y += random(-explosionRange, explosionRange);
+                        }
                     }
-                }
-                else if (emo === 'mystery') {
-                    // INTENSITY EFFECT: Higher intensity = more frequent glitches
-                    let glitchChance = 0.08 * emotionIntensity; // 0.024 to 0.08
-                    let glitchRange = 60 * emotionIntensity; // 18 to 60
-                    
-                    // Glitch displacement
-                    if (random(1) < glitchChance) {
-                        this.x = this.ox + random(-glitchRange, glitchRange);
-                    } else {
-                        this.x = lerp(this.x, this.ox, 0.5);
+                    else if (emo === 'mystery') {
+                        let glitchChance = 0.08 * emotionIntensity; 
+                        let glitchRange = 60 * emotionIntensity * effectMultiplier; 
+                        
+                        if (!this.isCore && random(1) < glitchChance) { 
+                            this.x = this.ox + random(-glitchRange, glitchRange);
+                        } else {
+                            this.x = lerp(this.x, this.ox, 0.5);
+                        }
+                        this.y = this.oy + sin(t * 50) * 1 * effectMultiplier;
                     }
-                    this.y = this.oy + sin(t * 50) * 1;
-                }
-                else if (emo === 'love') {
-                    // Gentle floating with text shape intact
-                    let t = millis() * 0.001;
-                    
-                    // Soft breathing motion
-                    let floatX = sin(t + this.ox * 0.01) * 2;
-                    let floatY = cos(t * 0.8 + this.oy * 0.01) * 3;
-                    
-                    this.x = lerp(this.x, this.ox + floatX, 0.1);
-                    this.y = lerp(this.y, this.oy + floatY, 0.1);
+                    else if (emo === 'love') {
+                        let floatX = sin(t + this.ox * 0.01) * 2 * effectMultiplier;
+                        let floatY = cos(t * 0.8 + this.oy * 0.01) * 3 * effectMultiplier;
+                        
+                        this.x = lerp(this.x, this.ox + floatX, 0.1);
+                        this.y = lerp(this.y, this.oy + floatY, 0.1);
+                    }
                 }
             }
 
             draw(emo) {
                 let style = emotionStyles[emo];
                 let c = style.color;
-                
                 noStroke();
-                
-                // === SKELETON PARTICLE RENDERING ===
-                // Skeleton particles are always stable, solid, and opaque
-                // They form the unchanging structural outline
-                if (this.isSkeleton) {
-                    fill(c[0], c[1], c[2], 240); // High opacity - always visible
-                    ellipse(this.x, this.y, this.size * 1.1, this.size * 1.1); // Slightly larger
-                    return; // Skip all emotion-specific rendering
-                }
+
+                let baseAlpha = this.isCore ? 255 : 180;
 
                 if (emo === 'repression') {
-                    // INTENSITY EFFECT: Higher intensity = more particle deletion (sparser)
-                    let deletionRate = 0.3 * emotionIntensity; // 0.09 to 0.3
-                    if (random(1) < deletionRate) return;
+                    let deletionRate = 0.3 * emotionIntensity; 
+                    if (this.isCore && random(1) < 0.02) return;
+                    if (!this.isCore && random(1) < deletionRate) return;
                     
-                    // Higher intensity = lower alpha (more faded)
-                    let minAlpha = 100 - (emotionIntensity * 50); // 100 to 50
-                    let maxAlpha = 200 - (emotionIntensity * 50); // 200 to 150
+                    let minAlpha = 100 - (emotionIntensity * 50); 
+                    let maxAlpha = 200 - (emotionIntensity * 50); 
                     fill(c[0], c[1], c[2], random(minAlpha, maxAlpha));
                     rect(this.x, this.y, this.size, this.size);
                 }
                 else if (emo === 'melancholy') {
-                    // Teardrop shape - elongated downward
-                    let alpha = map(this.y, this.oy, height, 255, 50);
+                    let alpha = map(this.y, this.oy, height, baseAlpha, 50);
                     fill(c[0], c[1], c[2], alpha);
-                    
-                    // Draw teardrop (ellipse stretched vertically)
                     ellipse(this.x, this.y, this.size * 0.8, this.size * 1.5);
-                    
-                    // Small tail at bottom
-                    if (random(1) < 0.3) {
+                    if (!this.isCore && random(1) < 0.3) {
                         fill(c[0], c[1], c[2], alpha * 0.5);
                         ellipse(this.x, this.y + this.size, this.size * 0.5, this.size * 0.8);
                     }
                 }
                 else if (emo === 'mystery') {
-                    // Glitchy scanline fragments
                     if (random(1) > 0.85) return;
-                    
-                    fill(c[0], c[1], c[2], 200);
-                    
-                    // Horizontal scanline fragments
+                    fill(c[0], c[1], c[2], baseAlpha - 50);
                     let scanWidth = random(4, 12);
                     rect(this.x - scanWidth/2, this.y, scanWidth, 1);
-                    
-                    // Occasional vertical glitch
-                    if (random(1) < 0.1) {
+                    if (!this.isCore && random(1) < 0.1) {
                         rect(this.x, this.y - 3, 1, 6);
                     }
                 }
                 else if (emo === 'anger') {
-                    fill(c[0], c[1], c[2]);
-                    // Jagged, irregular fragments - more aggressive
+                    fill(c[0], c[1], c[2], baseAlpha);
                     let w = random(3, 8);
                     let h = random(3, 8);
                     push();
@@ -1146,76 +762,30 @@
                     pop();
                 }
                 else if (emo === 'joy') {
-                    // Simple circles - original version
-                    fill(c[0], c[1], c[2]);
+                    fill(c[0], c[1], c[2], baseAlpha);
                     ellipse(this.x, this.y, this.size, this.size);
                 }
                 else if (emo === 'love') {
-                    // INTENSITY EFFECT: Higher intensity = more saturated/brighter colors
-                    let style = emotionStyles[emo];
-                    
-                    // Alternate between two pink colors based on position
                     let useColor2 = (floor(this.ox / 10) + floor(this.oy / 10)) % 2 === 0;
                     let baseColor = useColor2 ? style.color2 : style.color;
                     
-                    // Increase saturation and brightness with intensity
-                    let r = baseColor[0] + (emotionIntensity - 0.5) * 40; // ±20
-                    let g = baseColor[1] + (emotionIntensity - 0.5) * 30; // ±15
-                    let b = baseColor[2] + (emotionIntensity - 0.5) * 30; // ±15
+                    let r = constrain(baseColor[0] + (emotionIntensity - 0.5) * 40, 140, 220);
+                    let g = constrain(baseColor[1] + (emotionIntensity - 0.5) * 30, 80, 160);
+                    let b = constrain(baseColor[2] + (emotionIntensity - 0.5) * 30, 90, 170);
                     
-                    // Clamp values
-                    r = constrain(r, 140, 220);
-                    g = constrain(g, 80, 160);
-                    b = constrain(b, 90, 170);
+                    fill(r, g, b, baseAlpha);
                     
-                    fill(r, g, b, 230);
-                    noStroke();
-                    
-                    // Smaller hearts to preserve letter details
                     let s = this.size * 2.0;
-                    
-                    // Left lobe (circle)
                     ellipse(this.x - s * 0.25, this.y - s * 0.15, s * 0.7, s * 0.7);
-                    // Right lobe (circle)
                     ellipse(this.x + s * 0.25, this.y - s * 0.15, s * 0.7, s * 0.7);
-                    // Bottom point (triangle)
-                    triangle(
-                        this.x - s * 0.55, this.y - s * 0.1,
-                        this.x + s * 0.55, this.y - s * 0.1,
-                        this.x, this.y + s * 0.7
-                    );
+                    triangle(this.x - s * 0.55, this.y - s * 0.1, this.x + s * 0.55, this.y - s * 0.1, this.x, this.y + s * 0.7);
                 }
                 else {
-                    fill(c[0], c[1], c[2]);
+                    fill(c[0], c[1], c[2], baseAlpha);
                     ellipse(this.x, this.y, this.size, this.size);
                 }
             }
-            
-            // Helper function to draw heart shape
-            drawHeart(x, y, size) {
-                push();
-                translate(x, y);
-                
-                // Simple heart using two circles and a triangle
-                let s = size;
-                let c = emotionStyles['love'].color;
-                
-                // Top two bumps
-                fill(c[0], c[1], c[2], 220);
-                ellipse(-s * 0.35, -s * 0.3, s, s);
-                ellipse(s * 0.35, -s * 0.3, s, s);
-                
-                // Bottom point
-                triangle(-s * 0.7, -s * 0.3, 
-                        s * 0.7, -s * 0.3, 
-                        0, s * 0.8);
-                
-                pop();
-            }
         }
-
-        // Make function globally accessible
-        window.analyzeAndRender = analyzeAndRender;
     </script>
 </body>
 </html>
