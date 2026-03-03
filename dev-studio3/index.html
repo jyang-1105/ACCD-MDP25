@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Flow · Extinction's Memory Capsule</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:ital,wght@0,300;0,400;1,300&display=swap');
+
+:root {
+  --bg:   #07070e;
+  --surf: rgba(255,255,255,0.025);
+  --bd:   rgba(255,255,255,0.07);
+  --c1: #ff3333;
+  --c2: #ff8c00;
+  --c3: #ffd000;
+  --c4: #00d4ff;
+  --c5: #8855ff;
+  --c6: #00e676;
+  --text: #e6e2da;
+  --dim:  rgba(230,226,218,0.38);
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  min-height: 100vh;
+  padding: 64px 24px 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── HEADER ── */
+.hdr { text-align:center; margin-bottom:52px; }
+.hdr-eye  { font-size:9px; letter-spacing:0.55em; color:rgba(255,255,255,0.22); text-transform:uppercase; margin-bottom:12px; }
+.hdr-title{ font-size:22px; font-weight:400; letter-spacing:0.1em; color:var(--text); margin-bottom:6px; }
+.hdr-sub  { font-size:10px; letter-spacing:0.28em; color:rgba(255,208,75,0.45); text-transform:uppercase; }
+
+/* ── WRAPPER ── */
+.wrap { width:900px; max-width:100%; }
+
+/* ── STATE BANNER ── */
+.states {
+  display:grid; grid-template-columns:1fr 1fr;
+  border:1px solid var(--bd); border-radius:3px 3px 0 0; overflow:hidden;
+}
+.sc { padding:18px 22px; display:flex; gap:12px; align-items:flex-start; }
+.sc.idle   { background:rgba(0,230,118,0.03); border-right:1px solid var(--bd); }
+.sc.active { background:rgba(255,51,51,0.03); }
+
+.pip { width:7px; height:7px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+.idle   .pip { background:var(--c6); box-shadow:0 0 7px var(--c6); }
+.active .pip { background:var(--c1); box-shadow:0 0 7px var(--c1); animation:ppulse 1.8s ease infinite; }
+@keyframes ppulse { 0%,100%{box-shadow:0 0 4px var(--c1)} 50%{box-shadow:0 0 14px var(--c1)} }
+
+.sc-lbl { font-size:8px; letter-spacing:0.35em; text-transform:uppercase; margin-bottom:5px; }
+.idle   .sc-lbl { color:var(--c6); }
+.active .sc-lbl { color:var(--c1); }
+.sc-txt { font-family:var(--sans); font-size:11px; font-weight:300; color:var(--dim); line-height:1.65; }
+
+/* ── FLOW TABLE ── */
+.flow { border:1px solid var(--bd); border-top:none; }
+
+/* ── STEP ── */
+.step {
+  display:grid; grid-template-columns:48px 188px 1fr 108px;
+  border-bottom:1px solid var(--bd); position:relative;
+  transition: background 0.2s;
+}
+.step:hover { background:rgba(255,255,255,0.018); }
+.step::before {
+  content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+}
+.s1::before{background:var(--c1)} .s2::before{background:var(--c2)}
+.s3::before{background:var(--c3)} .s4::before{background:var(--c4)}
+.s5::before{background:var(--c5)} .s6::before{background:var(--c6)}
+
+.sn {
+  padding:22px 0 22px 16px; font-size:9px; letter-spacing:0.28em;
+  color:rgba(255,255,255,0.13); border-right:1px solid var(--bd);
+  display:flex; align-items:flex-start;
+}
+.si {
+  padding:20px 18px; border-right:1px solid var(--bd);
+  display:flex; flex-direction:column; justify-content:center; gap:5px;
+}
+.si-name { font-size:10px; font-weight:500; letter-spacing:0.2em; color:var(--text); text-transform:uppercase; }
+.si-hw   { font-size:9px; letter-spacing:0.08em; color:var(--dim); }
+
+.sd {
+  padding:20px 24px; font-family:var(--sans); font-size:11px;
+  font-weight:300; color:var(--dim); line-height:1.72;
+  display:flex; align-items:center;
+}
+.sb { padding:0 16px; border-left:1px solid var(--bd); display:flex; align-items:center; justify-content:center; }
+
+.badge { font-size:8px; letter-spacing:0.18em; text-transform:uppercase; padding:4px 9px; border-radius:2px; white-space:nowrap; }
+.b1{background:rgba(255,51,51,.1);  color:#ff7777; border:1px solid rgba(255,51,51,.22);}
+.b2{background:rgba(255,140,0,.1);  color:#ffaa55; border:1px solid rgba(255,140,0,.22);}
+.b3{background:rgba(255,208,0,.08); color:#ffdd55; border:1px solid rgba(255,208,0,.22);}
+.b4{background:rgba(0,212,255,.08); color:#44ddff; border:1px solid rgba(0,212,255,.22);}
+.b5{background:rgba(136,85,255,.1); color:#aa88ff; border:1px solid rgba(136,85,255,.22);}
+.b6{background:rgba(0,230,118,.08); color:#55ee99; border:1px solid rgba(0,230,118,.22);}
+
+/* ── CONNECTOR ── */
+.conn {
+  display:grid; grid-template-columns:48px 188px 1fr 108px;
+  border-bottom:1px solid rgba(255,255,255,0.035);
+  background:rgba(255,255,255,0.008);
+}
+.conn-inner {
+  grid-column:2/4; padding:8px 18px;
+  display:flex; align-items:center; gap:10px;
+  font-size:9px; letter-spacing:0.18em; color:rgba(255,255,255,0.2);
+}
+.track {
+  width:40px; height:1.5px; border-radius:1px;
+  position:relative; overflow:hidden; flex-shrink:0;
+}
+.track::after {
+  content:''; position:absolute; left:-100%; top:0;
+  width:60%; height:100%;
+  background:linear-gradient(90deg,transparent,currentColor);
+  animation:slide 1.4s linear infinite;
+}
+@keyframes slide { to{left:150%} }
+
+/* ── FORK ── */
+.fork {
+  padding:8px 18px 8px calc(48px + 188px + 18px);
+  display:flex; align-items:center; gap:10px;
+  font-size:8px; letter-spacing:0.26em; color:rgba(255,255,255,0.18);
+  text-transform:uppercase; border-bottom:1px solid var(--bd);
+  background:rgba(255,255,255,0.008);
+}
+.fork::before { content:''; width:32px; height:1px; background:var(--bd); flex-shrink:0; }
+
+/* ── DUAL STATE ── */
+.dual { display:flex; flex-direction:column; gap:11px; }
+.ds   { display:flex; gap:10px; align-items:flex-start; }
+.ds-tag {
+  font-family:var(--mono); font-size:7px; letter-spacing:0.16em;
+  padding:2px 7px; border-radius:2px; text-transform:uppercase;
+  flex-shrink:0; margin-top:2px;
+}
+.idle-t { background:rgba(0,230,118,.08); color:var(--c6); border:1px solid rgba(0,230,118,.2); }
+.actv-t { background:rgba(255,51,51,.08); color:var(--c1); border:1px solid rgba(255,51,51,.2); }
+.ds-body{ font-family:var(--sans); font-size:11px; font-weight:300; color:var(--dim); line-height:1.65; }
+
+/* ── RECEIPT PANEL ── */
+.rcpt {
+  border:1px solid rgba(0,230,118,0.18);
+  border-top:2px solid var(--c6);
+  border-radius:0 0 3px 3px;
+  background:rgba(0,230,118,0.018);
+  display:grid; grid-template-columns:130px 1fr 230px;
+}
+
+.rp-slip {
+  border-right:1px solid rgba(0,230,118,0.1);
+  padding:28px 16px;
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+}
+.thermal {
+  width:66px;
+  background:rgba(240,237,228,0.055);
+  border:1px solid rgba(240,237,228,0.13);
+  border-radius:2px 2px 10px 10px;
+  padding:12px 8px 20px;
+  text-align:center; position:relative; overflow:hidden;
+}
+.th-name { font-size:17px; color:rgba(240,237,228,0.85); margin-bottom:5px; }
+.th-body { font-size:7px; line-height:1.95; color:rgba(240,237,228,0.36); }
+.th-note { font-size:7px; color:rgba(255,208,75,0.48); margin-top:7px; padding-top:5px; border-top:1px dashed rgba(255,255,255,0.08); }
+.th-code { font-size:6px; color:rgba(255,255,255,0.15); margin-top:4px; letter-spacing:0.1em; }
+.scan-bar {
+  position:absolute; top:0; left:0; right:0; height:2px;
+  background:rgba(255,200,80,0.85); box-shadow:0 0 7px rgba(255,200,80,0.5);
+  animation:scanDown 3s ease-in-out infinite 1.2s;
+}
+@keyframes scanDown { 0%{top:0;opacity:.9} 100%{top:120%;opacity:0} }
+.perfs {
+  position:absolute; bottom:0; left:0; right:0; height:8px;
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,0.04) 0,rgba(255,255,255,0.04) 4px,transparent 4px,transparent 8px);
+}
+.slip-lbl { font-size:8px; letter-spacing:0.14em; color:rgba(0,230,118,0.35); text-transform:uppercase; }
+
+.rp-info { padding:26px 28px; border-right:1px solid rgba(0,230,118,0.07); }
+.rp-title { font-size:9px; letter-spacing:0.3em; color:var(--c6); text-transform:uppercase; margin-bottom:12px; }
+.rp-body  { font-family:var(--sans); font-size:11px; font-weight:300; color:var(--dim); line-height:1.8; }
+.rp-body em { font-style:normal; color:rgba(255,208,75,0.65); }
+
+.rp-states { padding:26px 22px; display:flex; flex-direction:column; justify-content:center; gap:20px; }
+.rs { display:flex; gap:12px; }
+.rs-icon {
+  width:20px; height:20px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:9px; margin-top:2px;
+}
+.ri-idle   { background:rgba(0,230,118,.08); border:1px solid rgba(0,230,118,.25); color:var(--c6); }
+.ri-active { background:rgba(255,51,51,.08);  border:1px solid rgba(255,51,51,.25);  color:var(--c1); }
+.rs-body { font-family:var(--sans); font-size:10.5px; font-weight:300; color:var(--dim); line-height:1.65; }
+.rs-body strong {
+  font-family:var(--mono); font-size:8px; font-weight:400;
+  letter-spacing:0.2em; text-transform:uppercase; display:block; margin-bottom:4px;
+}
+.lbl-idle   { color:var(--c6); }
+.lbl-active { color:var(--c1); }
+
+/* ── LEGEND ── */
+.legend { display:flex; gap:28px; margin-top:36px; flex-wrap:wrap; justify-content:center; }
+.li { display:flex; align-items:center; gap:8px; font-size:8.5px; letter-spacing:0.16em; color:rgba(230,226,218,0.3); text-transform:uppercase; }
+.lp { width:20px; height:1.5px; border-radius:1px; }
+
+/* ── ENTRANCE ── */
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.states { animation:fadeUp 0.4s ease both 0.05s; }
+.s1{animation:fadeUp 0.35s ease both 0.08s} .s2{animation:fadeUp 0.35s ease both 0.13s}
+.s3{animation:fadeUp 0.35s ease both 0.18s} .s4{animation:fadeUp 0.35s ease both 0.23s}
+.s5{animation:fadeUp 0.35s ease both 0.28s} .s6{animation:fadeUp 0.35s ease both 0.33s}
+.rcpt { animation:fadeUp 0.35s ease both 0.40s; }
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-eye">System Architecture · Data Flow</div>
+  <div class="hdr-title">山海经 · Extinction's Memory Capsule</div>
+  <div class="hdr-sub">Shānhǎijīng · Holographic Advertising Pod</div>
+</header>
+
+<div class="wrap">
+
+  <!-- State banner -->
+  <div class="states">
+    <div class="sc idle">
+      <div class="pip"></div>
+      <div>
+        <div class="sc-lbl">Idle — No Human Detected</div>
+        <div class="sc-txt">The ecosystem is undisturbed. Mythical beasts roam freely. The ancient world runs intact. No paper is issued.</div>
+      </div>
+    </div>
+    <div class="sc active">
+      <div class="pip"></div>
+      <div>
+        <div class="sc-lbl">Triggered — Human Detected</div>
+        <div class="sc-txt">Proximity detected. The ecosystem collapses — beasts appear wounded, the landscape turns to wasteland. A species record prints.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flow table -->
+  <div class="flow">
+
+    <div class="step s1">
+      <div class="sn">01</div>
+      <div class="si">
+        <div class="si-name">Infrared Sensor</div>
+        <div class="si-hw">Infrared Sensing Point</div>
+      </div>
+      <div class="sd">
+        Continuously polls the surrounding area at 30 Hz. When a human enters the detection radius,
+        it emits a proximity signal to the microcontroller. This single input governs all downstream behaviour.
+      </div>
+      <div class="sb"><span class="badge b1">Input</span></div>
+    </div>
+
+    <div class="conn">
+      <div class="conn-inner" style="color:var(--c1);">
+        <div class="track" style="color:var(--c1);"></div>
+        Proximity signal
+      </div>
+    </div>
+
+    <div class="step s2">
+      <div class="sn">02</div>
+      <div class="si">
+        <div class="si-name">Status Display</div>
+        <div class="si-hw">Miniscope LCD</div>
+      </div>
+      <div class="sd">
+        A small LCD screen on the machine body showing real-time sensor values —
+        distance readings and trigger confirmation. Acts as a system diagnostic display, not a user-facing output.
+      </div>
+      <div class="sb"><span class="badge b2">Feedback</span></div>
+    </div>
+
+    <div class="conn">
+      <div class="conn-inner" style="color:var(--c2);">
+        <div class="track" style="color:var(--c2);"></div>
+        Confirmed trigger
+      </div>
+    </div>
+
+    <div class="step s3">
+      <div class="sn">03</div>
+      <div class="si">
+        <div class="si-name">Microcontroller</div>
+        <div class="si-hw">Mainframe Inside</div>
+      </div>
+      <div class="sd">
+        Central logic unit. Reads the proximity signal and switches between idle and triggered states.
+        When triggered, it dispatches commands to both output channels simultaneously:
+        the display screen and the thermal printer.
+      </div>
+      <div class="sb"><span class="badge b3">Process</span></div>
+    </div>
+
+    <div class="fork">Parallel outputs — both channels fire simultaneously</div>
+
+    <div class="step s4">
+      <div class="sn">04</div>
+      <div class="si">
+        <div class="si-name">Visual Output</div>
+        <div class="si-hw">Display Screen</div>
+      </div>
+      <div class="sd">
+        <div class="dual">
+          <div class="ds">
+            <span class="ds-tag idle-t">Idle</span>
+            <span class="ds-body">A living Shānhǎijīng ecosystem. Beasts move freely, rivers flow, the ancient world is whole and undisturbed.</span>
+          </div>
+          <div class="ds">
+            <span class="ds-tag actv-t">Triggered</span>
+            <span class="ds-body">The ecosystem collapses. Beasts appear wounded or dying. The lush landscape warps into a scorched, desolate wasteland.</span>
+          </div>
+        </div>
+      </div>
+      <div class="sb"><span class="badge b4">Visual</span></div>
+    </div>
+
+    <div class="conn">
+      <div class="conn-inner" style="color:var(--c6);">
+        <div class="track" style="color:var(--c6);"></div>
+        Extinction record → printer
+      </div>
+    </div>
+
+    <div class="step s5">
+      <div class="sn">05</div>
+      <div class="si">
+        <div class="si-name">Heat Management</div>
+        <div class="si-hw">Gas Vent</div>
+      </div>
+      <div class="sd">
+        Manages thermal dissipation from the processor and printer mechanism.
+        Optional extension: synchronised mist or scent capsule release triggered
+        alongside the destruction sequence — engaging a third sensory channel.
+      </div>
+      <div class="sb"><span class="badge b5">Ambient</span></div>
+    </div>
+
+    <div class="conn">
+      <div class="conn-inner" style="color:var(--c6);">
+        <div class="track" style="color:var(--c6);"></div>
+        Print command
+      </div>
+    </div>
+
+    <div class="step s6">
+      <div class="sn">06</div>
+      <div class="si">
+        <div class="si-name">Thermal Printer</div>
+        <div class="si-hw">Heat-Sensitive Paper</div>
+      </div>
+      <div class="sd">
+        <div>
+          Outputs a species record from the Shānhǎijīng archive: beast illustration, ancient name,
+          and classical description. The paper feeds slowly as the on-screen ecosystem collapses in parallel.
+          <span style="display:block; margin-top:9px; color:rgba(255,208,75,0.62); font-size:10.5px;">
+            The receipt is physical evidence of your intrusion. You take it with you.
+          </span>
+        </div>
+      </div>
+      <div class="sb"><span class="badge b6">Physical</span></div>
+    </div>
+
+  </div><!-- /flow -->
+
+  <!-- Receipt panel -->
+  <div class="rcpt">
+
+    <div class="rp-slip">
+      <div class="thermal">
+        <div class="scan-bar"></div>
+        <div class="th-name">獓𪄿</div>
+        <div class="th-body">
+          leopard head<br>
+          ox tail · one horn<br>
+          dwells in mountains
+        </div>
+        <div class="th-note">食者无病</div>
+        <div class="th-code">EXTINCTION EVENT</div>
+        <div class="perfs"></div>
+      </div>
+      <div class="slip-lbl">Output</div>
+    </div>
+
+    <div class="rp-info">
+      <div class="rp-title">Shānhǎijīng · Extinction Receipt</div>
+      <div class="rp-body">
+        Each time a human approaches, the microcontroller selects a beast from the Shānhǎijīng archive
+        and encodes its illustration and classical description as a thermal print command.<br><br>
+        The paper feeds slowly from the machine body — one unique record per encounter,
+        issued in the exact moment the on-screen ecosystem collapses.<br><br>
+        <em>The receipt is proof of your intrusion. Take it with you.</em>
+      </div>
+    </div>
+
+    <div class="rp-states">
+      <div class="rs">
+        <div class="rs-icon ri-idle">○</div>
+        <div class="rs-body">
+          <strong class="lbl-idle">Idle — No Print</strong>
+          The machine waits. The ecosystem runs undisturbed. No paper is issued.
+        </div>
+      </div>
+      <div class="rs">
+        <div class="rs-icon ri-active">●</div>
+        <div class="rs-body">
+          <strong class="lbl-active">Triggered — Print Fires</strong>
+          Human detected. Screen collapses. Printer activates. One species record is issued.
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /rcpt -->
+
+</div><!-- /wrap -->
+
+<div class="legend">
+  <div class="li"><div class="lp" style="background:var(--c1);box-shadow:0 0 4px var(--c1)"></div>Sensor Input</div>
+  <div class="li"><div class="lp" style="background:var(--c3);box-shadow:0 0 4px var(--c3)"></div>Processing</div>
+  <div class="li"><div class="lp" style="background:var(--c4);box-shadow:0 0 4px var(--c4)"></div>Visual Output</div>
+  <div class="li"><div class="lp" style="background:var(--c6);box-shadow:0 0 4px var(--c6)"></div>Physical Output</div>
+  <div class="li"><div class="lp" style="background:var(--c5);box-shadow:0 0 4px var(--c5)"></div>Ambient Extension</div>
+</div>
+
+</body>
+</html>
