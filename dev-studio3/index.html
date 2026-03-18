@@ -3,444 +3,945 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Data Flow · Extinction's Memory Capsule</title>
+<title>Emotional Encryption — Catalog of Parts</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:ital,wght@0,300;0,400;1,300&display=swap');
+  :root {
+    --ink: #1a1816;
+    --parchment: #d4c5a9;
+    --parchment-faint: rgba(212,197,169,0.10);
+    --cell-w: 150px;
+    --cell-h: 150px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--ink);
+    color: var(--parchment);
+    font-family: 'Cormorant Garamond', serif;
+    min-height: 100vh;
+  }
 
-:root {
-  --bg:   #07070e;
-  --surf: rgba(255,255,255,0.025);
-  --bd:   rgba(255,255,255,0.07);
-  --c1: #ff3333;
-  --c2: #ff8c00;
-  --c3: #ffd000;
-  --c4: #00d4ff;
-  --c5: #8855ff;
-  --c6: #00e676;
-  --text: #e6e2da;
-  --dim:  rgba(230,226,218,0.38);
-  --mono: 'IBM Plex Mono', monospace;
-  --sans: 'IBM Plex Sans', sans-serif;
-}
+  header {
+    padding: 48px 64px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px solid var(--parchment-faint);
+  }
+  .title-block h1 {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 5px;
+    text-transform: uppercase; opacity: 0.38;
+    margin-bottom: 8px;
+  }
+  .title-block h2 {
+    font-size: 38px; font-weight: 300; font-style: italic;
+  }
+  .meta {
+    font-family: 'Space Mono', monospace;
+    font-size: 8px; letter-spacing: 3px;
+    text-transform: uppercase; opacity: 0.28;
+    line-height: 2.3; text-align: right;
+  }
 
-*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  .matrix-wrapper { padding: 44px 64px 64px; overflow-x: auto; }
+  .matrix-outer { display: flex; align-items: flex-start; gap: 18px; }
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--mono);
-  min-height: 100vh;
-  padding: 64px 24px 96px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+  .y-axis-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 7px; letter-spacing: 4px;
+    text-transform: uppercase; opacity: 0.28;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    margin-top: 38px;
+    white-space: nowrap;
+  }
 
-/* ── HEADER ── */
-.hdr { text-align:center; margin-bottom:52px; }
-.hdr-eye  { font-size:9px; letter-spacing:0.55em; color:rgba(255,255,255,0.22); text-transform:uppercase; margin-bottom:12px; }
-.hdr-title{ font-size:22px; font-weight:400; letter-spacing:0.1em; color:var(--text); margin-bottom:6px; }
-.hdr-sub  { font-size:10px; letter-spacing:0.28em; color:rgba(255,208,75,0.45); text-transform:uppercase; }
+  .matrix-inner { flex: 1; min-width: 0; }
 
-/* ── WRAPPER ── */
-.wrap { width:900px; max-width:100%; }
+  .x-axis-row {
+    display: grid;
+    grid-template-columns: 110px repeat(6, var(--cell-w));
+    gap: 5px;
+    margin-bottom: 5px;
+    align-items: end;
+  }
+  .col-label {
+    text-align: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 8px; letter-spacing: 2px;
+    text-transform: uppercase; opacity: 0.35;
+    padding-bottom: 8px;
+    line-height: 1.5;
+  }
+  .col-label span {
+    display: block;
+    font-size: 6px; opacity: 0.5;
+    letter-spacing: 1px;
+  }
 
-/* ── STATE BANNER ── */
-.states {
-  display:grid; grid-template-columns:1fr 1fr;
-  border:1px solid var(--bd); border-radius:3px 3px 0 0; overflow:hidden;
-}
-.sc { padding:18px 22px; display:flex; gap:12px; align-items:flex-start; }
-.sc.idle   { background:rgba(0,230,118,0.03); border-right:1px solid var(--bd); }
-.sc.active { background:rgba(255,51,51,0.03); }
+  .matrix-row {
+    display: grid;
+    grid-template-columns: 110px repeat(6, var(--cell-w));
+    gap: 5px;
+    margin-bottom: 5px;
+    align-items: center;
+  }
+  .row-label {
+    text-align: right;
+    padding-right: 18px;
+    line-height: 1.1;
+  }
+  .row-label .word {
+    font-size: 22px; font-style: italic; font-weight: 300;
+    opacity: 0.7; display: block;
+  }
+  .row-label .emo-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 6px; letter-spacing: 2px;
+    text-transform: uppercase; opacity: 0.3;
+    display: block; margin-top: 3px;
+  }
 
-.pip { width:7px; height:7px; border-radius:50%; flex-shrink:0; margin-top:4px; }
-.idle   .pip { background:var(--c6); box-shadow:0 0 7px var(--c6); }
-.active .pip { background:var(--c1); box-shadow:0 0 7px var(--c1); animation:ppulse 1.8s ease infinite; }
-@keyframes ppulse { 0%,100%{box-shadow:0 0 4px var(--c1)} 50%{box-shadow:0 0 14px var(--c1)} }
+  .cell {
+    width: var(--cell-w);
+    height: var(--cell-h);
+    position: relative;
+    border: 1px solid var(--parchment-faint);
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.3s, transform 0.25s;
+    background: #0d0c0b;
+  }
+  .cell:hover {
+    border-color: rgba(212,197,169,0.45);
+    transform: scale(1.06);
+    z-index: 20;
+  }
+  .cell > canvas {
+    position: absolute !important;
+    top: 0 !important; left: 0 !important;
+  }
+  /* intensity bar at bottom */
+  .intensity-bar {
+    position: absolute;
+    bottom: 0; left: 0;
+    height: 2px;
+    background: rgba(212,197,169,0.25);
+    z-index: 3;
+    pointer-events: none;
+    transition: background 0.3s;
+  }
+  .cell:hover .intensity-bar { background: rgba(212,197,169,0.5); }
 
-.sc-lbl { font-size:8px; letter-spacing:0.35em; text-transform:uppercase; margin-bottom:5px; }
-.idle   .sc-lbl { color:var(--c6); }
-.active .sc-lbl { color:var(--c1); }
-.sc-txt { font-family:var(--sans); font-size:11px; font-weight:300; color:var(--dim); line-height:1.65; }
+  .cell-tag {
+    position: absolute;
+    bottom: 7px; right: 7px;
+    font-family: 'Space Mono', monospace;
+    font-size: 6px; letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--parchment);
+    opacity: 0; transition: opacity 0.3s;
+    z-index: 5; pointer-events: none;
+  }
+  .cell:hover .cell-tag { opacity: 0.5; }
 
-/* ── FLOW TABLE ── */
-.flow { border:1px solid var(--bd); border-top:none; }
+  footer {
+    padding: 28px 64px 52px;
+    border-top: 1px solid var(--parchment-faint);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .legend-note {
+    font-size: 13px; font-style: italic;
+    opacity: 0.38; max-width: 440px; line-height: 1.9;
+  }
+  .legend-key {
+    font-family: 'Space Mono', monospace;
+    font-size: 7px; letter-spacing: 2px;
+    text-transform: uppercase; opacity: 0.28;
+    line-height: 2.6; text-align: right;
+  }
 
-/* ── STEP ── */
-.step {
-  display:grid; grid-template-columns:48px 188px 1fr 108px;
-  border-bottom:1px solid var(--bd); position:relative;
-  transition: background 0.2s;
-}
-.step:hover { background:rgba(255,255,255,0.018); }
-.step::before {
-  content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
-}
-.s1::before{background:var(--c1)} .s2::before{background:var(--c2)}
-.s3::before{background:var(--c3)} .s4::before{background:var(--c4)}
-.s5::before{background:var(--c5)} .s6::before{background:var(--c6)}
+  /* intensity gradient ruler */
+  .intensity-ruler {
+    display: grid;
+    grid-template-columns: 110px repeat(6, var(--cell-w));
+    gap: 5px;
+    margin-top: 8px;
+    padding-left: 0;
+  }
+  .ruler-bar {
+    height: 3px;
+    border-radius: 0;
+    background: linear-gradient(to right, rgba(212,197,169,0.05), rgba(212,197,169,0.4));
+  }
 
-.sn {
-  padding:22px 0 22px 16px; font-size:9px; letter-spacing:0.28em;
-  color:rgba(255,255,255,0.13); border-right:1px solid var(--bd);
-  display:flex; align-items:flex-start;
-}
-.si {
-  padding:20px 18px; border-right:1px solid var(--bd);
-  display:flex; flex-direction:column; justify-content:center; gap:5px;
-}
-.si-name { font-size:10px; font-weight:500; letter-spacing:0.2em; color:var(--text); text-transform:uppercase; }
-.si-hw   { font-size:9px; letter-spacing:0.08em; color:var(--dim); }
+  #loading-screen {
+    position: fixed; inset: 0;
+    background: var(--ink);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 999; transition: opacity 1s ease;
+  }
+  #loading-screen.fade-out { opacity: 0; pointer-events: none; }
+  .loading-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 6px;
+    text-transform: uppercase;
+    animation: blink 1.4s infinite alternate;
+  }
+  .loading-count {
+    font-family: 'Space Mono', monospace;
+    font-size: 8px; letter-spacing: 3px;
+    opacity: 0.4; margin-top: 12px;
+  }
+  .loading-bar-wrap {
+    margin-top: 16px; width: 100px; height: 1px;
+    background: rgba(212,197,169,0.1); overflow: hidden; position: relative;
+  }
+  .loading-bar {
+    position: absolute; left: -100%; top: 0;
+    width: 100%; height: 100%;
+    background: rgba(212,197,169,0.4);
+    animation: slide 1.4s infinite ease-in-out;
+  }
+  @keyframes blink { from{opacity:0.15} to{opacity:0.6} }
+  @keyframes slide { from{left:-100%} to{left:100%} }
 
-.sd {
-  padding:20px 24px; font-family:var(--sans); font-size:11px;
-  font-weight:300; color:var(--dim); line-height:1.72;
-  display:flex; align-items:center;
-}
-.sb { padding:0 16px; border-left:1px solid var(--bd); display:flex; align-items:center; justify-content:center; }
+  /* ── BLEND LAB ── */
+  #blend-section {
+    padding: 60px 64px 80px;
+    border-top: 1px solid rgba(212,197,169,0.10);
+  }
+  .blend-header {
+    margin-bottom: 40px;
+  }
+  .blend-header h3 {
+    font-size: 28px; font-weight: 300; font-style: italic;
+    margin-bottom: 8px;
+  }
+  .blend-header p {
+    font-family: 'Space Mono', monospace;
+    font-size: 8px; letter-spacing: 3px;
+    text-transform: uppercase; opacity: 0.35;
+  }
+  .blend-ui {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    justify-content: center;
+  }
+  .blend-picker {
+    display: flex; flex-direction: column; gap: 10px; align-items: center;
+  }
+  .picker-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 7px; letter-spacing: 3px;
+    text-transform: uppercase; opacity: 0.4;
+    margin-bottom: 4px;
+  }
+  .picker-buttons {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .emo-btn {
+    background: transparent;
+    border: 1px solid rgba(212,197,169,0.15);
+    color: rgba(212,197,169,0.5);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px; font-style: italic;
+    padding: 6px 18px;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-align: left;
+    min-width: 110px;
+  }
+  .emo-btn:hover {
+    border-color: rgba(212,197,169,0.5);
+    color: rgba(212,197,169,0.9);
+  }
+  .emo-btn.active {
+    border-color: rgba(212,197,169,0.8);
+    color: #d4c5a9;
+    background: rgba(212,197,169,0.06);
+  }
+  .blend-center {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 16px;
+  }
+  .blend-word-input input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(212,197,169,0.2);
+    color: #d4c5a9;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px; font-style: italic;
+    text-align: center;
+    width: 160px;
+    padding: 4px 0;
+    outline: none;
+    letter-spacing: 4px;
+  }
+  .blend-word-input input:focus {
+    border-bottom-color: rgba(212,197,169,0.6);
+  }
+  #blend-canvas-wrap canvas {
+    display: block;
+  }
+  .blend-slider-wrap {
+    display: flex; align-items: center; gap: 12px;
+    width: 320px;
+  }
+  .slider-end {
+    font-family: 'Space Mono', monospace;
+    font-size: 7px; letter-spacing: 2px;
+    text-transform: uppercase; opacity: 0.4;
+    min-width: 60px; text-align: center;
+    line-height: 1.4;
+  }
+  #blend-slider {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 1px;
+    background: rgba(212,197,169,0.2);
+    outline: none;
+    cursor: pointer;
+  }
+  #blend-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #d4c5a9;
+    cursor: pointer;
+  }
+  .blend-ratio-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 8px; letter-spacing: 3px;
+    text-transform: uppercase; opacity: 0.35;
+  }
 
-.badge { font-size:8px; letter-spacing:0.18em; text-transform:uppercase; padding:4px 9px; border-radius:2px; white-space:nowrap; }
-.b1{background:rgba(255,51,51,.1);  color:#ff7777; border:1px solid rgba(255,51,51,.22);}
-.b2{background:rgba(255,140,0,.1);  color:#ffaa55; border:1px solid rgba(255,140,0,.22);}
-.b3{background:rgba(255,208,0,.08); color:#ffdd55; border:1px solid rgba(255,208,0,.22);}
-.b4{background:rgba(0,212,255,.08); color:#44ddff; border:1px solid rgba(0,212,255,.22);}
-.b5{background:rgba(136,85,255,.1); color:#aa88ff; border:1px solid rgba(136,85,255,.22);}
-.b6{background:rgba(0,230,118,.08); color:#55ee99; border:1px solid rgba(0,230,118,.22);}
-
-/* ── CONNECTOR ── */
-.conn {
-  display:grid; grid-template-columns:48px 188px 1fr 108px;
-  border-bottom:1px solid rgba(255,255,255,0.035);
-  background:rgba(255,255,255,0.008);
-}
-.conn-inner {
-  grid-column:2/4; padding:8px 18px;
-  display:flex; align-items:center; gap:10px;
-  font-size:9px; letter-spacing:0.18em; color:rgba(255,255,255,0.2);
-}
-.track {
-  width:40px; height:1.5px; border-radius:1px;
-  position:relative; overflow:hidden; flex-shrink:0;
-}
-.track::after {
-  content:''; position:absolute; left:-100%; top:0;
-  width:60%; height:100%;
-  background:linear-gradient(90deg,transparent,currentColor);
-  animation:slide 1.4s linear infinite;
-}
-@keyframes slide { to{left:150%} }
-
-/* ── FORK ── */
-.fork {
-  padding:8px 18px 8px calc(48px + 188px + 18px);
-  display:flex; align-items:center; gap:10px;
-  font-size:8px; letter-spacing:0.26em; color:rgba(255,255,255,0.18);
-  text-transform:uppercase; border-bottom:1px solid var(--bd);
-  background:rgba(255,255,255,0.008);
-}
-.fork::before { content:''; width:32px; height:1px; background:var(--bd); flex-shrink:0; }
-
-/* ── DUAL STATE ── */
-.dual { display:flex; flex-direction:column; gap:11px; }
-.ds   { display:flex; gap:10px; align-items:flex-start; }
-.ds-tag {
-  font-family:var(--mono); font-size:7px; letter-spacing:0.16em;
-  padding:2px 7px; border-radius:2px; text-transform:uppercase;
-  flex-shrink:0; margin-top:2px;
-}
-.idle-t { background:rgba(0,230,118,.08); color:var(--c6); border:1px solid rgba(0,230,118,.2); }
-.actv-t { background:rgba(255,51,51,.08); color:var(--c1); border:1px solid rgba(255,51,51,.2); }
-.ds-body{ font-family:var(--sans); font-size:11px; font-weight:300; color:var(--dim); line-height:1.65; }
-
-/* ── RECEIPT PANEL ── */
-.rcpt {
-  border:1px solid rgba(0,230,118,0.18);
-  border-top:2px solid var(--c6);
-  border-radius:0 0 3px 3px;
-  background:rgba(0,230,118,0.018);
-  display:grid; grid-template-columns:130px 1fr 230px;
-}
-
-.rp-slip {
-  border-right:1px solid rgba(0,230,118,0.1);
-  padding:28px 16px;
-  display:flex; flex-direction:column; align-items:center; gap:10px;
-}
-.thermal {
-  width:66px;
-  background:rgba(240,237,228,0.055);
-  border:1px solid rgba(240,237,228,0.13);
-  border-radius:2px 2px 10px 10px;
-  padding:12px 8px 20px;
-  text-align:center; position:relative; overflow:hidden;
-}
-.th-name { font-size:17px; color:rgba(240,237,228,0.85); margin-bottom:5px; }
-.th-body { font-size:7px; line-height:1.95; color:rgba(240,237,228,0.36); }
-.th-note { font-size:7px; color:rgba(255,208,75,0.48); margin-top:7px; padding-top:5px; border-top:1px dashed rgba(255,255,255,0.08); }
-.th-code { font-size:6px; color:rgba(255,255,255,0.15); margin-top:4px; letter-spacing:0.1em; }
-.scan-bar {
-  position:absolute; top:0; left:0; right:0; height:2px;
-  background:rgba(255,200,80,0.85); box-shadow:0 0 7px rgba(255,200,80,0.5);
-  animation:scanDown 3s ease-in-out infinite 1.2s;
-}
-@keyframes scanDown { 0%{top:0;opacity:.9} 100%{top:120%;opacity:0} }
-.perfs {
-  position:absolute; bottom:0; left:0; right:0; height:8px;
-  background:repeating-linear-gradient(90deg,rgba(255,255,255,0.04) 0,rgba(255,255,255,0.04) 4px,transparent 4px,transparent 8px);
-}
-.slip-lbl { font-size:8px; letter-spacing:0.14em; color:rgba(0,230,118,0.35); text-transform:uppercase; }
-
-.rp-info { padding:26px 28px; border-right:1px solid rgba(0,230,118,0.07); }
-.rp-title { font-size:9px; letter-spacing:0.3em; color:var(--c6); text-transform:uppercase; margin-bottom:12px; }
-.rp-body  { font-family:var(--sans); font-size:11px; font-weight:300; color:var(--dim); line-height:1.8; }
-.rp-body em { font-style:normal; color:rgba(255,208,75,0.65); }
-
-.rp-states { padding:26px 22px; display:flex; flex-direction:column; justify-content:center; gap:20px; }
-.rs { display:flex; gap:12px; }
-.rs-icon {
-  width:20px; height:20px; border-radius:50%; flex-shrink:0;
-  display:flex; align-items:center; justify-content:center;
-  font-size:9px; margin-top:2px;
-}
-.ri-idle   { background:rgba(0,230,118,.08); border:1px solid rgba(0,230,118,.25); color:var(--c6); }
-.ri-active { background:rgba(255,51,51,.08);  border:1px solid rgba(255,51,51,.25);  color:var(--c1); }
-.rs-body { font-family:var(--sans); font-size:10.5px; font-weight:300; color:var(--dim); line-height:1.65; }
-.rs-body strong {
-  font-family:var(--mono); font-size:8px; font-weight:400;
-  letter-spacing:0.2em; text-transform:uppercase; display:block; margin-bottom:4px;
-}
-.lbl-idle   { color:var(--c6); }
-.lbl-active { color:var(--c1); }
-
-/* ── LEGEND ── */
-.legend { display:flex; gap:28px; margin-top:36px; flex-wrap:wrap; justify-content:center; }
-.li { display:flex; align-items:center; gap:8px; font-size:8.5px; letter-spacing:0.16em; color:rgba(230,226,218,0.3); text-transform:uppercase; }
-.lp { width:20px; height:1.5px; border-radius:1px; }
-
-/* ── ENTRANCE ── */
-@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-.states { animation:fadeUp 0.4s ease both 0.05s; }
-.s1{animation:fadeUp 0.35s ease both 0.08s} .s2{animation:fadeUp 0.35s ease both 0.13s}
-.s3{animation:fadeUp 0.35s ease both 0.18s} .s4{animation:fadeUp 0.35s ease both 0.23s}
-.s5{animation:fadeUp 0.35s ease both 0.28s} .s6{animation:fadeUp 0.35s ease both 0.33s}
-.rcpt { animation:fadeUp 0.35s ease both 0.40s; }
 </style>
 </head>
 <body>
 
-<header class="hdr">
-  <div class="hdr-eye">System Architecture · Data Flow</div>
-  <div class="hdr-title">山海经 · Extinction's Memory Capsule</div>
-  <div class="hdr-sub">Shānhǎijīng · Holographic Advertising Pod</div>
+<div id="loading-screen">
+  <div class="loading-text">Rendering catalog</div>
+  <div class="loading-count" id="load-count">0 / 36</div>
+  <div class="loading-bar-wrap"><div class="loading-bar"></div></div>
+</div>
+
+<header>
+  <div class="title-block">
+    <h1>Emotional Encryption</h1>
+    <h2>Catalog of Parts</h2>
+  </div>
+  <div class="meta">
+    6 words × 6 intensity levels<br>
+    36 typographic specimens<br>
+    particle-based writing system
+  </div>
 </header>
 
-<div class="wrap">
-
-  <!-- State banner -->
-  <div class="states">
-    <div class="sc idle">
-      <div class="pip"></div>
-      <div>
-        <div class="sc-lbl">Idle — No Human Detected</div>
-        <div class="sc-txt">The ecosystem is undisturbed. Mythical beasts roam freely. The ancient world runs intact. No paper is issued.</div>
-      </div>
-    </div>
-    <div class="sc active">
-      <div class="pip"></div>
-      <div>
-        <div class="sc-lbl">Triggered — Human Detected</div>
-        <div class="sc-txt">Proximity detected. The ecosystem collapses — beasts appear wounded, the landscape turns to wasteland. A species record prints.</div>
+<div class="matrix-wrapper">
+  <div class="matrix-outer">
+    <div class="y-axis-label">intensity →</div>
+    <div class="matrix-inner">
+      <div class="x-axis-row" id="x-axis"><div></div></div>
+      <div id="matrix"></div>
+      <div class="intensity-ruler">
+        <div></div>
+        <div class="ruler-bar"></div>
+        <div class="ruler-bar"></div>
+        <div class="ruler-bar"></div>
+        <div class="ruler-bar"></div>
+        <div class="ruler-bar"></div>
+        <div class="ruler-bar"></div>
       </div>
     </div>
   </div>
-
-  <!-- Flow table -->
-  <div class="flow">
-
-    <div class="step s1">
-      <div class="sn">01</div>
-      <div class="si">
-        <div class="si-name">Infrared Sensor</div>
-        <div class="si-hw">Infrared Sensing Point</div>
-      </div>
-      <div class="sd">
-        Continuously polls the surrounding area at 30 Hz. When a human enters the detection radius,
-        it emits a proximity signal to the microcontroller. This single input governs all downstream behaviour.
-      </div>
-      <div class="sb"><span class="badge b1">Input</span></div>
-    </div>
-
-    <div class="conn">
-      <div class="conn-inner" style="color:var(--c1);">
-        <div class="track" style="color:var(--c1);"></div>
-        Proximity signal
-      </div>
-    </div>
-
-    <div class="step s2">
-      <div class="sn">02</div>
-      <div class="si">
-        <div class="si-name">Status Display</div>
-        <div class="si-hw">Miniscope LCD</div>
-      </div>
-      <div class="sd">
-        A small LCD screen on the machine body showing real-time sensor values —
-        distance readings and trigger confirmation. Acts as a system diagnostic display, not a user-facing output.
-      </div>
-      <div class="sb"><span class="badge b2">Feedback</span></div>
-    </div>
-
-    <div class="conn">
-      <div class="conn-inner" style="color:var(--c2);">
-        <div class="track" style="color:var(--c2);"></div>
-        Confirmed trigger
-      </div>
-    </div>
-
-    <div class="step s3">
-      <div class="sn">03</div>
-      <div class="si">
-        <div class="si-name">Microcontroller</div>
-        <div class="si-hw">Mainframe Inside</div>
-      </div>
-      <div class="sd">
-        Central logic unit. Reads the proximity signal and switches between idle and triggered states.
-        When triggered, it dispatches commands to both output channels simultaneously:
-        the display screen and the thermal printer.
-      </div>
-      <div class="sb"><span class="badge b3">Process</span></div>
-    </div>
-
-    <div class="fork">Parallel outputs — both channels fire simultaneously</div>
-
-    <div class="step s4">
-      <div class="sn">04</div>
-      <div class="si">
-        <div class="si-name">Visual Output</div>
-        <div class="si-hw">Display Screen</div>
-      </div>
-      <div class="sd">
-        <div class="dual">
-          <div class="ds">
-            <span class="ds-tag idle-t">Idle</span>
-            <span class="ds-body">A living Shānhǎijīng ecosystem. Beasts move freely, rivers flow, the ancient world is whole and undisturbed.</span>
-          </div>
-          <div class="ds">
-            <span class="ds-tag actv-t">Triggered</span>
-            <span class="ds-body">The ecosystem collapses. Beasts appear wounded or dying. The lush landscape warps into a scorched, desolate wasteland.</span>
-          </div>
-        </div>
-      </div>
-      <div class="sb"><span class="badge b4">Visual</span></div>
-    </div>
-
-    <div class="conn">
-      <div class="conn-inner" style="color:var(--c6);">
-        <div class="track" style="color:var(--c6);"></div>
-        Extinction record → printer
-      </div>
-    </div>
-
-    <div class="step s5">
-      <div class="sn">05</div>
-      <div class="si">
-        <div class="si-name">Heat Management</div>
-        <div class="si-hw">Gas Vent</div>
-      </div>
-      <div class="sd">
-        Manages thermal dissipation from the processor and printer mechanism.
-        Optional extension: synchronised mist or scent capsule release triggered
-        alongside the destruction sequence — engaging a third sensory channel.
-      </div>
-      <div class="sb"><span class="badge b5">Ambient</span></div>
-    </div>
-
-    <div class="conn">
-      <div class="conn-inner" style="color:var(--c6);">
-        <div class="track" style="color:var(--c6);"></div>
-        Print command
-      </div>
-    </div>
-
-    <div class="step s6">
-      <div class="sn">06</div>
-      <div class="si">
-        <div class="si-name">Thermal Printer</div>
-        <div class="si-hw">Heat-Sensitive Paper</div>
-      </div>
-      <div class="sd">
-        <div>
-          Outputs a species record from the Shānhǎijīng archive: beast illustration, ancient name,
-          and classical description. The paper feeds slowly as the on-screen ecosystem collapses in parallel.
-          <span style="display:block; margin-top:9px; color:rgba(255,208,75,0.62); font-size:10.5px;">
-            The receipt is physical evidence of your intrusion. You take it with you.
-          </span>
-        </div>
-      </div>
-      <div class="sb"><span class="badge b6">Physical</span></div>
-    </div>
-
-  </div><!-- /flow -->
-
-  <!-- Receipt panel -->
-  <div class="rcpt">
-
-    <div class="rp-slip">
-      <div class="thermal">
-        <div class="scan-bar"></div>
-        <div class="th-name">獓𪄿</div>
-        <div class="th-body">
-          leopard head<br>
-          ox tail · one horn<br>
-          dwells in mountains
-        </div>
-        <div class="th-note">食者无病</div>
-        <div class="th-code">EXTINCTION EVENT</div>
-        <div class="perfs"></div>
-      </div>
-      <div class="slip-lbl">Output</div>
-    </div>
-
-    <div class="rp-info">
-      <div class="rp-title">Shānhǎijīng · Extinction Receipt</div>
-      <div class="rp-body">
-        Each time a human approaches, the microcontroller selects a beast from the Shānhǎijīng archive
-        and encodes its illustration and classical description as a thermal print command.<br><br>
-        The paper feeds slowly from the machine body — one unique record per encounter,
-        issued in the exact moment the on-screen ecosystem collapses.<br><br>
-        <em>The receipt is proof of your intrusion. Take it with you.</em>
-      </div>
-    </div>
-
-    <div class="rp-states">
-      <div class="rs">
-        <div class="rs-icon ri-idle">○</div>
-        <div class="rs-body">
-          <strong class="lbl-idle">Idle — No Print</strong>
-          The machine waits. The ecosystem runs undisturbed. No paper is issued.
-        </div>
-      </div>
-      <div class="rs">
-        <div class="rs-icon ri-active">●</div>
-        <div class="rs-body">
-          <strong class="lbl-active">Triggered — Print Fires</strong>
-          Human detected. Screen collapses. Printer activates. One species record is issued.
-        </div>
-      </div>
-    </div>
-
-  </div><!-- /rcpt -->
-
-</div><!-- /wrap -->
-
-<div class="legend">
-  <div class="li"><div class="lp" style="background:var(--c1);box-shadow:0 0 4px var(--c1)"></div>Sensor Input</div>
-  <div class="li"><div class="lp" style="background:var(--c3);box-shadow:0 0 4px var(--c3)"></div>Processing</div>
-  <div class="li"><div class="lp" style="background:var(--c4);box-shadow:0 0 4px var(--c4)"></div>Visual Output</div>
-  <div class="li"><div class="lp" style="background:var(--c6);box-shadow:0 0 4px var(--c6)"></div>Physical Output</div>
-  <div class="li"><div class="lp" style="background:var(--c5);box-shadow:0 0 4px var(--c5)"></div>Ambient Extension</div>
 </div>
 
+<footer>
+  <div class="legend-note">
+    Each row renders a single emotion word through its matching particle system,<br>
+    varying only the intensity from near-silence to full expression.
+  </div>
+  <div class="legend-key">
+    intensity 0.1 → whisper<br>
+    intensity 0.5 → presence<br>
+    intensity 1.0 → rupture
+  </div>
+</footer>
+
+
+<!-- ── BLEND LAB ── -->
+<section id="blend-section">
+  <div class="blend-header">
+    <h3>Emotion Blend Lab</h3>
+    <p>Select two emotions — drag to shift the balance</p>
+  </div>
+  <div class="blend-ui">
+    <div class="blend-picker">
+      <div class="picker-label">Emotion A</div>
+      <div class="picker-buttons" id="btns-a"></div>
+    </div>
+    <div class="blend-center">
+      <div class="blend-word-input">
+        <input type="text" id="blend-word" value="FEEL" maxlength="8" />
+      </div>
+      <div id="blend-canvas-wrap"></div>
+      <div class="blend-slider-wrap">
+        <span class="slider-end" id="label-a">—</span>
+        <input type="range" id="blend-slider" min="0" max="100" value="50" />
+        <span class="slider-end" id="label-b">—</span>
+      </div>
+      <div class="blend-ratio-label" id="blend-ratio">50% · 50%</div>
+    </div>
+    <div class="blend-picker">
+      <div class="picker-label">Emotion B</div>
+      <div class="picker-buttons" id="btns-b"></div>
+    </div>
+  </div>
+</section>
+
+<script>
+const WORDS    = ['sad','angry','joy','love','fear','mystery'];
+const INTENSITIES = [0.1, 0.28, 0.46, 0.64, 0.82, 1.0];
+const INT_LABELS  = ['0.1','0.3','0.5','0.7','0.85','1.0'];
+const CELL_W = 150, CELL_H = 150;
+
+// each word's native emotion form
+const wordEmotion = {
+  sad:'melancholy', angry:'anger', joy:'joy',
+  love:'love', fear:'repression', mystery:'mystery'
+};
+
+const STYLES = {
+  repression: { color:[230,230,240], bg:[55,55,68] },
+  anger:      { color:[255,110,90],  bg:[80,28,24] },
+  joy:        { color:[255,225,110], bg:[75,58,18] },
+  melancholy: { color:[170,210,255], bg:[35,50,85] },
+  mystery:    { color:[210,165,230], bg:[52,30,68] },
+  love:       { color:[255,165,175], color2:[255,200,210], bg:[80,40,55] }
+};
+
+// Build column headers
+const xRow = document.getElementById('x-axis');
+xRow.appendChild(document.createElement('div')); // spacer already in HTML
+INT_LABELS.forEach((lbl, i) => {
+  const d = document.createElement('div');
+  d.className = 'col-label';
+  const intLabels = ['whisper','murmur','presence','surge','peak','rupture'];
+  d.innerHTML = `${lbl}<span>${intLabels[i]}</span>`;
+  xRow.appendChild(d);
+});
+
+// Build rows
+const matrixEl = document.getElementById('matrix');
+WORDS.forEach((word, wi) => {
+  const row = document.createElement('div');
+  row.className = 'matrix-row';
+
+  const lbl = document.createElement('div');
+  lbl.className = 'row-label';
+  lbl.innerHTML = `<span class="word">${word}</span><span class="emo-tag">${wordEmotion[word]}</span>`;
+  row.appendChild(lbl);
+
+  INTENSITIES.forEach((intensity, ii) => {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.id = `c${wi}_${ii}`;
+
+    // intensity bar width
+    const bar = document.createElement('div');
+    bar.className = 'intensity-bar';
+    bar.style.width = (intensity * 100) + '%';
+    cell.appendChild(bar);
+
+    const tag = document.createElement('div');
+    tag.className = 'cell-tag';
+    tag.textContent = `${word} · ${INT_LABELS[ii]}`;
+    cell.appendChild(tag);
+
+    row.appendChild(cell);
+  });
+  matrixEl.appendChild(row);
+});
+
+// ── P5 sketch ──────────────────────────────────────────
+function launchSketch(word, emo, intensity, parentDiv) {
+  new p5(function(p) {
+    const W = CELL_W, H = CELL_H;
+    const style = STYLES[emo];
+    let pg, pts = [];
+
+    p.setup = function() {
+      p.createCanvas(W, H).parent(parentDiv);
+      p.pixelDensity(1);
+      p.frameRate(30);
+      pg = p.createGraphics(W, H);
+      buildPts();
+    };
+
+    p.draw = function() {
+      const t = p.millis() * 0.001;
+      p.background(style.bg[0], style.bg[1], style.bg[2]);
+
+      // per-emotion subtle bg
+      if (emo === 'anger') {
+        p.noStroke();
+        p.fill(120, 20, 20, (p.sin(t*0.5)*0.5+0.5) * 10 * intensity);
+        p.rect(0, 0, W, H);
+      } else if (emo === 'melancholy') {
+        const drops = Math.floor(6 * intensity);
+        for (let i = 0; i < drops; i++) {
+          p.stroke(80,100,120, p.random(5,14)); p.point(p.random(W), p.random(H));
+        }
+      } else if (emo === 'mystery' && intensity > 0.6) {
+        if (p.frameCount % 8 === 0) {
+          p.stroke(175, 130, 195, 10 * (intensity - 0.6) / 0.4); p.strokeWeight(1);
+          p.line(0, p.random(H), W, p.random(H));
+        }
+      } else if (emo === 'love') {
+        const pulse = p.sin(t * 0.8) * 0.5 + 0.5;
+        const g = p.drawingContext.createRadialGradient(W/2,H/2,0,W/2,H/2,W*0.9);
+        g.addColorStop(0, `rgba(200,130,140,${pulse * 0.1 * intensity})`);
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        p.drawingContext.fillStyle = g;
+        p.drawingContext.fillRect(0, 0, W, H);
+      }
+
+      pts.forEach(pt => { pt.update(t); pt.draw(); });
+    };
+
+    function buildPts() {
+      pts = [];
+      pg.clear(); pg.background(0, 0);
+      pg.fill(255); pg.noStroke();
+      pg.textAlign(p.CENTER, p.CENTER);
+      pg.textFont('Cormorant Garamond');
+      const txt = word.toUpperCase();
+      const fs = p.constrain(W / txt.length * (emo==='love'?1.65:1.4), 14, 48);
+      pg.textSize(fs);
+      pg.textStyle(emo === 'love' ? p.BOLD : p.NORMAL);
+      pg.text(txt, W/2, H/2);
+      pg.loadPixels();
+      const step = (emo === 'mystery' || emo === 'melancholy') ? 2 : 3;
+      const maxPts = emo === 'melancholy' ? 400 : 800;
+      for (let y = 0; y < H; y += step) {
+        for (let x = 0; x < W; x += step) {
+          if (pts.length >= maxPts) break;
+          if (pg.pixels[(x + y*W)*4 + 3] > 128) pts.push(new Pt(x, y));
+        }
+        if (pts.length >= maxPts) break;
+      }
+    }
+
+    class Pt {
+      constructor(x, y) {
+        this.ox=x; this.oy=y; this.x=x; this.y=y;
+        this.vx=0; this.vy=0;
+        this.sz = p.random(1.4, 2.8);
+        this.core = p.random() < 0.35;
+        // mystery: fixed scan-line shape per particle (no per-frame random)
+        this.scanOffset = p.random(1, 4);
+        this.scanWidth  = p.random(3, 10);
+        this.visible    = true;
+        this.meltSeed   = p.random(0, 100); // cheap noise substitute
+      }
+
+      update(t) {
+        this.x += this.vx; this.y += this.vy;
+        this.vx *= 0.88;   this.vy *= 0.88;
+        const ef = this.core ? 0.1 : 1.0;
+
+        if (emo === 'repression') {
+          const i2 = Math.pow(intensity, 1.8);
+          // trembling: rapid small shake, escalates with intensity
+          const tremble = i2 * 4.5 * ef;
+          this.x = this.ox + p.sin(t * p.map(intensity, 0.1, 1.0, 8, 40) + this.oy * 0.1) * tremble;
+          this.y = this.oy + p.cos(t * p.map(intensity, 0.1, 1.0, 6, 35) + this.ox * 0.1) * tremble * 0.6;
+          // high intensity: particles also get pulled inward (implosion)
+          if (intensity > 0.5) {
+            const pull = (intensity - 0.5) * 0.06 * ef;
+            const dx = W/2 - this.x, dy = H/2 - this.y;
+            this.x += dx * pull;
+            this.y += dy * pull;
+          }
+
+        } else if (emo === 'joy') {
+          const dx=this.ox-W/2, dy=this.oy-H/2;
+          const d=Math.sqrt(dx*dx+dy*dy)||1;
+          const pulse = p.sin(t*3 - d*0.05) * 10 * intensity * ef;
+          const expand = 0.06 * intensity * ef;
+          this.x = p.lerp(this.x, this.ox + (dx*expand) + (dx/d)*pulse, 0.1);
+          this.y = p.lerp(this.y, this.oy + (dy*expand) + (dy/d)*pulse, 0.1);
+
+        } else if (emo === 'melancholy') {
+          // threshold goes from 0.98 (almost nothing melts) to 0.35 (lots melt)
+          const meltThresh = 0.98 - intensity * 0.63;
+          // use cheap sin flicker instead of noise() for performance
+          const meltVal = 0.5 + 0.5 * Math.sin(this.meltSeed * 6.28 + t * 1.5);
+          if (!this.core && meltVal > meltThresh) {
+            this.y += 0.6 * intensity;
+          }
+          // sway also starts near-zero at low intensity
+          const swayAmt = Math.max(0, (intensity - 0.1) / 0.9) * 4 * ef;
+          this.x = p.lerp(this.x, this.ox + p.sin(t + this.oy*0.05) * swayAmt, 0.1);
+          if (this.y > H) { this.y=this.oy; this.x=this.ox; }
+
+        } else if (emo === 'anger') {
+          // non-linear: low intensity nearly still, escalates sharply
+          const i2 = Math.pow(Math.max(0, intensity - 0.08) / 0.92, 2.5);
+          // high restore speed at low intensity = snaps back fast = looks calm
+          const restore = p.map(intensity, 0.1, 1.0, 0.55, 0.07);
+          const friction = p.map(intensity, 0.1, 1.0, 0.65, 0.88);
+          this.vx *= friction;
+          this.vy *= friction;
+          this.x = p.lerp(this.x, this.ox, restore);
+          this.y = p.lerp(this.y, this.oy, restore);
+          if (p.random() < i2 * 0.32) {
+            const shake = i2 * 4.8;
+            this.vx += p.random(-shake, shake);
+            this.vy += p.random(-shake * 0.5, shake * 0.5);
+          }
+          // explode only starts at intensity > 0.62
+          const explodeChance = Math.max(0, (intensity - 0.62) * 0.02);
+          const explodeRange  = Math.max(0, (intensity - 0.62) * 65);
+          if (!this.core && p.random() < explodeChance) {
+            this.vx += p.random(-explodeRange, explodeRange);
+            this.vy += p.random(-explodeRange, explodeRange);
+          }
+
+        } else if (emo === 'mystery') {
+          this.y = this.oy;
+          if (intensity <= 0.1) {
+            // first cell only: completely still
+            this.x = this.ox;
+          } else {
+            const i2 = (intensity - 0.1) / 0.9;
+            const glitchChance = i2 * i2 * 0.06;
+            const glitchRange  = i2 * 35 * ef;
+            if (!this.core && p.random() < glitchChance) {
+              this.x = this.ox + p.random(-glitchRange, glitchRange);
+            } else {
+              this.x = p.lerp(this.x, this.ox, 0.4);
+            }
+          }
+
+        } else if (emo === 'love') {
+          const floatAmt = intensity * ef;
+          this.x = p.lerp(this.x, this.ox + p.sin(t * 1.2 + this.ox*0.02) * 7 * floatAmt, 0.08);
+          this.y = p.lerp(this.y, this.oy + p.cos(t * 0.9 + this.oy*0.02) * 9 * floatAmt, 0.08);
+        }
+      }
+
+      draw() {
+        const c = style.color;
+        p.noStroke();
+        // alpha scales with intensity: quiet = translucent, full = opaque
+        const baseAlpha = p.map(intensity, 0.1, 1.0, 200, 255);
+        const al = this.core ? baseAlpha : baseAlpha * 0.72;
+
+        if (emo === 'repression') {
+          // high intensity: more particles vanish (fear consumes)
+          const vanishRate = Math.pow(Math.max(0, intensity - 0.3) / 0.7, 1.5) * 0.7;
+          if (!this.core && p.random() < vanishRate) return;
+          if (this.core  && p.random() < vanishRate * 0.3) return;
+          // size shrinks under pressure at high intensity
+          const sz = this.sz * p.map(intensity, 0.1, 1.0, 1.2, 0.5);
+          p.fill(c[0], c[1], c[2], p.map(intensity, 0.1, 1.0, 180, 255));
+          p.rect(this.x, this.y, sz, sz);
+
+        } else if (emo === 'melancholy') {
+          const a = p.map(this.y, this.oy, H, al, 50);
+          p.fill(c[0], c[1], c[2], a);
+          p.ellipse(this.x, this.y, this.sz, this.sz);
+
+        } else if (emo === 'mystery') {
+          if (!this.visible) return;
+          p.fill(c[0], c[1], c[2], al);
+          if (intensity <= 0.1) {
+            // first cell: clean sharp circle, fully legible
+            p.ellipse(this.x, this.y, this.sz, this.sz);
+          } else {
+            // cells 2-6: scanline style with increasing glitch
+            p.fill(c[0], c[1], c[2], al - 40);
+            const offset = p.random(0, this.scanOffset * intensity * 3);
+            const w = this.scanWidth * p.map(intensity, 0.28, 1.0, 0.8, 1.8);
+            p.rect(this.x - offset, this.y, w, 1);
+          }
+
+        } else if (emo === 'anger') {
+          p.fill(c[0], c[1], c[2], al);
+          if (intensity < 0.35) {
+            // whisper: calm circle, no rotation
+            p.ellipse(this.x, this.y, this.sz * 0.9, this.sz * 0.9);
+          } else if (intensity < 0.65) {
+            // building: slightly elongated, mild tilt
+            const rot = p.random(-0.5, 0.5) * p.map(intensity, 0.35, 0.65, 0, 1);
+            const w = this.sz * p.map(intensity, 0.35, 0.65, 1.0, 2.2);
+            const h = this.sz * p.map(intensity, 0.35, 0.65, 1.0, 1.5);
+            p.push(); p.translate(this.x, this.y); p.rotate(rot);
+            p.rect(-w/2, -h/2, w, h); p.pop();
+          } else {
+            // rupture: full chaotic rect
+            const w = p.random(2, 2 + intensity * 5);
+            const h = p.random(2, 2 + intensity * 5);
+            p.push(); p.translate(this.x, this.y); p.rotate(p.random(p.TWO_PI));
+            p.rect(0, 0, w, h); p.pop();
+          }
+
+        } else if (emo === 'love') {
+          const useC2 = (Math.floor(this.ox/10)+Math.floor(this.oy/10))%2===0;
+          const bc = useC2 ? style.color2 : style.color;
+          p.fill(bc[0], bc[1], bc[2], al);
+          const s = this.sz * 1.7;
+          p.ellipse(this.x-s*0.25, this.y-s*0.15, s*0.7, s*0.7);
+          p.ellipse(this.x+s*0.25, this.y-s*0.15, s*0.7, s*0.7);
+          p.triangle(this.x-s*0.55,this.y-s*0.1, this.x+s*0.55,this.y-s*0.1, this.x,this.y+s*0.7);
+
+        } else {
+          p.fill(c[0], c[1], c[2], al);
+          p.ellipse(this.x, this.y, this.sz, this.sz);
+        }
+      }
+    }
+  });
+}
+
+// ── Staggered launch ──────────────────────────────────
+const queue = [];
+WORDS.forEach((word, wi) => {
+  INTENSITIES.forEach((intensity, ii) => {
+    queue.push({ word, emo: wordEmotion[word], intensity, id:`c${wi}_${ii}` });
+  });
+});
+
+let idx = 0;
+const loadCount = document.getElementById('load-count');
+
+function launchNext() {
+  if (idx >= queue.length) {
+    document.getElementById('loading-screen').classList.add('fade-out');
+    setTimeout(() => document.getElementById('loading-screen').remove(), 1200);
+    return;
+  }
+  const { word, emo, intensity, id } = queue[idx++];
+  loadCount.textContent = `${idx} / ${queue.length}`;
+  launchSketch(word, emo, intensity, document.getElementById(id));
+  setTimeout(launchNext, 55);
+}
+
+document.fonts.ready.then(() => setTimeout(launchNext, 300));
+
+// ── BLEND LAB ────────────────────────────────
+(function() {
+  const EMOS = ['melancholy','anger','joy','love','repression','mystery'];
+  const EMO_WORDS = { melancholy:'sad', anger:'angry', joy:'joy', love:'love', repression:'fear', mystery:'mystery' };
+  const BW = 320, BH = 320;
+
+  let blendEmoA = 'melancholy';
+  let blendEmoB = 'anger';
+  let blendRatio = 0.5; // 0 = all A, 1 = all B
+  let blendWord = 'FEEL';
+  let blendP5 = null;
+
+  // Build buttons
+  ['a','b'].forEach(side => {
+    const container = document.getElementById('btns-' + side);
+    EMOS.forEach(emo => {
+      const btn = document.createElement('button');
+      btn.className = 'emo-btn' + ((side==='a'&&emo===blendEmoA)||(side==='b'&&emo===blendEmoB) ? ' active' : '');
+      btn.textContent = EMO_WORDS[emo];
+      btn.dataset.emo = emo;
+      btn.onclick = () => {
+        if (side === 'a') blendEmoA = emo;
+        else blendEmoB = emo;
+        document.querySelectorAll('#btns-' + side + ' .emo-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        updateLabels();
+        rebuildBlend();
+      };
+      container.appendChild(btn);
+    });
+  });
+
+  // Slider
+  const slider = document.getElementById('blend-slider');
+  slider.addEventListener('input', () => {
+    blendRatio = slider.value / 100;
+    updateLabels();
+    // no rebuild needed — draw loop reads blendRatio live
+  });
+
+  // Word input
+  const wordInput = document.getElementById('blend-word');
+  wordInput.addEventListener('input', () => {
+    blendWord = wordInput.value.toUpperCase() || 'FEEL';
+    rebuildBlend();
+  });
+
+  function updateLabels() {
+    const pctA = Math.round((1 - blendRatio) * 100);
+    const pctB = Math.round(blendRatio * 100);
+    document.getElementById('label-a').textContent = EMO_WORDS[blendEmoA];
+    document.getElementById('label-b').textContent = EMO_WORDS[blendEmoB];
+    document.getElementById('blend-ratio').textContent = pctA + '% · ' + pctB + '%';
+  }
+  updateLabels();
+
+  function rebuildBlend() {
+    if (blendP5) { blendP5.remove(); blendP5 = null; }
+    const wrap = document.getElementById('blend-canvas-wrap');
+    wrap.innerHTML = '';
+
+    blendP5 = new p5(function(p) {
+      const W = BW, H = BH;
+      let pg, pts = [];
+
+      p.setup = function() {
+        p.createCanvas(W, H).parent(wrap);
+        p.pixelDensity(1);
+        pg = p.createGraphics(W, H);
+        buildPts();
+      };
+
+      p.draw = function() {
+        const t = p.millis() * 0.001;
+        const ratio = blendRatio; // live read
+        const sA = STYLES[blendEmoA], sB = STYLES[blendEmoB];
+
+        // blend bg
+        const bg = [
+          p.lerp(sA.bg[0], sB.bg[0], ratio),
+          p.lerp(sA.bg[1], sB.bg[1], ratio),
+          p.lerp(sA.bg[2], sB.bg[2], ratio)
+        ];
+        p.background(bg[0], bg[1], bg[2]);
+
+        pts.forEach(pt => { pt.update(t, ratio); pt.draw(ratio); });
+      };
+
+      function buildPts() {
+        pts = [];
+        pg.clear(); pg.background(0,0);
+        pg.fill(255); pg.noStroke();
+        pg.textAlign(p.CENTER, p.CENTER);
+        pg.textFont('Cormorant Garamond');
+        const fs = p.constrain(W / blendWord.length * 1.4, 20, 90);
+        pg.textSize(fs);
+        pg.text(blendWord, W/2, H/2);
+        pg.loadPixels();
+        for (let y = 0; y < H; y += 2) {
+          for (let x = 0; x < W; x += 2) {
+            if (pg.pixels[(x+y*W)*4+3] > 128) pts.push(new Pt(x,y));
+          }
+        }
+      }
+
+      class Pt {
+        constructor(x,y) {
+          this.ox=x; this.oy=y; this.x=x; this.y=y;
+          this.vx=0; this.vy=0;
+          this.sz=p.random(2,4);
+          this.core=p.random()<0.35;
+          this.scanOffset=p.random(1,4);
+          this.scanWidth=p.random(3,10);
+        }
+
+        _moveFor(emo, t, ef) {
+          const iA = 1.0; // blend at full intensity
+          if (emo==='repression') {
+            const i2 = Math.pow(iA, 1.8);
+            const tremble = i2 * 5 * ef;
+            return {
+              tx: this.ox + p.sin(t*30+this.oy*0.1)*tremble,
+              ty: this.oy + p.cos(t*25+this.ox*0.1)*tremble*0.6
+            };
+          } else if (emo==='joy') {
+            const dx=this.ox-W/2, dy=this.oy-H/2;
+            const d=Math.sqrt(dx*dx+dy*dy)||1;
+            const pulse=p.sin(t*3-d*0.05)*10*ef;
+            return { tx: this.ox+(dx/d)*pulse, ty: this.oy+(dy/d)*pulse };
+          } else if (emo==='melancholy') {
+            const sway = p.sin(t+this.oy*0.05)*4*ef;
+            // y uses this.y so melt accumulates — don't snap back to oy
+            const meltSpeed = p.noise(this.ox*0.01, t*0.5) > 0.45 && !this.core ? 1.2*ef : 0;
+            return { tx: this.ox+sway, ty: this.y + meltSpeed, melt: true };
+          } else if (emo==='anger') {
+            return { tx: this.ox+p.random(-4,4), ty: this.oy+p.random(-4,4) };
+          } else if (emo==='mystery') {
+            const gx = p.random()<0.05 ? this.ox+p.random(-20,20)*ef : this.ox;
+            return { tx: gx, ty: this.oy };
+          } else if (emo==='love') {
+            return {
+              tx: this.ox+p.sin(t*1.2+this.ox*0.02)*7*ef,
+              ty: this.oy+p.cos(t*0.9+this.oy*0.02)*9*ef
+            };
+          }
+          return { tx: this.ox, ty: this.oy };
+        }
+
+        update(t, ratio) {
+          const ef = this.core ? 0.15 : 1.0;
+          const mA = this._moveFor(blendEmoA, t, ef);
+          const mB = this._moveFor(blendEmoB, t, ef);
+          const tx = p.lerp(mA.tx, mB.tx, ratio);
+          const ty = p.lerp(mA.ty, mB.ty, ratio);
+          const isMelt = (mA.melt && (1-ratio) > 0.01) || (mB.melt && ratio > 0.01);
+          this.x = p.lerp(this.x, tx, 0.12);
+          // for melt: don't lerp y back, let it drift downward
+          if (isMelt) {
+            this.y = ty;
+          } else {
+            this.y = p.lerp(this.y, ty, 0.12);
+          }
+          // reset melt if fallen off screen
+          if (this.y > H) { this.y=this.oy; this.x=this.ox; }
+        }
+
+        draw(ratio) {
+          const sA = STYLES[blendEmoA], sB = STYLES[blendEmoB];
+          const cA = sA.color, cB = sB.color;
+          const c = [
+            p.lerp(cA[0],cB[0],ratio),
+            p.lerp(cA[1],cB[1],ratio),
+            p.lerp(cA[2],cB[2],ratio)
+          ];
+          p.noStroke();
+          p.fill(c[0],c[1],c[2], this.core ? 230 : 185);
+
+          // shape: blend between A and B style
+          const useB = p.random() < ratio;
+          const emo = useB ? blendEmoB : blendEmoA;
+          if (emo==='mystery') {
+            p.rect(this.x-this.scanOffset, this.y, this.scanWidth*1.5, 1);
+          } else if (emo==='anger') {
+            p.push(); p.translate(this.x,this.y); p.rotate(p.random(p.TWO_PI));
+            p.rect(0,0,p.random(2,5),p.random(2,5)); p.pop();
+          } else if (emo==='melancholy') {
+            p.ellipse(this.x,this.y,this.sz*0.8,this.sz*1.4);
+          } else if (emo==='love') {
+            const s=this.sz*1.6;
+            p.ellipse(this.x-s*0.25,this.y-s*0.15,s*0.7,s*0.7);
+            p.ellipse(this.x+s*0.25,this.y-s*0.15,s*0.7,s*0.7);
+            p.triangle(this.x-s*0.55,this.y-s*0.1,this.x+s*0.55,this.y-s*0.1,this.x,this.y+s*0.7);
+          } else if (emo==='repression') {
+            p.rect(this.x,this.y,this.sz,this.sz);
+          } else {
+            p.ellipse(this.x,this.y,this.sz,this.sz);
+          }
+        }
+      }
+    });
+  }
+
+  rebuildBlend();
+})();
+
+</script>
 </body>
 </html>
