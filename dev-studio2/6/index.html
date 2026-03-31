@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>All Water Meets Again</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Space+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Space+Mono:wght@400&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
 
 body{
@@ -13,9 +13,9 @@ body{
   overflow:hidden;
   cursor:none;
   width:100vw;height:100vh;
-  font-family:'Special Elite',serif;
 }
 
+/* ── STORY CURSOR ── */
 #cursor{
   position:fixed;width:5px;height:5px;border-radius:50%;
   pointer-events:none;z-index:300;
@@ -31,142 +31,172 @@ body{
   box-shadow:0 0 8px rgba(140,180,230,0.8),0 0 22px rgba(100,150,210,0.3);
 }
 
-/* ── Background image ── */
+/* ── BACKGROUND IMAGE ── */
 #bg{
   position:fixed;inset:0;
   background-size:cover;
   background-position:center;
-  z-index:0;
-  opacity:0;
+  z-index:0;opacity:0;
   transition:opacity 0s;
 }
-#bg.fadein{ transition:opacity 1.8s ease; opacity:1; }
-#bg.fadeout{ transition:opacity 1s ease; opacity:0; }
-
-/* Bottom gradient to ease into textbox */
+#bg.fadein{ transition:opacity 0.9s ease; opacity:1; }
+#bg.fadeout{ transition:opacity 0.5s ease; opacity:0; }
 #bg::after{
-  content:'';
-  position:absolute;inset:0;
-  background:linear-gradient(
-    to bottom,
-    transparent 35%,
-    rgba(6,4,3,0.4) 70%,
-    rgba(6,4,3,0.75) 100%
-  );
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to bottom,transparent 35%,rgba(6,4,3,0.35) 70%,rgba(6,4,3,0.65) 100%);
 }
 
-/* ── Text box ── */
+/* ── TEXT BOX ── */
 #textbox{
-  position:fixed;
-  bottom:0;left:0;right:0;
-  z-index:10;
-  padding:26px 56px 38px 56px;
-  min-height:138px;
+  position:fixed;bottom:0;left:0;right:0;z-index:10;
+  padding:22px 56px 34px 56px;min-height:128px;
   display:flex;flex-direction:column;justify-content:center;gap:10px;
   border-top:1px solid rgba(255,255,255,0.07);
-  opacity:0;
-  transform:translateY(6px);
-  transition:opacity 1s ease, transform 1s ease,
-             background 1s ease, border-color 1s ease;
+  opacity:0;transform:translateY(6px);
+  transition:opacity 0.8s ease,transform 0.8s ease,background 1s ease,border-color 1s ease;
 }
 #textbox.show{opacity:1;transform:translateY(0);}
+#textbox.hesse{ background:rgba(10,7,4,0.52);border-color:rgba(190,150,90,0.15);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px); }
+#textbox.camellia{ background:rgba(4,8,16,0.52);border-color:rgba(100,150,210,0.15);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px); }
 
-/* Hesse: warm dark background */
-#textbox.hesse{
-  background:rgba(10,7,4,0.78);
-  border-color:rgba(190,150,90,0.12);
-  backdrop-filter:blur(3px);
-}
-/* Camellia: cool dark background */
-#textbox.camellia{
-  background:rgba(4,8,14,0.80);
-  border-color:rgba(100,150,210,0.12);
-  backdrop-filter:blur(3px);
-}
-
-/* Voice label */
 #voice-tag{
-  font-family:'Space Mono',monospace;
-  font-size:8px;
-  letter-spacing:0.38em;
-  text-transform:uppercase;
-  transition:color 1s ease;
+  font-family:'Space Mono',monospace;font-size:10px;
+  letter-spacing:0.38em;text-transform:uppercase;transition:color 1s ease;
 }
-#voice-tag.hesse{ color:rgba(190,150,90,0.5); }
-#voice-tag.camellia{ color:rgba(100,150,210,0.5); }
+#voice-tag.hesse{ color:rgba(190,150,90,0.65); }
+#voice-tag.camellia{ color:rgba(100,150,210,0.65); }
 
-/* Main typewriter text */
 #poem-text{
   font-family:'Special Elite',serif;
   font-size:clamp(14px,1.8vw,19px);
-  letter-spacing:0.03em;
-  line-height:1.9;
-  transition:color 1s ease;
+  letter-spacing:0.03em;line-height:1.9;transition:color 1s ease;
 }
 #poem-text.hesse{ color:rgba(218,185,140,0.93); }
 #poem-text.camellia{ color:rgba(160,198,240,0.92); }
 
-/* Blinking cursor */
 .type-cursor{
-  display:inline-block;
-  width:2px;height:0.95em;
-  margin-left:1px;
-  vertical-align:middle;
+  display:inline-block;width:2px;height:0.95em;
+  margin-left:1px;vertical-align:middle;
   animation:blink 0.85s step-end infinite;
 }
 .type-cursor.hesse{ background:rgba(218,185,140,0.8); }
 .type-cursor.camellia{ background:rgba(160,198,240,0.8); }
 @keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
 
-/* Continue indicator */
 #continue{
-  position:absolute;bottom:16px;right:40px;
-  font-family:'Space Mono',monospace;
-  font-size:8px;letter-spacing:0.25em;
-  opacity:0;
-  transition:opacity 1.2s ease, color 1s ease;
-  white-space:nowrap;
+  position:absolute;bottom:14px;right:40px;
+  font-family:'Space Mono',monospace;font-size:8px;letter-spacing:0.25em;
+  opacity:0;transition:opacity 1.2s ease,color 1s ease;white-space:nowrap;
 }
 #continue.show{opacity:1;}
 #continue.hesse{ color:rgba(190,150,90,0.45); }
 #continue.camellia{ color:rgba(100,150,210,0.45); }
 
-/* Page number */
 #page-num{
   position:fixed;top:28px;right:34px;
-  font-family:'Space Mono',monospace;font-size:8px;
-  letter-spacing:0.3em;
-  pointer-events:none;z-index:20;
-  transition:color 1s ease;
+  font-family:'Space Mono',monospace;font-size:8px;letter-spacing:0.3em;
+  pointer-events:none;z-index:20;transition:color 1s ease;
 }
 #page-num.hesse{ color:rgba(190,150,90,0.22); }
 #page-num.camellia{ color:rgba(100,150,210,0.22); }
 
-/* Title top left */
 #title{
   position:fixed;top:28px;left:34px;
   font-family:'Space Mono',monospace;font-size:8px;
   letter-spacing:0.28em;color:rgba(150,140,130,0.18);
   text-transform:uppercase;pointer-events:none;z-index:20;
+  transition:opacity 1s ease;
 }
 
-/* End screen */
+/* ── PARTICLE ENDSCREEN ── */
 #endscreen{
-  position:fixed;inset:0;
-  background:#080604;
-  z-index:50;
-  display:flex;align-items:center;justify-content:center;
+  position:fixed;inset:0;z-index:50;
   opacity:0;pointer-events:none;
   transition:opacity 2s ease;
+  background:#020509;
 }
 #endscreen.show{opacity:1;pointer-events:all;}
-#endscreen p{
-  font-family:'Special Elite',serif;
-  font-size:clamp(13px,1.6vw,17px);
-  color:rgba(180,170,160,0.5);
-  letter-spacing:0.15em;
+
+#endscreen canvas{
+  display:block;position:absolute;top:0;left:0;
+}
+
+/* Particle overlay UI — mirrors Part 1 */
+#end-overlay{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:10;
+}
+#end-stage-label{
+  position:absolute;top:34px;left:36px;
+  font-family:'Space Mono',monospace;font-size:8px;letter-spacing:0.35em;
+  color:rgba(100,140,200,0.3);text-transform:uppercase;
+  transition:color 1.5s ease;
+}
+#end-title{
+  position:absolute;top:34px;right:36px;
+  font-family:'Space Mono',monospace;font-size:8px;letter-spacing:0.28em;
+  color:rgba(100,140,200,0.25);text-transform:uppercase;white-space:nowrap;
+}
+#end-poem-main{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
   text-align:center;
-  line-height:2;
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(15px,2.2vw,22px);
+  font-weight:300;font-style:italic;
+  color:rgba(200,220,255,0);
+  letter-spacing:0.06em;line-height:2;width:60%;
+  text-shadow:0 0 60px rgba(120,170,255,0.5);
+  transition:color 2s ease,text-shadow 2s ease;
+}
+#end-poem-main.visible{ color:rgba(200,220,255,0.88); }
+#end-poem-main.warm{
+  color:rgba(255,220,170,0.92);
+  text-shadow:0 0 60px rgba(255,180,100,0.5);
+}
+#end-poem-sub{
+  position:absolute;bottom:52px;left:50%;
+  transform:translateX(-50%);
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(11px,1.4vw,14px);
+  font-weight:300;font-style:italic;
+  color:rgba(150,180,230,0);
+  letter-spacing:0.1em;line-height:1.8;
+  text-align:center;width:55%;
+  transition:color 2s ease;
+}
+#end-poem-sub.visible{ color:rgba(150,180,230,0.6); }
+#end-burst-msg{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  text-align:center;
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(18px,2.8vw,28px);
+  font-weight:300;font-style:italic;
+  color:rgba(255,255,255,0);
+  letter-spacing:0.08em;line-height:2;width:65%;
+  pointer-events:none;
+  transition:color 1s ease,text-shadow 1s ease;
+  text-shadow:0 0 0px rgba(255,255,255,0);
+}
+#end-burst-msg.active{
+  color:rgba(240,248,255,0.95);
+  text-shadow:0 0 100px rgba(180,210,255,0.7),0 0 200px rgba(140,180,255,0.3);
+}
+#end-hint{
+  position:absolute;bottom:22px;left:50%;transform:translateX(-50%);
+  font-family:'Space Mono',monospace;font-size:8px;letter-spacing:0.22em;
+  color:rgba(100,140,200,0.22);white-space:nowrap;
+  transition:opacity 2s ease;
+}
+
+/* Particle cursor */
+#end-cursor{
+  position:fixed;width:6px;height:6px;border-radius:50%;
+  background:rgba(255,215,155,0.95);pointer-events:none;z-index:200;
+  transform:translate(-50%,-50%);
+  box-shadow:0 0 10px rgba(255,200,120,0.9),0 0 30px rgba(255,155,70,0.4),0 0 70px rgba(255,120,50,0.12);
+  display:none;
 }
 </style>
 </head>
@@ -182,70 +212,37 @@ body{
 </div>
 
 <div id="title">All Water Meets Again</div>
-<div id="page-num" class="hesse">01 / 09</div>
+<div id="page-num" class="hesse">01 / 08</div>
 
+<!-- ── PARTICLE ENDSCREEN ── -->
 <div id="endscreen">
-  <p>all the water in the world<br>will meet again.</p>
+  <canvas id="end-canvas"></canvas>
+  <div id="end-overlay">
+    <div id="end-stage-label">— I —&nbsp;&nbsp;arrival</div>
+    <div id="end-title">All Water Meets Again</div>
+    <div id="end-poem-main">Winter repeats itself,<br>and those who should meet<br>will meet again.</div>
+    <div id="end-poem-sub"></div>
+    <div id="end-burst-msg"></div>
+    <div id="end-hint">move your cursor through the waters</div>
+  </div>
 </div>
+<div id="end-cursor"></div>
 
 <script>
 // ═══════════════════════════════════════════════════════
-//  PAGES DATA
+//  STORY PAGES
 // ═══════════════════════════════════════════════════════
 const pages = [
-  {
-    voice: 'hesse',
-    label: 'Hesse',
-    image: 'assets/1.png',
-    text:  'Winter repeats itself, and those who should meet will meet again.',
-  },
-  {
-    voice: 'camellia',
-    label: 'Camellia',
-    image: 'assets/2.png',
-    text:  'A few years ago, I might not have fully understood this.',
-  },
-  {
-    voice: 'hesse',
-    label: 'Hesse',
-    image: 'assets/3.png',
-    text:  "So we don't have to always worry about regrets, but learn to look forward to them.",
-  },
-  {
-    voice: 'camellia',
-    label: 'Camellia',
-    image: 'assets/4.png',
-    text:  'Every encounter means something — and so does every separation.',
-  },
-  {
-    voice: 'hesse',
-    label: 'Hesse',
-    image: 'assets/5.png',
-    text:  'The part of me who was changed by you will forever accompany me in your place.',
-  },
-  {
-    voice: 'camellia',
-    label: 'Camellia',
-    image: 'assets/6.png',
-    text:  'Even when distance becomes permanent, something remains.',
-  },
-  {
-    voice: 'hesse',
-    label: 'Hesse',
-    image: 'assets/7.png',
-    text:  'All the water in the world will meet again.',
-  },
-  {
-    voice: 'camellia',
-    label: 'Camellia',
-    image: 'assets/8.png',
-    text:  "Maybe that's what the water already knows.",
-  },
+  { voice:'hesse',    label:'Hesse',    image:'assets/1.png', text:'Winter repeats itself, and those who should meet will meet again.' },
+  { voice:'camellia', label:'Camellia', image:'assets/2.png', text:'A few years ago, I might not have fully understood this.' },
+  { voice:'hesse',    label:'Hesse',    image:'assets/3.png', text:"So we don't have to always worry about regrets, but learn to look forward to them." },
+  { voice:'camellia', label:'Camellia', image:'assets/4.png', text:'Every encounter means something — and so does every separation.' },
+  { voice:'hesse',    label:'Hesse',    image:'assets/5.png', text:'The part of me who was changed by you will forever accompany me in your place.' },
+  { voice:'camellia', label:'Camellia', image:'assets/6.png', text:'Even when distance becomes permanent, something remains.' },
+  { voice:'hesse',    label:'Hesse',    image:'assets/7.png', text:'All the water in the world will meet again.' },
+  { voice:'camellia', label:'Camellia', image:'assets/8.png', text:"Maybe that's what the water already knows." },
 ];
 
-// ═══════════════════════════════════════════════════════
-//  STATE
-// ═══════════════════════════════════════════════════════
 const cursorEl   = document.getElementById('cursor');
 const bg         = document.getElementById('bg');
 const textbox    = document.getElementById('textbox');
@@ -254,108 +251,329 @@ const poemEl     = document.getElementById('poem-text');
 const continueEl = document.getElementById('continue');
 const pageNum    = document.getElementById('page-num');
 const endscreen  = document.getElementById('endscreen');
+const titleEl    = document.getElementById('title');
 
-let current    = 0;
-let typingDone = false;
-let typingInterval = null;
+let current = 0, typingDone = false, typingInterval = null, storyDone = false, transitioning = false;
 
 window.addEventListener('mousemove', e => {
-  cursorEl.style.left = e.clientX + 'px';
-  cursorEl.style.top  = e.clientY + 'px';
+  cursorEl.style.left = e.clientX+'px';
+  cursorEl.style.top  = e.clientY+'px';
 });
 
-// ═══════════════════════════════════════════════════════
-//  LOAD PAGE
-// ═══════════════════════════════════════════════════════
 function loadPage(index) {
+  if (index < 0 || index >= pages.length) return;
   const page = pages[index];
   const v    = page.voice;
   typingDone = false;
   continueEl.classList.remove('show');
-
-  // Update color theme
-  cursorEl.className  = v;
-  textbox.className   = v;
-  voiceTag.className  = v;
-  poemEl.className    = v;
-  continueEl.className= v;
-  pageNum.className   = v;
-
+  cursorEl.className   = v;
+  textbox.className    = v;
+  voiceTag.className   = v;
+  poemEl.className     = v;
+  continueEl.className = v;
+  pageNum.className    = v;
   voiceTag.textContent = page.label;
   pageNum.textContent  = `${String(index+1).padStart(2,'0')} / 08`;
   poemEl.innerHTML     = '';
-
-  // Fade in background
   bg.style.backgroundImage = `url('${page.image}')`;
   bg.className = '';
   void bg.offsetWidth;
   bg.classList.add('fadein');
-
-  // Show textbox then type
   textbox.classList.remove('show');
   setTimeout(() => {
     textbox.classList.add('show');
-    setTimeout(() => typeWriter(page.text, v), 500);
-  }, 900);
+    setTimeout(() => typeWriter(page.text, v), 400);
+  }, 700);
 }
 
-// ═══════════════════════════════════════════════════════
-//  TYPEWRITER
-// ═══════════════════════════════════════════════════════
 function typeWriter(text, voice) {
   if (typingInterval) clearInterval(typingInterval);
   poemEl.innerHTML = '';
   let i = 0;
-
   const cur = document.createElement('span');
   cur.className = `type-cursor ${voice}`;
   poemEl.appendChild(cur);
-
   typingInterval = setInterval(() => {
     if (i < text.length) {
       poemEl.insertBefore(document.createTextNode(text[i]), cur);
       i++;
     } else {
       clearInterval(typingInterval);
-      setTimeout(() => {
-        cur.remove();
-        typingDone = true;
-        continueEl.classList.add('show');
-      }, 500);
+      setTimeout(() => { cur.remove(); typingDone = true; continueEl.classList.add('show'); }, 400);
     }
   }, 46);
 }
 
-// ═══════════════════════════════════════════════════════
-//  ADVANCE
-// ═══════════════════════════════════════════════════════
 document.addEventListener('click', () => {
-  if (!typingDone) return;
-
+  if (storyDone || !typingDone || transitioning) return;
+  transitioning = true;
   if (current === pages.length - 1) {
-    // End of story
-    bg.classList.remove('fadein');
-    bg.classList.add('fadeout');
-    textbox.style.transition = 'opacity 1s ease';
-    textbox.style.opacity = '0';
-    setTimeout(() => endscreen.classList.add('show'), 1200);
+    storyDone = true;
+    bg.classList.remove('fadein'); bg.classList.add('fadeout');
+    textbox.style.transition = 'opacity 0.8s ease'; textbox.style.opacity = '0';
+    titleEl.style.opacity = '0'; pageNum.style.opacity = '0';
+    setTimeout(() => {
+      endscreen.classList.add('show');
+      cursorEl.style.display = 'none';
+      document.getElementById('end-cursor').style.display = 'block';
+      startParticleWorld();
+    }, 1000);
     return;
   }
-
-  // Fade out current bg
-  bg.classList.remove('fadein');
-  bg.classList.add('fadeout');
+  bg.classList.remove('fadein'); bg.classList.add('fadeout');
   textbox.classList.remove('show');
-
   setTimeout(() => {
     current++;
+    transitioning = false;
     loadPage(current);
-  }, 900);
+  }, 550);
 });
 
 // ═══════════════════════════════════════════════════════
-//  START
+//  FULL PARTICLE WORLD (Part 1 system)
 // ═══════════════════════════════════════════════════════
+function startParticleWorld() {
+  const canvas     = document.getElementById('end-canvas');
+  const ctx        = canvas.getContext('2d');
+  const endCurEl   = document.getElementById('end-cursor');
+  const poemMain   = document.getElementById('end-poem-main');
+  const poemSub    = document.getElementById('end-poem-sub');
+  const stageLbl   = document.getElementById('end-stage-label');
+  const burstMsg   = document.getElementById('end-burst-msg');
+  const hintEl     = document.getElementById('end-hint');
+
+  let W = canvas.width  = window.innerWidth;
+  let H = canvas.height = window.innerHeight;
+  window.addEventListener('resize', () => {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    initParticles();
+  });
+
+  const mouse = {x:-999,y:-999,px:-999,py:-999};
+  let firstMove=false, idleTimer=null;
+  let pStage=0, warmCount=0;
+  const WARM_THRESHOLD=90;
+
+  window.addEventListener('mousemove', e => {
+    mouse.px=mouse.x; mouse.py=mouse.y;
+    mouse.x=e.clientX; mouse.y=e.clientY;
+    endCurEl.style.left=e.clientX+'px';
+    endCurEl.style.top=e.clientY+'px';
+    if(!firstMove){ firstMove=true; hintEl.style.opacity='0'; toStage(1); }
+    if(pStage===2){ toStage(1); }
+    clearTimeout(idleTimer);
+    idleTimer=setTimeout(()=>{ if(pStage===1) toStage(2); },3000);
+  });
+
+  const STAGE_TEXT={
+    0:{ label:'— I —\u00a0\u00a0arrival',    main:'Winter repeats itself,<br>and those who should meet<br>will meet again.', sub:'', mainClass:'visible' },
+    1:{ label:'— II —\u00a0\u00a0encounter', main:'All the water in the world<br>will meet again.', sub:'The Arctic Ocean and the Nile River<br>will blend in the wet clouds.', mainClass:'visible' },
+    2:{ label:'— III —\u00a0\u00a0departure',main:'', sub:'', mainClass:'', burst:'But from then on,<br>we never met again.' },
+    3:{ label:'— IV —\u00a0\u00a0carry',      main:'The part of me who was changed by you<br>will forever accompany me<br>in your place.', sub:'Even if we wander,<br>every road will take us home.', mainClass:'warm' },
+  };
+
+  let burstTimeout=null;
+  function toStage(n){
+    if(pStage===n) return;
+    pStage=n;
+    const t=STAGE_TEXT[n];
+    stageLbl.textContent=t.label;
+    burstMsg.classList.remove('active'); burstMsg.innerHTML='';
+    clearTimeout(burstTimeout);
+    if(n===2){
+      poemMain.className=''; poemMain.innerHTML='';
+      poemSub.className=''; poemSub.innerHTML='';
+      burstTimeout=setTimeout(()=>{
+        burstMsg.innerHTML=t.burst; burstMsg.classList.add('active');
+        triggerDepartureFlash();
+        setTimeout(()=>{ burstMsg.classList.remove('active'); },4000);
+      },600);
+    } else {
+      poemMain.className=t.mainClass; poemMain.innerHTML=t.main;
+      poemSub.className=t.sub?'visible':''; poemSub.innerHTML=t.sub;
+    }
+  }
+
+  // Colors
+  const COLD=[{r:105,g:170,b:255},{r:75,g:145,b:235},{r:130,g:195,b:255},{r:60,g:125,b:210}];
+  const WARM=[{r:255,g:195,b:100},{r:255,g:162,b:78},{r:248,g:218,b:130},{r:255,g:142,b:85},{r:228,g:186,b:118}];
+  function lerp(a,b,t){return{r:a.r+(b.r-a.r)*t,g:a.g+(b.g-a.g)*t,b:a.b+(b.b-a.b)*t};}
+
+  // Departure flash
+  let flashParticles=[], departureFlashActive=false;
+  function triggerDepartureFlash(){
+    departureFlashActive=true;
+    const cx=W/2,cy=H/2;
+    for(let i=0;i<120;i++){
+      const angle=Math.random()*Math.PI*2, speed=1+Math.random()*5;
+      flashParticles.push({x:cx+(Math.random()-0.5)*60,y:cy+(Math.random()-0.5)*60,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life:0,maxLife:60+Math.random()*80,size:1+Math.random()*2.5,cold:Math.random()>0.3});
+    }
+    setTimeout(()=>{ departureFlashActive=false; },3000);
+  }
+  function updateFlash(){
+    flashParticles=flashParticles.filter(p=>{
+      p.life++; p.x+=p.vx; p.y+=p.vy; p.vx*=0.96; p.vy*=0.96;
+      if(p.life>=p.maxLife) return false;
+      const a=(1-p.life/p.maxLife)*0.75;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+      ctx.fillStyle=p.cold?`rgba(180,210,255,${a})`:`rgba(255,240,200,${a})`;
+      ctx.fill(); return true;
+    });
+  }
+
+  // Drift words
+  const wordPool=['winter','meet again','regrets','changed','Arctic Ocean','Nile River','clouds','wander','home','forever','sacred','water'];
+  let driftWords=[];
+  class DriftWord{
+    constructor(){
+      this.word=wordPool[Math.floor(Math.random()*wordPool.length)];
+      this.x=Math.random()*W; this.y=Math.random()*H;
+      this.vx=(Math.random()-0.5)*0.18; this.vy=(Math.random()-0.5)*0.12;
+      this.alpha=0; this.targetAlpha=0.07+Math.random()*0.1;
+      this.life=0; this.maxLife=320+Math.random()*400;
+      this.size=10+Math.random()*14; this.warm=false;
+    }
+    update(){
+      this.life++;
+      const fi=Math.min(1,this.life/80);
+      const fo=Math.max(0,1-Math.max(0,this.life-this.maxLife*0.7)/(this.maxLife*0.3));
+      this.alpha=this.targetAlpha*fi*fo;
+      const dx=mouse.x-this.x,dy=mouse.y-this.y,dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<150&&firstMove){ this.warm=true; this.vx+=(dx/dist)*0.008; this.vy+=(dy/dist)*0.008; }
+      this.vx*=0.995; this.vy*=0.995; this.x+=this.vx; this.y+=this.vy;
+      return this.life<this.maxLife&&this.x>-100&&this.x<W+100&&this.y>-100&&this.y<H+100;
+    }
+    draw(){
+      ctx.save();
+      ctx.font=`300 italic ${this.size}px 'Cormorant Garamond',serif`;
+      ctx.fillStyle=this.warm?`rgba(255,200,130,${this.alpha*1.4})`:`rgba(140,180,240,${this.alpha})`;
+      ctx.fillText(this.word,this.x,this.y);
+      ctx.restore();
+    }
+  }
+  function manageDriftWords(){
+    if(driftWords.length<12&&Math.random()<0.008) driftWords.push(new DriftWord());
+    driftWords=driftWords.filter(w=>w.update());
+    driftWords.forEach(w=>w.draw());
+  }
+
+  // Particles
+  class Particle{
+    constructor(){ this.assignedWarm=WARM[Math.floor(Math.random()*WARM.length)]; this.warmProgress=0; this.spawnRandom(); }
+    spawnRandom(){ this.x=Math.random()*W; this.y=Math.random()*H; this._init(); this.life=Math.floor(Math.random()*this.maxLife); }
+    spawnEdge(){
+      const e=Math.floor(Math.random()*4);
+      if(e===0){this.x=Math.random()*W;this.y=-12;}
+      else if(e===1){this.x=W+12;this.y=Math.random()*H;}
+      else if(e===2){this.x=Math.random()*W;this.y=H+12;}
+      else{this.x=-12;this.y=Math.random()*H;}
+      this._init();
+    }
+    _init(){
+      this.baseColor=COLD[Math.floor(Math.random()*COLD.length)];
+      this.currentColor=lerp(this.baseColor,this.assignedWarm,this.warmProgress);
+      this.size=0.8+Math.random()*2.2; this.life=0; this.maxLife=200+Math.random()*300; this.trail=[];
+      const cx=W/2,cy=H/2,dx=cx-this.x,dy=cy-this.y,d=Math.sqrt(dx*dx+dy*dy)||1;
+      this.vx=(dx/d)*(0.2+Math.random()*0.6)+(Math.random()-0.5)*0.5;
+      this.vy=(dy/d)*(0.2+Math.random()*0.6)+(Math.random()-0.5)*0.5;
+    }
+    update(){
+      this.life++;
+      this.trail.push({x:this.x,y:this.y});
+      if(this.trail.length>10) this.trail.shift();
+      const dx=mouse.x-this.x,dy=mouse.y-this.y,dist=Math.sqrt(dx*dx+dy*dy);
+      const R=pStage===1?115:80;
+      if(dist<R&&firstMove&&pStage!==2){
+        const prox=1-dist/R;
+        if(this.warmProgress<1){
+          const wasCold=this.warmProgress<0.12;
+          this.warmProgress=Math.min(1,this.warmProgress+prox*0.025);
+          if(wasCold&&this.warmProgress>=0.12){ warmCount++; if(warmCount>=WARM_THRESHOLD&&pStage===1) toStage(3); }
+        }
+        this.vx-=(dx/dist)*prox*0.15; this.vy-=(dy/dist)*prox*0.15;
+      }
+      if(pStage===2&&departureFlashActive){
+        const cx=W/2,cy=H/2,pdx=this.x-cx,pdy=this.y-cy,pd=Math.sqrt(pdx*pdx+pdy*pdy)||1;
+        if(pd<180){ const f=(180-pd)/180; this.vx+=(pdx/pd)*f*0.25; this.vy+=(pdy/pd)*f*0.25; }
+      }
+      this.currentColor=lerp(this.baseColor,this.assignedWarm,this.warmProgress);
+      const ang=(Math.sin(this.x*0.007+this.life*0.003)+Math.cos(this.y*0.007+this.life*0.002))*Math.PI;
+      this.vx+=Math.cos(ang)*0.011; this.vy+=Math.sin(ang)*0.011;
+      const cx=W/2,cy=H/2,cdx=cx-this.x,cdy=cy-this.y,cd=Math.sqrt(cdx*cdx+cdy*cdy)||1;
+      if(cd>80){this.vx+=cdx/cd*0.007;this.vy+=cdy/cd*0.007;}
+      this.vx*=0.983;this.vy*=0.983;
+      const spd=Math.sqrt(this.vx*this.vx+this.vy*this.vy);
+      if(spd>3){this.vx=this.vx/spd*3;this.vy=this.vy/spd*3;}
+      this.x+=this.vx;this.y+=this.vy;
+      if(this.life>this.maxLife||this.x<-160||this.x>W+160||this.y<-160||this.y>H+160){
+        const sw=this.warmProgress,sc={...this.assignedWarm};
+        this.spawnEdge(); this.warmProgress=sw; this.assignedWarm=sc;
+        this.currentColor=lerp(this.baseColor,this.assignedWarm,this.warmProgress);
+      }
+    }
+    draw(){
+      const fi=Math.min(1,this.life/45);
+      const fo=Math.max(0,1-Math.max(0,this.life-this.maxLife*0.72)/(this.maxLife*0.28));
+      const alpha=fi*fo;
+      const {r,g,b}=this.currentColor;
+      const stageMult=pStage===2?0.45:1;
+      for(let i=0;i<this.trail.length;i++){
+        const t=i/this.trail.length;
+        ctx.beginPath();ctx.arc(this.trail[i].x,this.trail[i].y,this.size*t*0.5,0,Math.PI*2);
+        ctx.fillStyle=`rgba(${r|0},${g|0},${b|0},${alpha*t*0.22*stageMult})`;ctx.fill();
+      }
+      const glowR=this.size*(1.7+this.warmProgress*2.8);
+      const grad=ctx.createRadialGradient(this.x,this.y,0,this.x,this.y,glowR);
+      grad.addColorStop(0,`rgba(${r|0},${g|0},${b|0},${alpha*0.9*stageMult})`);
+      grad.addColorStop(0.4,`rgba(${r|0},${g|0},${b|0},${alpha*0.28*stageMult})`);
+      grad.addColorStop(1,`rgba(${r|0},${g|0},${b|0},0)`);
+      ctx.beginPath();ctx.arc(this.x,this.y,glowR,0,Math.PI*2);ctx.fillStyle=grad;ctx.fill();
+    }
+  }
+
+  let particles=[];
+  function initParticles(){
+    const n=Math.min(700,Math.floor(W*H/2600));
+    particles=Array.from({length:n},()=>new Particle());
+  }
+  initParticles();
+
+  let ambientWarm=0;
+  function drawAmbient(){
+    const cx=W/2,cy=H/2,r=Math.min(W,H)*0.18;
+    const g=ctx.createRadialGradient(cx,cy,0,cx,cy,r);
+    if(pStage===3) ambientWarm=Math.min(1,ambientWarm+0.002);
+    g.addColorStop(0,pStage===3?`rgba(255,165,80,${0.05*ambientWarm})`:`rgba(105,148,215,${0.06*(1-ambientWarm)})`);
+    g.addColorStop(0.6,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+    if(firstMove&&pStage!==2){
+      const ca=ctx.createRadialGradient(mouse.x,mouse.y,0,mouse.x,mouse.y,120);
+      ca.addColorStop(0,'rgba(255,195,100,0.06)'); ca.addColorStop(0.5,'rgba(255,150,65,0.02)'); ca.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.beginPath();ctx.arc(mouse.x,mouse.y,120,0,Math.PI*2);ctx.fillStyle=ca;ctx.fill();
+    }
+    ctx.save();ctx.font='8px "Space Mono",monospace';
+    ctx.fillStyle='rgba(130,190,255,0.12)';ctx.fillText('ARCTIC OCEAN',24,30);
+    ctx.fillStyle='rgba(75,175,155,0.12)';ctx.textAlign='right';ctx.fillText('NILE RIVER',W-24,H-16);
+    ctx.restore();
+  }
+
+  function render(){
+    let bgA=0.19;
+    if(pStage===2) bgA=0.25;
+    if(pStage===3) bgA=0.18;
+    ctx.fillStyle=`rgba(2,5,9,${bgA})`;ctx.fillRect(0,0,W,H);
+    drawAmbient();
+    manageDriftWords();
+    for(const p of particles){p.update();p.draw();}
+    updateFlash();
+    requestAnimationFrame(render);
+  }
+
+  toStage(0);
+  render();
+}
+
 loadPage(0);
 </script>
 </body>
