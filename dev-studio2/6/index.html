@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All Water Meets Again</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Space+Mono&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+  background:#080604;
+  overflow:hidden;
+  cursor:none;
+  width:100vw;height:100vh;
+  font-family:'Special Elite',serif;
+}
+
+#cursor{
+  position:fixed;width:5px;height:5px;border-radius:50%;
+  pointer-events:none;z-index:300;
+  transform:translate(-50%,-50%);
+  transition:background 1s ease, box-shadow 1s ease;
+}
+#cursor.hesse{
+  background:rgba(210,175,120,0.9);
+  box-shadow:0 0 8px rgba(210,175,120,0.8),0 0 22px rgba(180,140,90,0.3);
+}
+#cursor.camellia{
+  background:rgba(140,180,230,0.9);
+  box-shadow:0 0 8px rgba(140,180,230,0.8),0 0 22px rgba(100,150,210,0.3);
+}
+
+/* ── Background image ── */
+#bg{
+  position:fixed;inset:0;
+  background-size:cover;
+  background-position:center;
+  z-index:0;
+  opacity:0;
+  transition:opacity 0s;
+}
+#bg.fadein{ transition:opacity 1.8s ease; opacity:1; }
+#bg.fadeout{ transition:opacity 1s ease; opacity:0; }
+
+/* Bottom gradient to ease into textbox */
+#bg::after{
+  content:'';
+  position:absolute;inset:0;
+  background:linear-gradient(
+    to bottom,
+    transparent 35%,
+    rgba(6,4,3,0.4) 70%,
+    rgba(6,4,3,0.75) 100%
+  );
+}
+
+/* ── Text box ── */
+#textbox{
+  position:fixed;
+  bottom:0;left:0;right:0;
+  z-index:10;
+  padding:26px 56px 38px 56px;
+  min-height:138px;
+  display:flex;flex-direction:column;justify-content:center;gap:10px;
+  border-top:1px solid rgba(255,255,255,0.07);
+  opacity:0;
+  transform:translateY(6px);
+  transition:opacity 1s ease, transform 1s ease,
+             background 1s ease, border-color 1s ease;
+}
+#textbox.show{opacity:1;transform:translateY(0);}
+
+/* Hesse: warm dark background */
+#textbox.hesse{
+  background:rgba(10,7,4,0.78);
+  border-color:rgba(190,150,90,0.12);
+  backdrop-filter:blur(3px);
+}
+/* Camellia: cool dark background */
+#textbox.camellia{
+  background:rgba(4,8,14,0.80);
+  border-color:rgba(100,150,210,0.12);
+  backdrop-filter:blur(3px);
+}
+
+/* Voice label */
+#voice-tag{
+  font-family:'Space Mono',monospace;
+  font-size:8px;
+  letter-spacing:0.38em;
+  text-transform:uppercase;
+  transition:color 1s ease;
+}
+#voice-tag.hesse{ color:rgba(190,150,90,0.5); }
+#voice-tag.camellia{ color:rgba(100,150,210,0.5); }
+
+/* Main typewriter text */
+#poem-text{
+  font-family:'Special Elite',serif;
+  font-size:clamp(14px,1.8vw,19px);
+  letter-spacing:0.03em;
+  line-height:1.9;
+  transition:color 1s ease;
+}
+#poem-text.hesse{ color:rgba(218,185,140,0.93); }
+#poem-text.camellia{ color:rgba(160,198,240,0.92); }
+
+/* Blinking cursor */
+.type-cursor{
+  display:inline-block;
+  width:2px;height:0.95em;
+  margin-left:1px;
+  vertical-align:middle;
+  animation:blink 0.85s step-end infinite;
+}
+.type-cursor.hesse{ background:rgba(218,185,140,0.8); }
+.type-cursor.camellia{ background:rgba(160,198,240,0.8); }
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+
+/* Continue indicator */
+#continue{
+  position:absolute;bottom:16px;right:40px;
+  font-family:'Space Mono',monospace;
+  font-size:8px;letter-spacing:0.25em;
+  opacity:0;
+  transition:opacity 1.2s ease, color 1s ease;
+  white-space:nowrap;
+}
+#continue.show{opacity:1;}
+#continue.hesse{ color:rgba(190,150,90,0.45); }
+#continue.camellia{ color:rgba(100,150,210,0.45); }
+
+/* Page number */
+#page-num{
+  position:fixed;top:28px;right:34px;
+  font-family:'Space Mono',monospace;font-size:8px;
+  letter-spacing:0.3em;
+  pointer-events:none;z-index:20;
+  transition:color 1s ease;
+}
+#page-num.hesse{ color:rgba(190,150,90,0.22); }
+#page-num.camellia{ color:rgba(100,150,210,0.22); }
+
+/* Title top left */
+#title{
+  position:fixed;top:28px;left:34px;
+  font-family:'Space Mono',monospace;font-size:8px;
+  letter-spacing:0.28em;color:rgba(150,140,130,0.18);
+  text-transform:uppercase;pointer-events:none;z-index:20;
+}
+
+/* End screen */
+#endscreen{
+  position:fixed;inset:0;
+  background:#080604;
+  z-index:50;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;
+  transition:opacity 2s ease;
+}
+#endscreen.show{opacity:1;pointer-events:all;}
+#endscreen p{
+  font-family:'Special Elite',serif;
+  font-size:clamp(13px,1.6vw,17px);
+  color:rgba(180,170,160,0.5);
+  letter-spacing:0.15em;
+  text-align:center;
+  line-height:2;
+}
+</style>
+</head>
+<body>
+
+<div id="cursor" class="hesse"></div>
+<div id="bg"></div>
+
+<div id="textbox" class="hesse">
+  <span id="voice-tag" class="hesse">Hesse</span>
+  <div id="poem-text" class="hesse"></div>
+  <div id="continue" class="hesse">click to continue ›</div>
+</div>
+
+<div id="title">All Water Meets Again</div>
+<div id="page-num" class="hesse">01 / 09</div>
+
+<div id="endscreen">
+  <p>all the water in the world<br>will meet again.</p>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  PAGES DATA
+// ═══════════════════════════════════════════════════════
+const pages = [
+  {
+    voice: 'hesse',
+    label: 'Hesse',
+    image: 'assets/1.png',
+    text:  'Winter repeats itself, and those who should meet will meet again.',
+  },
+  {
+    voice: 'camellia',
+    label: 'Camellia',
+    image: 'assets/2.png',
+    text:  'A few years ago, I might not have fully understood this.',
+  },
+  {
+    voice: 'hesse',
+    label: 'Hesse',
+    image: 'assets/3.png',
+    text:  "So we don't have to always worry about regrets, but learn to look forward to them.",
+  },
+  {
+    voice: 'camellia',
+    label: 'Camellia',
+    image: 'assets/4.png',
+    text:  'Every encounter means something — and so does every separation.',
+  },
+  {
+    voice: 'hesse',
+    label: 'Hesse',
+    image: 'assets/5.png',
+    text:  'The part of me who was changed by you will forever accompany me in your place.',
+  },
+  {
+    voice: 'camellia',
+    label: 'Camellia',
+    image: 'assets/6.png',
+    text:  'Even when distance becomes permanent, something remains.',
+  },
+  {
+    voice: 'hesse',
+    label: 'Hesse',
+    image: 'assets/7.png',
+    text:  'All the water in the world will meet again.',
+  },
+  {
+    voice: 'camellia',
+    label: 'Camellia',
+    image: 'assets/8.png',
+    text:  "Maybe that's what the water already knows.",
+  },
+];
+
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+const cursorEl   = document.getElementById('cursor');
+const bg         = document.getElementById('bg');
+const textbox    = document.getElementById('textbox');
+const voiceTag   = document.getElementById('voice-tag');
+const poemEl     = document.getElementById('poem-text');
+const continueEl = document.getElementById('continue');
+const pageNum    = document.getElementById('page-num');
+const endscreen  = document.getElementById('endscreen');
+
+let current    = 0;
+let typingDone = false;
+let typingInterval = null;
+
+window.addEventListener('mousemove', e => {
+  cursorEl.style.left = e.clientX + 'px';
+  cursorEl.style.top  = e.clientY + 'px';
+});
+
+// ═══════════════════════════════════════════════════════
+//  LOAD PAGE
+// ═══════════════════════════════════════════════════════
+function loadPage(index) {
+  const page = pages[index];
+  const v    = page.voice;
+  typingDone = false;
+  continueEl.classList.remove('show');
+
+  // Update color theme
+  cursorEl.className  = v;
+  textbox.className   = v;
+  voiceTag.className  = v;
+  poemEl.className    = v;
+  continueEl.className= v;
+  pageNum.className   = v;
+
+  voiceTag.textContent = page.label;
+  pageNum.textContent  = `${String(index+1).padStart(2,'0')} / 08`;
+  poemEl.innerHTML     = '';
+
+  // Fade in background
+  bg.style.backgroundImage = `url('${page.image}')`;
+  bg.className = '';
+  void bg.offsetWidth;
+  bg.classList.add('fadein');
+
+  // Show textbox then type
+  textbox.classList.remove('show');
+  setTimeout(() => {
+    textbox.classList.add('show');
+    setTimeout(() => typeWriter(page.text, v), 500);
+  }, 900);
+}
+
+// ═══════════════════════════════════════════════════════
+//  TYPEWRITER
+// ═══════════════════════════════════════════════════════
+function typeWriter(text, voice) {
+  if (typingInterval) clearInterval(typingInterval);
+  poemEl.innerHTML = '';
+  let i = 0;
+
+  const cur = document.createElement('span');
+  cur.className = `type-cursor ${voice}`;
+  poemEl.appendChild(cur);
+
+  typingInterval = setInterval(() => {
+    if (i < text.length) {
+      poemEl.insertBefore(document.createTextNode(text[i]), cur);
+      i++;
+    } else {
+      clearInterval(typingInterval);
+      setTimeout(() => {
+        cur.remove();
+        typingDone = true;
+        continueEl.classList.add('show');
+      }, 500);
+    }
+  }, 46);
+}
+
+// ═══════════════════════════════════════════════════════
+//  ADVANCE
+// ═══════════════════════════════════════════════════════
+document.addEventListener('click', () => {
+  if (!typingDone) return;
+
+  if (current === pages.length - 1) {
+    // End of story
+    bg.classList.remove('fadein');
+    bg.classList.add('fadeout');
+    textbox.style.transition = 'opacity 1s ease';
+    textbox.style.opacity = '0';
+    setTimeout(() => endscreen.classList.add('show'), 1200);
+    return;
+  }
+
+  // Fade out current bg
+  bg.classList.remove('fadein');
+  bg.classList.add('fadeout');
+  textbox.classList.remove('show');
+
+  setTimeout(() => {
+    current++;
+    loadPage(current);
+  }, 900);
+});
+
+// ═══════════════════════════════════════════════════════
+//  START
+// ═══════════════════════════════════════════════════════
+loadPage(0);
+</script>
+</body>
+</html>
