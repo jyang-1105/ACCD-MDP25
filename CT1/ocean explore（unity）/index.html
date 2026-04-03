@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ocean Explorer — Dream Space</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #f0f4f5;
+      color: #0a1628;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-size: 15px;
+      line-height: 1.8;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 80px 40px;
+    }
+
+    header { margin-bottom: 80px; }
+
+    header h1 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 300;
+      font-size: 52px;
+      line-height: 1.05;
+      color: #0d2240;
+      margin-bottom: 20px;
+    }
+
+    header h1 em { font-style: italic; color: #3d8faa; }
+
+    header p { color: #4a5f6a; max-width: 560px; }
+
+    section { margin-bottom: 64px; }
+
+    h2 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 300;
+      font-size: 26px;
+      color: #0d2240;
+      margin-bottom: 16px;
+    }
+
+    p { color: #4a5f6a; margin-bottom: 12px; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .grid-2 img {
+      width: 100%;
+      display: block;
+      object-fit: contain;
+      height: 340px;
+      background: white;
+    }
+
+    .interactions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .int-card {
+      background: white;
+      border-top: 2px solid #3d8faa;
+      padding: 24px;
+    }
+
+    .int-card h3 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 400;
+      font-size: 15px;
+      color: #0d2240;
+      margin-bottom: 8px;
+    }
+
+    .int-card p { font-size: 14px; margin: 0; }
+
+    .code-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .code-block {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .code-block.full { grid-column: 1 / -1; }
+
+    .code-label {
+      font-family: 'Outfit', sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #3d8faa;
+    }
+
+    .code-desc {
+      font-size: 13px;
+      color: #7a9aaa;
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    .code-block img {
+      width: 100%;
+      display: block;
+      border: 1px solid #c8dde6;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Ocean <em>Explorer</em></h1>
+  <p>An underwater world built in Unity where you swim around, collect shells, and click on creatures to learn what they are. The goal was to make something that felt calm and open rather than goal-driven.</p>
+</header>
+
+<section>
+  <h2>Sketches</h2>
+  <p>I started with a rough sketch of the scene layout and a diagram mapping out the controls and the two main interactions before building anything.</p>
+  <div class="grid-2">
+    <img src="ocean assets/Sketch_Environment.png" alt="Environment sketch"/>
+    <img src="ocean assets/Controls_Diagram.png" alt="Controls and interaction diagram"/>
+  </div>
+</section>
+
+<section>
+  <h2>Environment</h2>
+  <p>The scene is built on a Unity terrain with low-poly coral and rock assets. I added underwater fog and adjusted the lighting to get a blue-green tint. Fish and sea turtles move around on their own using a raycast-based AI so they don't just walk into walls.</p>
+  <img src="ocean assets/Environment_Overview.png" style="width:100%;margin-top:20px;" alt="Environment overview"/>
+</section>
+
+<section>
+  <h2>Interactions</h2>
+  <div class="interactions">
+    <div class="int-card">
+      <h3>Collect Shells</h3>
+      <p>Walk up to a shell and click it. It disappears and the score goes up by one. Simple, but satisfying to do repeatedly.</p>
+    </div>
+    <div class="int-card">
+      <h3>Identify Creatures</h3>
+      <p>Click on any fish or sea turtle and a panel slides in with the creature's name and a short description. Click close to go back to exploring.</p>
+    </div>
+  </div>
+  <video src="ocean assets/Creature_Info.mov" controls style="width:100%;margin-top:12px;"></video>
+</section>
+
+<section>
+  <h2>Code</h2>
+  <p>The main scripts I wrote for this project — the fish movement AI was the most complex part, the rest handles collection and UI.</p>
+
+  <div class="code-grid">
+
+    <div class="code-block full">
+      <span class="code-label">OceanAnimalMovement — Smart Turn</span>
+      <img src="ocean assets/OceanAnimalMovement_SmartTurn.png" alt="OceanAnimalMovement SmartTurn script"/>
+      <p class="code-desc">This is the part I spent the most time on. It shoots three raycasts (left, forward, right) and decides which direction to turn based on which ones hit something. If the front is blocked it checks left and right and picks the open side. If everything is blocked it just picks a random angle.</p>
+    </div>
+
+    <div class="code-block">
+      <span class="code-label">CollectManager</span>
+      <img src="ocean assets/CollectManager_Script.png" alt="CollectManager script"/>
+      <p class="code-desc">Keeps track of the score and updates the text on screen every time something is collected.</p>
+    </div>
+
+    <div class="code-block">
+      <span class="code-label">CollectObject</span>
+      <img src="ocean assets/CollectObject_Script.png" alt="CollectObject script"/>
+      <p class="code-desc">When you click a shell, this script finds the CollectManager, tells it to add a point, then destroys the shell object.</p>
+    </div>
+
+    <div class="code-block">
+      <span class="code-label">ShowManager</span>
+      <img src="ocean assets/ShowManager_Script.png" alt="ShowManager script"/>
+      <p class="code-desc">Fills in the info panel with the creature's name and description, and moves the camera to look at the creature you clicked.</p>
+    </div>
+
+    <div class="code-block">
+      <span class="code-label">Fish</span>
+      <img src="ocean assets/Fish_Script.png" alt="Fish script"/>
+      <p class="code-desc">Tracks whether the info panel is open or not. First click opens the panel, clicking again plays a little bounce animation using DOTween.</p>
+    </div>
+
+  </div>
+</section>
+
+<section>
+  <h2>Demo</h2>
+  <video src="ocean assets/Demo.mov" controls style="width:100%;"></video>
+</section>
+
+</body>
+</html>
