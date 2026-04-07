@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All Water Meets Again</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap');
+*{ margin:0; padding:0; box-sizing:border-box; }
+body{ background:#020509; overflow:hidden; font-family:'Cormorant Garamond',serif; cursor:none; }
+
+/* canvas sits at z-index 1 */
+#canvas-container{
+  position:fixed; top:0; left:0; width:100%; height:100%; z-index:1;
+}
+
+/* ── OVERLAY ── z-index:200 so it's always above canvas */
+#overlay{
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  pointer-events:none; z-index:200;
+}
+
+/* ── TOP LABELS ── */
+#stage-label{
+  position:absolute; top:36px; left:40px;
+  font-size:9px; letter-spacing:0.32em;
+  color:rgba(105,150,215,0.28);
+  text-transform:uppercase; font-weight:300;
+  transition:opacity 1.5s;
+}
+#title-label{
+  position:absolute; top:36px; right:40px;
+  font-size:10px; letter-spacing:0.22em;
+  color:rgba(105,150,215,0.2);
+  font-style:italic; font-weight:300; white-space:nowrap;
+}
+
+/* ── MAIN POEM (Hesse's voice + response) ── */
+#poem-main{
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  text-align:center;
+  font-size:clamp(16px, 2.3vw, 26px);
+  font-weight:300; font-style:italic;
+  color:rgba(200,220,255,0);
+  letter-spacing:0.05em; line-height:2.1;
+  width:62%;
+  transition:color 2.5s ease, text-shadow 2.5s ease;
+}
+/* stage 0,1,2: Hesse's voice — cool blue */
+#poem-main.visible{
+  color:rgba(200,220,255,0.88);
+  text-shadow:0 0 60px rgba(120,170,255,0.25);
+}
+/* stage 3: merged/carry — warm */
+#poem-main.warm{
+  color:rgba(255,222,175,0.92);
+  text-shadow:0 0 70px rgba(255,175,90,0.3);
+}
+/* stage 4-7: response voice — pale, wider tracking */
+#poem-main.wind{
+  color:rgba(215,230,255,0.80);
+  letter-spacing:0.09em;
+  text-shadow:none;
+}
+
+/* ── SUB TEXT ── */
+#poem-sub{
+  position:absolute; bottom:58px; left:50%;
+  transform:translateX(-50%);
+  font-size:clamp(12px, 1.4vw, 16px);
+  font-weight:300; font-style:italic;
+  color:rgba(150,180,230,0);
+  letter-spacing:0.07em; line-height:2.0;
+  text-align:center; width:56%;
+  transition:color 2.5s ease;
+}
+#poem-sub.visible{ color:rgba(150,180,230,0.55); }
+#poem-sub.warm   { color:rgba(240,200,148,0.50); }
+#poem-sub.wind   { color:rgba(200,215,240,0.45); letter-spacing:0.11em; }
+
+/* ── BURST (departure) ── */
+#burst-msg{
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  text-align:center;
+  font-size:clamp(18px, 2.8vw, 30px);
+  font-weight:300; font-style:italic;
+  color:rgba(255,255,255,0);
+  letter-spacing:0.06em; line-height:2.1;
+  width:65%; pointer-events:none;
+  transition:color 1s ease, text-shadow 1s ease;
+}
+#burst-msg.active{
+  color:rgba(240,248,255,0.95);
+  text-shadow:0 0 120px rgba(180,210,255,0.55);
+}
+
+/* ── HINT ── */
+#hint{
+  position:absolute; bottom:22px; left:50%;
+  transform:translateX(-50%);
+  font-size:9px; letter-spacing:0.24em;
+  color:rgba(105,150,215,0.2);
+  font-style:italic; white-space:nowrap;
+  transition:opacity 2s ease;
+}
+
+/* ── STATUS (model / hand) ── */
+#status{
+  position:absolute; top:14px; left:50%;
+  transform:translateX(-50%);
+  font-size:9px; letter-spacing:0.2em; font-style:italic;
+  color:rgba(105,150,215,0.28);
+  transition:color 0.3s;
+}
+#status.on{ color:rgba(255,195,128,0.6); }
+
+/* ── WEBCAM PREVIEW ── */
+#webcam-wrap{
+  position:fixed; bottom:16px; right:16px;
+  width:120px; height:90px;
+  border-radius:3px; overflow:hidden;
+  border:1px solid rgba(105,170,255,0.10);
+  opacity:0.12; z-index:50;
+}
+#webcam-wrap video{
+  width:100%; height:100%;
+  object-fit:cover; transform:scaleX(-1);
+}
+</style>
+</head>
+<body>
+
+<div id="canvas-container"></div>
+
+<div id="webcam-wrap">
+  <video id="webcam-preview" autoplay playsinline muted></video>
+</div>
+
+<div id="overlay">
+  <div id="stage-label">— I —&nbsp;&nbsp;arrival</div>
+  <div id="title-label">All Water Meets Again</div>
+
+  <!-- poem-main: Hesse stages 0-3, Response stages 4-7 -->
+  <div id="poem-main">
+    Winter repeats itself,<br>
+    and those who should meet<br>
+    will meet again.
+  </div>
+
+  <div id="poem-sub"></div>
+  <div id="burst-msg"></div>
+
+  <div id="hint">bring your index finger into the waters</div>
+  <div id="status">loading model...</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+<script src="https://unpkg.com/ml5@1/dist/ml5.min.js"></script>
+<script src="sketch.js"></script>
+</body>
+</html>
