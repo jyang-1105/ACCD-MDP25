@@ -111,11 +111,13 @@ function setup() {
   video = createCapture(VIDEO);
   video.size(640, 480);
   video.hide();
-  video.elt.onloadedmetadata = function() {
+
+  // 等 video 就绪后再 detectStart — 和 Bacio di Scelta 一样的写法
+  setTimeout(function() {
     let pv = document.getElementById('webcam-preview');
-    if (pv) pv.srcObject = video.elt.srcObject;
-  };
-  handPose.detectStart(video, function(r) { hands = r; });
+    if (pv && video.elt.srcObject) pv.srcObject = video.elt.srcObject;
+    handPose.detectStart(video, function(r) { hands = r; });
+  }, 500);
 }
 
 // ════════════════════════════════════════
