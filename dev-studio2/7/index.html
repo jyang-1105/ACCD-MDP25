@@ -125,7 +125,7 @@ let stage = -1;
 let firstContact = false;
 let mergeTriggered = false;
 let idleTO = null, burstTO = null;
-const MERGE_RATIO = 0.55;
+const MERGE_RATIO = 0.22;
 
 // ── mouse ──
 let fingerX, fingerY, velX = 0, velY = 0;
@@ -247,8 +247,8 @@ function draw() {
     fill(255,215,155,25);  ellipse(fingerX,fingerY,18);
   }
 
-  // merge check → advance to stage 4 (skipping departure)
-  if (stage===1 && firstContact && !mergeTriggered && wParts.length>0) {
+  // merge check — works on stage 1 or 2
+  if ((stage===1||stage===2) && firstContact && !mergeTriggered && wParts.length>0) {
     let total=0;
     for(let p of wParts) total+=p.mp;
     if(total/wParts.length >= MERGE_RATIO) {
@@ -336,7 +336,7 @@ class Particle {
     // merge
     if(firstContact && stage<6){
       let dx=fingerX-this.x,dy=fingerY-this.y,d=dist(0,0,dx,dy);
-      if(d<110){ let prox=1-d/110; this.mp=min(1,this.mp+prox*0.006); if(d>1){this.vx-=dx/d*prox*0.1;this.vy-=dy/d*prox*0.1;} }
+      if(d<110){ let prox=1-d/110; this.mp=min(1,this.mp+prox*0.012); if(d>1){this.vx-=dx/d*prox*0.1;this.vy-=dy/d*prox*0.1;} }
     }
     // follow path
     if(this.type==='world' && stage<=5){
