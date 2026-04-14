@@ -9,82 +9,65 @@
 *{ margin:0; padding:0; box-sizing:border-box; }
 body{ background:#020509; overflow:hidden; font-family:'Cormorant Garamond',serif; cursor:none; }
 
-/* canvas sits at z-index 1 */
-#canvas-container{
-  position:fixed; top:0; left:0; width:100%; height:100%; z-index:1;
-}
+#canvas-container{ position:fixed; top:0; left:0; width:100%; height:100%; z-index:1; }
 
-/* ── OVERLAY ── z-index:200 so it's always above canvas */
 #overlay{
   position:fixed; top:0; left:0; width:100%; height:100%;
   pointer-events:none; z-index:200;
 }
-
-/* ── TOP LABELS ── */
 #stage-label{
   position:absolute; top:36px; left:40px;
   font-size:9px; letter-spacing:0.32em;
-  color:rgba(105,150,215,0.28);
-  text-transform:uppercase; font-weight:300;
-  transition:opacity 1.5s;
+  color:rgba(105,150,215,0.28); text-transform:uppercase; font-weight:300;
 }
 #title-label{
   position:absolute; top:36px; right:40px;
   font-size:10px; letter-spacing:0.22em;
-  color:rgba(105,150,215,0.2);
-  font-style:italic; font-weight:300; white-space:nowrap;
+  color:rgba(105,150,215,0.2); font-style:italic; font-weight:300; white-space:nowrap;
 }
-
-/* ── MAIN POEM (Hesse's voice + response) ── */
 #poem-main{
   position:absolute; top:50%; left:50%;
   transform:translate(-50%,-50%);
   text-align:center;
-  font-size:clamp(16px, 2.3vw, 26px);
+  font-size:clamp(16px,2.3vw,26px);
   font-weight:300; font-style:italic;
   color:rgba(200,220,255,0);
-  letter-spacing:0.05em; line-height:2.1;
-  width:62%;
-  transition:color 2.5s ease, text-shadow 2.5s ease;
+  letter-spacing:0.05em; line-height:2.2; width:64%;
+  transition:color 4s ease, text-shadow 4s ease;
 }
-/* stage 0,1,2: Hesse's voice — cool blue */
-#poem-main.visible{
-  color:rgba(200,220,255,0.88);
-  text-shadow:0 0 60px rgba(120,170,255,0.25);
+#poem-main.visible   { color:rgba(200,220,255,0.88); text-shadow:0 0 60px rgba(120,170,255,0.2); }
+#poem-main.wind      { color:rgba(215,230,255,0.80); letter-spacing:0.09em; text-shadow:none; }
+#poem-main.transition{
+  color:rgba(190,210,230,0.75);
+  font-size:clamp(13px,1.7vw,20px);
+  letter-spacing:0.12em;
+  font-style:italic;
+  text-shadow:
+    0 0 20px rgba(175,212,195,0.6),
+    0 0 60px rgba(175,212,195,0.3),
+    0 0 120px rgba(175,212,195,0.15);
+  animation: transitionGlow 2.5s ease-in-out infinite;
 }
-/* stage 3: merged/carry — warm */
-#poem-main.warm{
-  color:rgba(255,222,175,0.92);
-  text-shadow:0 0 70px rgba(255,175,90,0.3);
-}
-/* stage 4-7: response voice — pale, wider tracking */
-#poem-main.wind{
-  color:rgba(215,230,255,0.80);
-  letter-spacing:0.09em;
-  text-shadow:none;
+@keyframes transitionGlow {
+  0%,100% {
+    text-shadow:
+      0 0 20px rgba(175,212,195,0.5),
+      0 0 60px rgba(175,212,195,0.2),
+      0 0 120px rgba(175,212,195,0.1);
+  }
+  50% {
+    text-shadow:
+      0 0 30px rgba(175,212,195,0.9),
+      0 0 80px rgba(175,212,195,0.5),
+      0 0 160px rgba(175,212,195,0.25);
+  }
 }
 
-/* ── SUB TEXT ── */
-#poem-sub{
-  position:absolute; bottom:58px; left:50%;
-  transform:translateX(-50%);
-  font-size:clamp(12px, 1.4vw, 16px);
-  font-weight:300; font-style:italic;
-  color:rgba(150,180,230,0);
-  letter-spacing:0.07em; line-height:2.0;
-  text-align:center; width:56%;
-  transition:color 2.5s ease;
-}
-#poem-sub.visible{ color:rgba(150,180,230,0.55); }
-#poem-sub.warm   { color:rgba(240,200,148,0.50); }
-#poem-sub.wind   { color:rgba(200,215,240,0.45); letter-spacing:0.11em; }
-
-/* ── BURST (departure) ── */
 #burst-msg{
   position:absolute; top:50%; left:50%;
   transform:translate(-50%,-50%);
   text-align:center;
-  font-size:clamp(18px, 2.8vw, 30px);
+  font-size:clamp(18px,2.8vw,30px);
   font-weight:300; font-style:italic;
   color:rgba(255,255,255,0);
   letter-spacing:0.06em; line-height:2.1;
@@ -96,68 +79,415 @@ body{ background:#020509; overflow:hidden; font-family:'Cormorant Garamond',seri
   text-shadow:0 0 120px rgba(180,210,255,0.55);
 }
 
-/* ── HINT ── */
+/* attribution */
+#attr{
+  position:absolute; bottom:88px; left:50%;
+  transform:translateX(-50%);
+  font-size:10px; letter-spacing:0.28em;
+  color:rgba(150,170,210,0);
+  font-style:italic; white-space:nowrap;
+  transition:color 3s ease;
+}
+#attr.hesse    { color:rgba(160,190,240,0.60); }
+#attr.camellia { color:rgba(255,205,145,0.60); }
+
 #hint{
-  position:absolute; bottom:22px; left:50%;
+  position:absolute; bottom:28px; left:50%;
   transform:translateX(-50%);
   font-size:9px; letter-spacing:0.24em;
   color:rgba(105,150,215,0.2);
   font-style:italic; white-space:nowrap;
   transition:opacity 2s ease;
 }
-
-/* ── STATUS (model / hand) ── */
-#status{
-  position:absolute; top:14px; left:50%;
-  transform:translateX(-50%);
-  font-size:9px; letter-spacing:0.2em; font-style:italic;
-  color:rgba(105,150,215,0.28);
-  transition:color 0.3s;
-}
-#status.on{ color:rgba(255,195,128,0.6); }
-
-/* ── WEBCAM PREVIEW ── */
-#webcam-wrap{
-  position:fixed; bottom:16px; right:16px;
-  width:120px; height:90px;
-  border-radius:3px; overflow:hidden;
-  border:1px solid rgba(105,170,255,0.10);
-  opacity:0.12; z-index:50;
-}
-#webcam-wrap video{
-  width:100%; height:100%;
-  object-fit:cover; transform:scaleX(-1);
-}
 </style>
 </head>
 <body>
 
 <div id="canvas-container"></div>
-
-<div id="webcam-wrap">
-  <video id="webcam-preview" autoplay playsinline muted></video>
-</div>
-
 <div id="overlay">
-  <div id="stage-label">— I —&nbsp;&nbsp;arrival</div>
+  <div id="stage-label">— arrival</div>
   <div id="title-label">All Water Meets Again</div>
-
-  <!-- poem-main: Hesse stages 0-3, Response stages 4-7 -->
-  <div id="poem-main">
-    Winter repeats itself,<br>
-    and those who should meet<br>
-    will meet again.
-  </div>
-
-  <div id="poem-sub"></div>
+  <div id="poem-main"></div>
   <div id="burst-msg"></div>
-
-  <div id="hint">bring your index finger into the waters</div>
-  <div id="status">loading model...</div>
+  <div id="attr"></div>
+  <div id="hint">move your cursor through the waters</div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
-<script src="https://unpkg.com/ml5@1/dist/ml5.min.js"></script>
-<script src="sketch.js"></script>
+<script>
+// ── colors ──
+const CS = [105,170,255]; // world: cold blue
+const CH = [255,195,128]; // hand:  warm amber
+const CM = [175,212,195]; // merged: seafoam
+
+// ── state ──
+let stage = -1;
+let firstContact = false;
+let mergeTriggered = false;
+let idleTO = null, burstTO = null;
+const MERGE_RATIO = 0.55;
+
+// ── mouse ──
+let fingerX, fingerY, velX = 0, velY = 0;
+
+// ── particles ──
+let wParts = [], hParts = [], fParts = [];
+let flashOn = false;
+
+// ── river path ──
+let rPath = [];
+
+// ── DOM ──
+let elMain, elStage, elBurst, elHint, elAttr;
+
+// ── stage data ──
+// stages: 0 arrival | 1 hesse-a | 2 hesse-b | 3 departure |
+//         4 hesse-c | 5 transition | 6-8 camellia | 9 camellia-final
+const ST = {
+  0:{ lb:'— arrival',
+      m:'', mc:'', attr:'' },
+  1:{ lb:'— I —  Hesse',
+      m:'Winter repeats itself,<br>and those who should meet will meet again.',
+      mc:'visible', attr:'' },
+  2:{ lb:'— I —  Hesse',
+      m:'So we don\'t have to always worry about regrets,<br>but learn to look forward to them.',
+      mc:'visible', attr:'hesse' },
+  3:{ lb:'— II —  departure',
+      m:'', mc:'', attr:'',
+      burst:'But from then on,<br>we never met again.' },
+  4:{ lb:'— III —  Hesse',
+      m:'The part of me who was changed by you<br>will forever accompany me in your place.',
+      mc:'visible', attr:'hesse' },
+  5:{ lb:'— IV —  transition',
+      m:'All the water in the world will meet again —<br>but Hesse never mentioned the wind.',
+      mc:'transition', attr:'' },
+  6:{ lb:'— V —  Camellia',
+      m:'Some goodbyes were always meant to happen.',
+      mc:'wind', attr:'' },
+  7:{ lb:'— V —  Camellia',
+      m:'Not because love wasn\'t real,<br>but because some things are carried by water,<br>and some things are carried by wind.',
+      mc:'wind', attr:'camellia' },
+  8:{ lb:'— VI —  Camellia',
+      m:'Hesse said the water always meets again.<br>I believe him.',
+      mc:'wind', attr:'' },
+  9:{ lb:'— VI —  Camellia',
+      m:'But the wind doesn\'t need to.<br>The wind just moves —<br>through you, past you, and on.',
+      mc:'wind', attr:'camellia' },
+  10:{ lb:'— VII —  Camellia',
+      m:'What stays, stays.<br>What leaves, leaves.<br><br>Let the ones who were always going to go,<br>go with the wind.',
+      mc:'wind', attr:'camellia' },
+  11:{ lb:'— VIII —  Camellia',
+      m:'Not as loss.<br>Just as motion.<br>Just as the way it was always going to be.',
+      mc:'wind', attr:'camellia' },
+};
+
+// ════════════════════
+//  SETUP
+// ════════════════════
+function setup() {
+  let cnv = createCanvas(windowWidth, windowHeight);
+  cnv.parent('canvas-container');
+  pixelDensity(1);
+  frameRate(60);
+  colorMode(RGB, 255);
+  noStroke();
+
+  fingerX = width/2; fingerY = height/2;
+
+  elMain  = document.getElementById('poem-main');
+  elStage = document.getElementById('stage-label');
+  elBurst = document.getElementById('burst-msg');
+  elHint  = document.getElementById('hint');
+  elAttr  = document.getElementById('attr');
+
+  buildPath();
+  initWorld();
+  toStage(0);
+}
+
+// ════════════════════
+//  DRAW
+// ════════════════════
+function draw() {
+  background(2, 5, 9, 40);
+
+  // world particles
+  for (let i = wParts.length-1; i >= 0; i--) {
+    wParts[i].tick();
+    wParts[i].show();
+    if (wParts[i].dead()) {
+      if (stage >= 7) wParts.splice(i,1);
+      else            wParts[i].resetW(false);
+    }
+  }
+
+  // flash
+  for (let i = fParts.length-1; i >= 0; i--) {
+    let f = fParts[i];
+    f.life++; f.x+=f.vx; f.y+=f.vy; f.vx*=0.965; f.vy*=0.965;
+    let a = (1-f.life/f.max)*160;
+    let r=f.cr||180, g=f.cg||212, b=f.cb||255;
+    fill(r,g,b,a);
+    ellipse(f.x,f.y,f.r*2);
+    if(f.life>=f.max) fParts.splice(i,1);
+  }
+
+  // hand (mouse) particles
+  spawnHand();
+  for (let i = hParts.length-1; i >= 0; i--) {
+    hParts[i].tick();
+    hParts[i].show();
+    if(hParts[i].dead()) hParts.splice(i,1);
+  }
+
+  // cursor dot
+  if (firstContact) {
+    noStroke();
+    fill(255,215,155,130); ellipse(fingerX,fingerY,5);
+    fill(255,215,155,25);  ellipse(fingerX,fingerY,18);
+  }
+
+  // merge check → advance to stage 4 (skipping departure)
+  if (stage===1 && firstContact && !mergeTriggered && wParts.length>0) {
+    let total=0;
+    for(let p of wParts) total+=p.mp;
+    if(total/wParts.length >= MERGE_RATIO) {
+      mergeTriggered=true;
+      triggerMergeBurst();
+      setTimeout(function(){ toStage(4); }, 1800);
+    }
+  }
+}
+
+// ════════════════════
+//  MOUSE
+// ════════════════════
+function mouseMoved() {
+  velX = velX*0.5+(mouseX-fingerX)*0.5;
+  velY = velY*0.5+(mouseY-fingerY)*0.5;
+  fingerX=mouseX; fingerY=mouseY;
+  if(!firstContact){
+    firstContact=true;
+    elHint.style.opacity='0';
+    toStage(1);
+  }
+  if(stage===1||stage===2) resetIdle();
+  if(stage===3) toStage(1);
+}
+
+function mousePressed() {
+  if(stage===2) toStage(3);
+  else if(stage>=4 && stage<11) toStage(stage+1);
+}
+function keyPressed() {
+  if(key===' ' && stage===2) toStage(3);
+  else if(key===' ' && stage>=4 && stage<11) toStage(stage+1);
+}
+
+// ════════════════════
+//  RIVER PATH
+// ════════════════════
+function buildPath() {
+  rPath=[];
+  for(let i=0;i<=160;i++){
+    let t=i/160;
+    rPath.push({
+      x:width*0.06+width*0.88*t,
+      y:height*0.5+sin(t*PI*1.7)*height*0.21+sin(t*PI*3.9+1.1)*height*0.06
+    });
+  }
+}
+
+// ════════════════════
+//  PARTICLE
+// ════════════════════
+class Particle {
+  constructor(type){
+    this.type=type; this.mp=0; this.pt=random(1); this.trail=[];
+    if(type==='world') this.resetW(true);
+    else this.resetH();
+  }
+  resetW(rnd){
+    let idx=floor(this.pt*(rPath.length-1));
+    let p=rPath[constrain(idx,0,rPath.length-1)];
+    this.x=p.x+random(-28,28); this.y=p.y+random(-28,28);
+    this.sz=random(0.8,2.2);
+    this.life=rnd?floor(random(240)):0; this.max=random(280,520); this.trail=[];
+    let n=constrain(idx+1,0,rPath.length-1);
+    let dx=rPath[n].x-p.x, dy=rPath[n].y-p.y, len=dist(0,0,dx,dy)||1, spd=random(0.15,0.38);
+    this.vx=dx/len*spd+random(-0.2,0.2); this.vy=dy/len*spd+random(-0.2,0.2);
+  }
+  resetH(){
+    let spd=dist(0,0,velX,velY), nx=spd>0.4?velX/spd:0, ny=spd>0.4?velY/spd:0;
+    this.x=fingerX-nx*random(3,12)+random(-5,5); this.y=fingerY-ny*random(3,12)+random(-5,5);
+    this.sz=random(0.8,2.2); this.life=0; this.max=random(140,300); this.trail=[];
+    let perp=random(-0.18,0.18);
+    this.vx=nx*random(0.18,0.55)-ny*perp+random(-0.06,0.06);
+    this.vy=ny*random(0.18,0.55)+nx*perp+0.03+random(-0.04,0.04);
+  }
+  col(){
+    let b=this.type==='world'?CS:CH;
+    return[b[0]+(CM[0]-b[0])*this.mp, b[1]+(CM[1]-b[1])*this.mp, b[2]+(CM[2]-b[2])*this.mp];
+  }
+  tick(){
+    this.life++;
+    this.trail.push({x:this.x,y:this.y});
+    if(this.trail.length>8) this.trail.shift();
+    // merge
+    if(firstContact && stage<6){
+      let dx=fingerX-this.x,dy=fingerY-this.y,d=dist(0,0,dx,dy);
+      if(d<110){ let prox=1-d/110; this.mp=min(1,this.mp+prox*0.006); if(d>1){this.vx-=dx/d*prox*0.1;this.vy-=dy/d*prox*0.1;} }
+    }
+    // follow path
+    if(this.type==='world' && stage<=5){
+      this.pt+=0.0008; if(this.pt>1) this.pt=0;
+      let idx=constrain(floor(this.pt*(rPath.length-1)),0,rPath.length-1);
+      let p=rPath[idx], dx=p.x-this.x, dy=p.y-this.y, d=dist(0,0,dx,dy)||1;
+      if(d>5){this.vx+=dx/d*0.009;this.vy+=dy/d*0.009;}
+    }
+    // flow field
+    let ang=(sin(this.x*0.007+this.life*0.003)+cos(this.y*0.007+this.life*0.002))*PI;
+    this.vx+=cos(ang)*0.006; this.vy+=sin(ang)*0.006;
+    // departure scatter
+    if(stage===3&&flashOn){
+      let cdx=this.x-width/2,cdy=this.y-height/2,cd=dist(0,0,cdx,cdy)||1;
+      if(cd<200){let f=(200-cd)/200;this.vx+=cdx/cd*f*0.2;this.vy+=cdy/cd*f*0.2;}
+    }
+    // wind
+    if(stage>=7){this.vx+=0.06;this.vy-=0.01;}    this.vx*=0.978; this.vy*=0.978;
+    let spd=dist(0,0,this.vx,this.vy), cap=stage>=7?3:2;
+    if(spd>cap){this.vx=this.vx/spd*cap;this.vy=this.vy/spd*cap;}
+    this.x+=this.vx; this.y+=this.vy;
+  }
+  show(){
+    let fi=min(1,this.life/50), fo=max(0,1-max(0,this.life-this.max*0.72)/(this.max*0.28));
+    let a=fi*fo*(stage===3?0.45:1);
+    let[r,g,b]=this.col();
+    noStroke();
+    for(let i=0;i<this.trail.length;i++){
+      let t=i/this.trail.length;
+      fill(r,g,b,a*t*0.22*255);
+      let sz=this.sz*t*0.7;
+      if(sz>0.2) ellipse(this.trail[i].x,this.trail[i].y,sz*2);
+    }
+    fill(r,g,b,a*0.88*255); ellipse(this.x,this.y,this.sz*2);
+    fill(r,g,b,a*0.10*255); ellipse(this.x,this.y,this.sz*6);
+  }
+  dead(){
+    return this.life>this.max||this.x<-150||this.x>width+150||this.y<-150||this.y>height+150;
+  }
+}
+
+function initWorld(){
+  let n=min(800,floor(width*height/2000));
+  wParts=[]; for(let i=0;i<n;i++) wParts.push(new Particle('world'));
+}
+function spawnHand(){
+  if(!firstContact||stage>=7) return;
+  if(dist(0,0,velX,velY)<0.3) return;
+  if(hParts.length>250) return;
+  for(let i=0;i<2;i++) hParts.push(new Particle('hand'));
+}
+
+function triggerMergeBurst(){
+  // 从指尖位置爆出海沫色粒子
+  for(let i=0;i<120;i++){
+    let a=random(TWO_PI), s=random(0.5,5);
+    fParts.push({
+      x:fingerX+random(-20,20),
+      y:fingerY+random(-20,20),
+      vx:cos(a)*s, vy:sin(a)*s,
+      life:0, max:random(60,140),
+      r:random(0.8,2.5),
+      // seafoam color
+      cr:175, cg:212, cb:195
+    });
+  }
+}
+
+function triggerFlash(){
+  flashOn=true;
+  let cx=width/2,cy=height/2;
+  for(let i=0;i<100;i++){
+    let a=random(TWO_PI),s=random(0.5,4.5);
+    fParts.push({x:cx+random(-40,40),y:cy+random(-40,40),vx:cos(a)*s,vy:sin(a)*s,life:0,max:random(50,110),r:random(0.8,2.2)});
+  }
+  setTimeout(function(){flashOn=false;},2500);
+}
+
+// ════════════════════
+//  STAGE SYSTEM
+// ════════════════════
+function showAttr(key, n){
+  elAttr.className=''; elAttr.textContent='';
+  if(!key) return;
+  setTimeout(function(){
+    if(stage===n){
+      elAttr.textContent = key==='hesse' ? '— Hermann Hesse' : '— Camellia';
+      elAttr.className = key;
+    }
+  },1200);
+}
+
+function toStage(n){
+  if(stage===n) return;
+  stage=n;
+  let t=ST[n];
+  elStage.textContent=t.lb;
+  elBurst.classList.remove('active'); elBurst.innerHTML='';
+  elHint.textContent=''; elHint.style.opacity='0';
+  clearTimeout(burstTO);
+
+  if(n===3){
+    // departure
+    elMain.className=''; elMain.innerHTML='';
+    elAttr.className=''; elAttr.textContent='';
+    burstTO=setTimeout(function(){
+      elBurst.innerHTML=t.burst; elBurst.classList.add('active');
+      triggerFlash();
+      setTimeout(function(){elBurst.classList.remove('active');},4500);
+    },600);
+    setTimeout(function(){if(stage===3)toStage(4);},10000);
+  } else {
+    elMain.className=t.mc; elMain.innerHTML=t.m;
+    showAttr(t.attr, n);
+  }
+
+  // ── stage-specific timings ──
+  if(n===1){
+    setTimeout(function(){if(stage===1)toStage(2);},7000);
+  }
+  if(n===2){
+    setTimeout(function(){if(stage===2)toStage(3);},14000);
+  }
+  if(n===4){
+    setTimeout(function(){
+      if(stage===4){elHint.textContent='click or press space to continue';elHint.style.opacity='0.25';}
+    },5000);
+    setTimeout(function(){if(stage===4)toStage(5);},9000);
+  }
+  if(n===5){
+    setTimeout(function(){if(stage===5)toStage(6);},5000);
+  }
+  if(n>=6 && n<=10){
+    setTimeout(function(){
+      if(stage===n){elHint.textContent='click or press space to continue';elHint.style.opacity='0.22';}
+    },7000);
+    setTimeout(function(){if(stage===n)toStage(n+1);},12000);
+  }
+  if(n===11){
+    // final — no advance
+  }
+}
+
+function resetIdle(){
+  clearTimeout(idleTO);
+  idleTO=setTimeout(function(){if(stage===1||stage===2)toStage(3);},8000);
+}
+
+function windowResized(){
+  resizeCanvas(windowWidth,windowHeight); buildPath(); initWorld();
+}
+</script>
 </body>
 </html>
