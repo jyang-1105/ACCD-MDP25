@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sponge Adventure</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --yellow: #F2C94C;
+  --yellow-light: #FDF6DC;
+  --green: #4CAF6E;
+  --green-light: #E8F5ED;
+  --blue: #4A90D9;
+  --blue-light: #EAF2FB;
+  --white: #ffffff;
+  --off-white: #F8F8F6;
+  --ink: #1A1A1A;
+  --ink-mid: #555555;
+  --ink-light: #999999;
+  --border: #E8E8E5;
+}
+
+body {
+  background: var(--white);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.2rem 3rem;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: -0.5px;
+}
+.nav-logo span { color: var(--yellow); }
+.nav-links {
+  display: flex;
+  gap: 2.5rem;
+  list-style: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-mid);
+}
+.nav-links a { text-decoration: none; color: inherit; transition: color 0.2s; }
+.nav-links a:hover { color: var(--ink); }
+
+/* HERO */
+.hero {
+  padding: 160px 3rem 100px;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+.hero-label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hero-label::before {
+  content: '';
+  display: inline-block;
+  width: 24px; height: 2px;
+  background: var(--green);
+}
+.hero-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: clamp(52px, 6vw, 80px);
+  line-height: 1.0;
+  letter-spacing: -2px;
+  margin-bottom: 1.5rem;
+}
+.hero-title .hl { color: var(--yellow); -webkit-text-stroke: 1px #C9991A; }
+.hero-desc {
+  font-size: 18px;
+  color: var(--ink-mid);
+  line-height: 1.8;
+  margin-bottom: 2rem;
+  font-weight: 300;
+}
+.hero-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 14px;
+  border-radius: 100px;
+  letter-spacing: 0.5px;
+}
+.tag-y { background: var(--yellow-light); color: #9A6E00; }
+.tag-g { background: var(--green-light);  color: #1E6B3A; }
+.tag-b { background: var(--blue-light);   color: #1A5A99; }
+
+/* Hero illustration */
+.hero-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* SECTIONS */
+.divider { width: 100%; height: 1px; background: var(--border); max-width: 1200px; margin: 0 auto; }
+
+.section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 90px 3rem;
+}
+.section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+.section-num {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-light);
+  letter-spacing: 1px;
+}
+.section-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: clamp(28px, 3vw, 38px);
+  letter-spacing: -1px;
+}
+
+/* VIDEO */
+.video-wrap {
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  padding-bottom: 56.25%;
+  background: var(--off-white);
+  border: 1px solid var(--border);
+}
+.video-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
+
+/* ABOUT */
+.about-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.about-cell {
+  padding: 2.5rem;
+  background: var(--white);
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.about-cell:nth-child(even) { border-right: none; }
+.about-cell:nth-child(3), .about-cell:nth-child(4) { border-bottom: none; }
+.cell-icon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.ic-y { background: var(--yellow-light); }
+.ic-g { background: var(--green-light); }
+.ic-b { background: var(--blue-light); }
+.cell-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 17px; margin-bottom: 0.6rem; }
+.cell-body { font-size: 16px; color: var(--ink-mid); line-height: 1.75; }
+
+/* MECHANICS */
+.mechanics-bg {
+  background: var(--off-white);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.mechanic-item {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 2rem;
+  padding: 2.5rem 0;
+  border-bottom: 1px solid var(--border);
+  align-items: start;
+}
+.mechanic-item:last-child { border-bottom: none; }
+.mech-num { font-family:'Syne',sans-serif; font-weight:800; font-size:42px; color:var(--border); line-height:1; }
+.mech-title { font-family:'Syne',sans-serif; font-weight:700; font-size:20px; margin-bottom:.6rem; }
+.mech-body { font-size:16px; color:var(--ink-mid); line-height:1.75; }
+.state-compare { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1.2rem; }
+.state-box { padding:1rem 1.2rem; border-radius:10px; font-size:15px; line-height:1.6; }
+.state-dry { background:var(--yellow-light); border-left:3px solid var(--yellow); }
+.state-wet { background:var(--blue-light); border-left:3px solid var(--blue); }
+.state-label { font-family:'Syne',sans-serif; font-weight:700; font-size:12px; letter-spacing:1px; text-transform:uppercase; margin-bottom:.4rem; color:var(--ink); }
+.enemy-card { background:var(--off-white); border:1px solid var(--border); border-radius:14px; padding:1.5rem; margin-top:1rem; }
+.enemy-name { font-family:'Syne',sans-serif; font-weight:700; font-size:16px; margin-bottom:.4rem; display:flex; align-items:center; gap:8px; }
+.ebadge { font-size:10px; font-weight:600; letter-spacing:1px; text-transform:uppercase; padding:3px 10px; border-radius:100px; }
+.eb-y { background:var(--yellow-light); color:#8A6500; }
+.eb-b { background:var(--blue-light); color:#1A5A99; }
+.enemy-desc { font-size:15px; color:var(--ink-mid); line-height:1.7; }
+
+/* CONTROLS */
+.controls-layout { display:grid; grid-template-columns:1fr 1fr; gap:3rem; align-items:start; }
+.key-row { display:flex; align-items:center; gap:1rem; padding:1rem 0; border-bottom:1px solid var(--border); }
+.key-row:last-child { border-bottom:none; }
+.key-chip {
+  font-family:'Syne',sans-serif; font-weight:700; font-size:13px;
+  min-width:72px; padding:6px 12px;
+  background:var(--off-white); border:1px solid var(--border); border-bottom:3px solid #D0D0CC;
+  border-radius:8px; text-align:center; color:var(--ink); letter-spacing:.5px;
+}
+.key-desc { font-size:15px; color:var(--ink-mid); }
+.tip-box {
+  background:var(--yellow-light); border-radius:14px; padding:1.8rem;
+  border-left:4px solid var(--yellow);
+}
+.tip-title { font-family:'Syne',sans-serif; font-weight:700; font-size:16px; margin-bottom:.8rem; }
+.tip-body { font-size:15px; color:var(--ink-mid); line-height:1.75; }
+
+/* GALLERY */
+.gallery-filters { display:flex; gap:8px; margin-bottom:2rem; flex-wrap:wrap; }
+.filter-btn {
+  font-size:13px; font-weight:500;
+  padding:7px 18px; border-radius:100px;
+  border:1px solid var(--border); background:var(--white); color:var(--ink-mid);
+  cursor:pointer; transition:all .15s; font-family:'DM Sans',sans-serif;
+}
+.filter-btn:hover, .filter-btn.active { background:var(--ink); color:var(--white); border-color:var(--ink); }
+.gallery-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; }
+.g-item {
+  border-radius:12px; overflow:hidden;
+  border:1px solid var(--border); cursor:pointer;
+  background:var(--off-white);
+  transition:transform .2s, box-shadow .2s;
+}
+.g-item:hover { transform:translateY(-4px); box-shadow:0 12px 32px rgba(0,0,0,0.08); }
+.g-item.wide { grid-column:span 2; }
+.g-img-wrap { overflow:hidden; aspect-ratio:16/10; }
+.g-item.wide .g-img-wrap { aspect-ratio:16/7; }
+.g-img-wrap img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .3s; }
+.g-item:hover .g-img-wrap img { transform:scale(1.04); }
+.g-caption { padding:.9rem 1rem; border-top:1px solid var(--border); }
+.g-caption-label { font-size:10px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:var(--ink-light); margin-bottom:2px; }
+.g-caption-title { font-size:14px; font-weight:500; color:var(--ink); }
+
+/* FOOTER */
+footer {
+  border-top:1px solid var(--border);
+  padding:3rem;
+  display:flex; justify-content:space-between; align-items:center;
+  max-width:1200px; margin:0 auto;
+}
+.footer-left { font-family:'Syne',sans-serif; font-weight:700; font-size:20px; }
+.footer-left span { color:var(--yellow); }
+.footer-right { font-size:14px; color:var(--ink-light); text-align:right; line-height:1.8; }
+
+/* LIGHTBOX */
+.lightbox {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.85);
+  z-index:9999; display:none;
+  align-items:center; justify-content:center; padding:2rem; cursor:pointer;
+}
+.lightbox.open { display:flex; }
+.lightbox img { max-width:90vw; max-height:88vh; border-radius:8px; cursor:default; }
+.lb-close {
+  position:absolute; top:1.5rem; right:2rem;
+  width:40px; height:40px; border-radius:50%;
+  background:rgba(255,255,255,0.15); border:none; color:white;
+  font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+}
+
+@media (max-width:768px) {
+  .hero { grid-template-columns:1fr; padding:120px 1.5rem 60px; }
+  .hero-visual { display:none; }
+  .about-layout { grid-template-columns:1fr; }
+  .about-cell { border-right:none !important; }
+  .about-cell:nth-child(3) { border-bottom:1px solid var(--border) !important; }
+  .gallery-grid { grid-template-columns:1fr 1fr; }
+  .g-item.wide { grid-column:span 1; }
+  .controls-layout { grid-template-columns:1fr; }
+  nav { padding:1rem 1.5rem; }
+  .nav-links { display:none; }
+  .section { padding:60px 1.5rem; }
+  footer { flex-direction:column; gap:1rem; text-align:center; }
+  .footer-right { text-align:center; }
+  .mechanic-item { grid-template-columns:50px 1fr; gap:1rem; }
+  .mech-num { font-size:28px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Sponge<span>.</span></div>
+  <ul class="nav-links">
+    <li><a href="#video">Gameplay</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#mechanics">Mechanics</a></li>
+    <li><a href="#dev">Dev Process</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div>
+    <div class="hero-label">Unity 2D · Pixel Art Platformer</div>
+    <h1 class="hero-title">Sponge<br><span class="hl">Adventure</span></h1>
+    <p class="hero-desc">A 2D pixel platformer where your body is your mechanic. Absorb water to grow heavier, crush tougher enemies, and learn when to be light — and when to be heavy.</p>
+    <div class="hero-tags">
+      <span class="tag tag-y">Unity Engine</span>
+      <span class="tag tag-g">C# Scripting</span>
+      <span class="tag tag-b">Physics-Based Combat</span>
+      <span class="tag tag-y">Tilemap Design</span>
+      <span class="tag tag-g">Pixel Art</span>
+    </div>
+  </div>
+  <div class="hero-visual" style="background:none;border-radius:0;overflow:visible;">
+    <svg viewBox="0 0 320 320" width="100%" style="image-rendering:pixelated;display:block;" xmlns="http://www.w3.org/2000/svg">
+      <!-- Sky -->
+      <rect x="0" y="0" width="320" height="320" fill="#87CEEB"/>
+      <!-- Sky gradient strips -->
+      <rect x="0" y="0" width="320" height="60" fill="#A8DCF0"/>
+      <rect x="0" y="60" width="320" height="80" fill="#87CEEB"/>
+      <rect x="0" y="140" width="320" height="60" fill="#9ED4EC"/>
+
+      <!-- Cloud 1 (pixel blocks) -->
+      <rect x="20" y="30" width="16" height="8" fill="white"/>
+      <rect x="28" y="22" width="24" height="8" fill="white"/>
+      <rect x="36" y="14" width="16" height="8" fill="white"/>
+      <rect x="12" y="38" width="48" height="8" fill="white"/>
+
+      <!-- Cloud 2 -->
+      <rect x="210" y="50" width="12" height="8" fill="white"/>
+      <rect x="218" y="42" width="20" height="8" fill="white"/>
+      <rect x="206" y="58" width="36" height="8" fill="white"/>
+
+      <!-- Water droplet 1 (floating) -->
+      <rect x="60" y="90" width="8" height="4" fill="#4A90D9"/>
+      <rect x="58" y="94" width="12" height="4" fill="#4A90D9"/>
+      <rect x="60" y="98" width="8" height="4" fill="#4A90D9"/>
+      <rect x="62" y="102" width="4" height="4" fill="#4A90D9"/>
+      <!-- droplet shine -->
+      <rect x="61" y="92" width="3" height="3" fill="#A8D4F5"/>
+
+      <!-- Water droplet 2 -->
+      <rect x="248" y="110" width="8" height="4" fill="#4A90D9"/>
+      <rect x="246" y="114" width="12" height="4" fill="#4A90D9"/>
+      <rect x="248" y="118" width="8" height="4" fill="#4A90D9"/>
+      <rect x="250" y="122" width="4" height="4" fill="#4A90D9"/>
+      <rect x="249" y="112" width="3" height="3" fill="#A8D4F5"/>
+
+      <!-- Water droplet 3 small -->
+      <rect x="170" y="75" width="6" height="3" fill="#4A90D9"/>
+      <rect x="169" y="78" width="8" height="3" fill="#4A90D9"/>
+      <rect x="170" y="81" width="6" height="3" fill="#4A90D9"/>
+      <rect x="171" y="84" width="4" height="3" fill="#4A90D9"/>
+
+      <!-- Ground tiles row -->
+      <rect x="0" y="248" width="320" height="72" fill="#5A8A3C"/>
+      <!-- Grass top -->
+      <rect x="0" y="240" width="320" height="8" fill="#6FCF57"/>
+      <!-- Tile grid lines on ground -->
+      <rect x="0" y="248" width="320" height="4" fill="#4A7A2C"/>
+      <!-- tile separators -->
+      <rect x="32"  y="248" width="2" height="72" fill="#4A7A2C" opacity=".5"/>
+      <rect x="64"  y="248" width="2" height="72" fill="#4A7A2C" opacity=".5"/>
+      <rect x="96"  y="248" width="2" height="72" fill="#4A7A2C" opacity=".5"/>
+      <rect x="128" y="248" width="2" height="72" fill="#4A7A2C" opacity=".5"/>
+      <rect x="160" y="248" width="2" height="72" fill="#4A7A2C" opacity=".5"/>
+      <rect x="192" y="248" width="2" height="72" fill="#4A7A2C" opacity=".5"/>
+      <rect x="224" y="248" width="2" height="72" fill="#4A7A2C" opacity=".5"/>
+      <rect x="256" y="248" width="2" height="72" fill="#4A7A2C" opacity=".5"/>
+      <rect x="288" y="248" width="2" height="72" fill="#4A7A2C" opacity=".5"/>
+      <!-- grass tufts -->
+      <rect x="16"  y="234" width="4" height="6" fill="#4CAF6E"/>
+      <rect x="14"  y="236" width="8" height="4" fill="#4CAF6E"/>
+      <rect x="80"  y="234" width="4" height="6" fill="#4CAF6E"/>
+      <rect x="78"  y="236" width="8" height="4" fill="#4CAF6E"/>
+      <rect x="144" y="234" width="4" height="6" fill="#4CAF6E"/>
+      <rect x="142" y="236" width="8" height="4" fill="#4CAF6E"/>
+      <rect x="210" y="234" width="4" height="6" fill="#4CAF6E"/>
+      <rect x="208" y="236" width="8" height="4" fill="#4CAF6E"/>
+      <rect x="275" y="234" width="4" height="6" fill="#4CAF6E"/>
+      <rect x="273" y="236" width="8" height="4" fill="#4CAF6E"/>
+
+      <!-- Platform block (elevated) -->
+      <rect x="220" y="196" width="80" height="16" fill="#8B6F3A"/>
+      <rect x="220" y="192" width="80" height="6" fill="#A0804A"/>
+      <rect x="220" y="196" width="80" height="3" fill="#C4A060"/>
+      <!-- platform tile lines -->
+      <rect x="240" y="192" width="2" height="20" fill="#7A5F2A" opacity=".6"/>
+      <rect x="260" y="192" width="2" height="20" fill="#7A5F2A" opacity=".6"/>
+      <rect x="280" y="192" width="2" height="20" fill="#7A5F2A" opacity=".6"/>
+
+      <!-- SPONGE CHARACTER (pixel art, 8x8 grid scaled up, centered ~130,170) -->
+      <!-- Body base -->
+      <g id="sponge">
+        <!-- main body 48x48px -->
+        <rect x="112" y="172" width="48" height="48" fill="#E8A820"/>
+        <!-- highlight top -->
+        <rect x="112" y="172" width="48" height="6" fill="#F5C842"/>
+        <!-- left highlight -->
+        <rect x="112" y="172" width="6" height="48" fill="#F5C842"/>
+        <!-- shadow right -->
+        <rect x="154" y="178" width="6" height="42" fill="#C48A10"/>
+        <!-- shadow bottom -->
+        <rect x="112" y="214" width="42" height="6" fill="#C48A10"/>
+
+        <!-- pores / texture holes -->
+        <rect x="122" y="182" width="8" height="8" fill="#C48A10"/>
+        <rect x="142" y="178" width="8" height="8" fill="#C48A10"/>
+        <rect x="118" y="198" width="6" height="6" fill="#C48A10"/>
+        <rect x="148" y="194" width="8" height="8" fill="#C48A10"/>
+        <rect x="130" y="208" width="8" height="8" fill="#C48A10"/>
+        <!-- inner pore highlights -->
+        <rect x="122" y="182" width="3" height="3" fill="#B07808"/>
+        <rect x="142" y="178" width="3" height="3" fill="#B07808"/>
+        <rect x="148" y="194" width="3" height="3" fill="#B07808"/>
+
+        <!-- Eyes -->
+        <rect x="122" y="184" width="8" height="8" fill="#1A1A1A"/>
+        <rect x="142" y="184" width="8" height="8" fill="#1A1A1A"/>
+        <!-- eye shine -->
+        <rect x="123" y="185" width="3" height="3" fill="white"/>
+        <rect x="143" y="185" width="3" height="3" fill="white"/>
+
+        <!-- Mouth (smile in pixels) -->
+        <rect x="122" y="204" width="4" height="4" fill="#1A1A1A"/>
+        <rect x="126" y="208" width="4" height="4" fill="#1A1A1A"/>
+        <rect x="130" y="210" width="8" height="4" fill="#1A1A1A"/>
+        <rect x="138" y="208" width="4" height="4" fill="#1A1A1A"/>
+        <rect x="142" y="204" width="4" height="4" fill="#1A1A1A"/>
+
+        <!-- outline (pixel border) -->
+        <rect x="108" y="168" width="56" height="4" fill="#8B6010"/>
+        <rect x="108" y="168" width="4" height="56" fill="#8B6010"/>
+        <rect x="160" y="168" width="4" height="56" fill="#8B6010"/>
+        <rect x="108" y="220" width="56" height="4" fill="#8B6010"/>
+      </g>
+
+      <!-- small star/sparkle near sponge -->
+      <rect x="100" y="162" width="4" height="4" fill="#F2C94C"/>
+      <rect x="98"  y="164" width="8" height="2" fill="#F2C94C"/>
+      <rect x="175" y="158" width="4" height="4" fill="#4A90D9"/>
+      <rect x="173" y="160" width="8" height="2" fill="#4A90D9"/>
+
+      <!-- bounce shadow on ground -->
+      <ellipse cx="136" cy="244" rx="28" ry="5" fill="#3A6A24" opacity=".35"/>
+    </svg>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- VIDEO -->
+<section class="section" id="video">
+  <div class="section-header">
+    <span class="section-num">01</span>
+    <h2 class="section-title">Gameplay Demo</h2>
+  </div>
+  <div class="video-wrap">
+    <iframe src="https://www.youtube.com/embed/GrUlHkVudLQ"
+      title="Sponge Adventure Gameplay"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen></iframe>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ABOUT -->
+<section class="section" id="about">
+  <div class="section-header">
+    <span class="section-num">02</span>
+    <h2 class="section-title">About the Game</h2>
+  </div>
+  <div class="about-layout">
+    <div class="about-cell">
+      <div class="cell-icon ic-b">🌤</div>
+      <div class="cell-title">World & Setting</div>
+      <div class="cell-body">A 2D pixel art game made in Unity. The world has blue skies, water, and grassy platforms — pretty classic platformer setting but it fits the sponge theme well.</div>
+    </div>
+    <div class="about-cell">
+      <div class="cell-icon ic-g">🏡</div>
+      <div class="cell-title">The Goal</div>
+      <div class="cell-body">Get through the level, deal with the enemies along the way, and make it to the wooden cottage at the end to win. It sounds simple but you have to think about whether you're wet or dry the whole time.</div>
+    </div>
+    <div class="about-cell">
+      <div class="cell-icon ic-y">🧽</div>
+      <div class="cell-title">The Sponge</div>
+      <div class="cell-body">You control a sponge. That might sound random but it actually makes a lot of sense for the mechanics — sponges absorb water, and in this game that absorption changes everything about how you play.</div>
+    </div>
+    <div class="about-cell">
+      <div class="cell-icon ic-g">🐞</div>
+      <div class="cell-title">Enemies</div>
+      <div class="cell-body">Ladybugs walk back and forth on the ground, and eagles fly around in the air. They need different strategies — a dry sponge can take out a ladybug no problem, but eagles are tougher and you need the extra weight from being wet to bring them down.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- MECHANICS -->
+<div class="mechanics-bg" id="mechanics">
+  <section class="section">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <h2 class="section-title">How It Works</h2>
+    </div>
+
+    <div class="mechanic-item">
+      <div class="mech-num">01</div>
+      <div>
+        <div class="mech-title">Wetness & Physics State System</div>
+        <div class="mech-body">How much water the sponge has absorbed changes its actual physics values in Unity. It's the core mechanic I built the whole game around. Being dry is faster and jumpier, being wet is slower but hits harder — and you're constantly switching between the two depending on what's ahead.</div>
+        <div class="state-compare">
+          <div class="state-box state-dry">
+            <div class="state-label">🌟 Dry State</div>
+            Lightweight, fast movement, higher jumps. Great for covering ground quickly and reaching spots that need height or speed.
+          </div>
+          <div class="state-box state-wet">
+            <div class="state-label">💧 Wet State</div>
+            Slower and heavier, but hits hard. Good for taking down tougher enemies that a light sponge can't handle.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mechanic-item">
+      <div class="mech-num">02</div>
+      <div>
+        <div class="mech-title">Water Droplet Collection</div>
+        <div class="mech-body">Blue water droplets float around the level and you jump to collect them. The counter in the top left shows how many you've grabbed. The more you collect, the heavier you get — so picking up droplets isn't just for points, it actually changes what you can do.</div>
+      </div>
+    </div>
+
+    <div class="mechanic-item">
+      <div class="mech-num">03</div>
+      <div>
+        <div class="mech-title">Physics-Based Stomp Combat</div>
+        <div class="mech-body">It's pretty simple — jump on top of enemies to beat them. But whether it actually works depends on how heavy you are. That's where the wet/dry system comes in. Some enemies go down easily, others need you to be fully soaked first.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem;">
+          <div class="enemy-card">
+            <div class="enemy-name">Ladybug <span class="ebadge eb-y">Dry OK</span></div>
+            <div class="enemy-desc">Patrols on the ground. A standard stomp from a dry sponge carries enough impact to knock it out — no extra preparation needed.</div>
+          </div>
+          <div class="enemy-card">
+            <div class="enemy-name">Eagle <span class="ebadge eb-b">Needs Wet</span></div>
+            <div class="enemy-desc">Flies around in the air. Has pretty high defense, so a dry stomp won't do much. You need to absorb enough water first, then drop on it.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- CONTROLS -->
+<section class="section" id="controls">
+  <div class="section-header">
+    <span class="section-num">04</span>
+    <h2 class="section-title">Controls</h2>
+  </div>
+  <div class="controls-layout">
+    <div>
+      <div class="key-row">
+        <div class="key-chip">← →</div>
+        <div class="key-desc">Move left and right</div>
+      </div>
+      <div class="key-row">
+        <div class="key-chip">Space</div>
+        <div class="key-desc">Jump — supports double jump</div>
+      </div>
+      <div class="key-row">
+        <div class="key-chip">Touch 💧</div>
+        <div class="key-desc">Absorb water droplets on contact</div>
+      </div>
+      <div class="key-row">
+        <div class="key-chip">Land ↓</div>
+        <div class="key-desc">Stomp an enemy by landing on top</div>
+      </div>
+    </div>
+    <div class="tip-box">
+      <div class="tip-title">State Management</div>
+      <div class="tip-body">The main thing to figure out is when to stay dry and when to soak up. Dry is better for moving around and jumping over gaps. Switch to wet right before you need to stomp a tougher enemy. If you're too heavy you'll have trouble making some jumps, so it's a constant back and forth.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- DEV GALLERY -->
+<section class="section" id="dev">
+  <div class="section-header">
+    <span class="section-num">05</span>
+    <h2 class="section-title">Development Process</h2>
+  </div>
+  <p style="color:var(--ink-mid);margin-bottom:2rem;max-width:640px;font-size:16px;line-height:1.8;">
+    I built this in Unity using C#. The level is made with Unity's Tilemap system, the player controller handles the wet/dry physics switching, enemies use a simple patrol script, and there's a UI manager keeping the HUD updated. Here's a breakdown of how each part came together.
+  </p>
+  <div class="gallery-filters">
+    <button class="filter-btn active" onclick="filterGallery(this,'all')">All</button>
+    <button class="filter-btn" onclick="filterGallery(this,'level')">Level Design</button>
+    <button class="filter-btn" onclick="filterGallery(this,'player')">Player System</button>
+    <button class="filter-btn" onclick="filterGallery(this,'enemy')">Enemy AI</button>
+    <button class="filter-btn" onclick="filterGallery(this,'ui')">UI & Polish</button>
+  </div>
+  <div class="gallery-grid" id="gallery">
+
+    <div class="g-item wide" data-cat="level" onclick="openLB(this)">
+      <div class="g-img-wrap"><img src="game assets/地图.png" alt="Level Map"></div>
+      <div class="g-caption"><div class="g-caption-label">Level Design</div><div class="g-caption-title">Tilemap layout — full level view in Unity editor</div></div>
+    </div>
+    <div class="g-item" data-cat="level" onclick="openLB(this)">
+      <div class="g-img-wrap"><img src="game assets/终点.png" alt="Goal"></div>
+      <div class="g-caption"><div class="g-caption-label">Level Design</div><div class="g-caption-title">End goal — cottage level completion trigger</div></div>
+    </div>
+    <div class="g-item" data-cat="player" onclick="openLB(this)">
+      <div class="g-img-wrap"><img src="game assets/角色控制.png" alt="Player Controller"></div>
+      <div class="g-caption"><div class="g-caption-label">Player System</div><div class="g-caption-title">HumanController.cs — core player script</div></div>
+    </div>
+    <div class="g-item" data-cat="player" onclick="openLB(this)">
+      <div class="g-img-wrap"><img src="game assets/跳跃.png" alt="Jump"></div>
+      <div class="g-caption"><div class="g-caption-label">Player System</div><div class="g-caption-title">Jump physics — gravity and force values</div></div>
+    </div>
+    <div class="g-item" data-cat="player" onclick="openLB(this)">
+      <div class="g-img-wrap"><img src="game assets/移动.png" alt="Movement"></div>
+      <div class="g-caption"><div class="g-caption-label">Player System</div><div class="g-caption-title">Horizontal movement implementation</div></div>
+    </div>
+    <div class="g-item" data-cat="player" onclick="openLB(this)">
+      <div class="g-img-wrap"><img src="game assets/踩踏.png" alt="Stomp"></div>
+      <div class="g-caption"><div class="g-caption-label">Player System</div><div class="g-caption-title">Stomp — collision detection logic</div></div>
+    </div>
+    <div class="g-item" data-cat="player" onclick="openLB(this)">
+      <div class="g-img-wrap"><img src="game assets/踩踏特效.png" alt="VFX"></div>
+      <div class="g-caption"><div class="g-caption-label">Player System</div><div class="g-caption-title">HitVfx — stomp particle effect prefab</div></div>
+    </div>
+    <div class="g-item" data-cat="player" onclick="openLB(this)">
+      <div class="g-img-wrap"><img src="game assets/可收集水滴.png" alt="Droplet"></div>
+      <div class="g-caption"><div class="g-caption-label">Player System</div><div class="g-caption-title">Collectible water droplet system</div></div>
+    </div>
+    <div class="g-item" data-cat="player" onclick="openLB(this)">
+      <div class="g-img-wrap"><img src="game assets/水.png" alt="Water"></div>
+      <div class="g-caption"><div class="g-caption-label">Player System</div><div class="g-caption-title">Water absorption and wetness state</div></div>
+    </div>
+    <div class="g-item" data-cat="player" onclick="openLB(this)">
+      <div class="g-img-wrap"><img src="game assets/物体交互.png" alt="Interaction"></div>
+      <div class="g-caption"><div class="g-caption-label">Player System</div><div class="g-caption-title">Object interaction and collision handling</div></div>
+    </div>
+    <div class="g-item wide" data-cat="enemy" onclick="openLB(this)">
+      <div class="g-img-wrap"><img src="game assets/敌人.png" alt="Enemy Code"></div>
+      <div class="g-caption"><div class="g-caption-label">Enemy AI</div><div class="g-caption-title">MoveEnemy.cs — patrol and collision logic</div></div>
+    </div>
+    <div class="g-item" data-cat="enemy" onclick="openLB(this)">
+      <div class="g-img-wrap"><img src="game assets/敌人1.png" alt="Ladybug"></div>
+      <div class="g-caption"><div class="g-caption-label">Enemy AI</div><div class="g-caption-title">Ladybug — ground patrol behavior</div></div>
+    </div>
+    <div class="g-item" data-cat="enemy" onclick="openLB(this)">
+      <div class="g-img-wrap"><img src="game assets/敌人2.png" alt="Eagle"></div>
+      <div class="g-caption"><div class="g-caption-label">Enemy AI</div><div class="g-caption-title">Eagle — airborne enemy behavior</div></div>
+    </div>
+    <div class="g-item" data-cat="ui" onclick="openLB(this)">
+      <div class="g-img-wrap"><img src="game assets/血条.png" alt="Health"></div>
+      <div class="g-caption"><div class="g-caption-label">UI & Polish</div><div class="g-caption-title">Health bar — Blood.cs HP system</div></div>
+    </div>
+    <div class="g-item" data-cat="ui" onclick="openLB(this)">
+      <div class="g-img-wrap"><img src="game assets/游戏控制.png" alt="Game Manager"></div>
+      <div class="g-caption"><div class="g-caption-label">UI & Polish</div><div class="g-caption-title">Game Manager — overall flow control</div></div>
+    </div>
+    <div class="g-item" data-cat="ui" onclick="openLB(this)">
+      <div class="g-img-wrap"><img src="game assets/成功界面.png" alt="Victory"></div>
+      <div class="g-caption"><div class="g-caption-label">UI & Polish</div><div class="g-caption-title">Victory screen — SuccessfulPanel prefab</div></div>
+    </div>
+    <div class="g-item" data-cat="ui" onclick="openLB(this)">
+      <div class="g-img-wrap"><img src="game assets/失败界面.png" alt="Fail"></div>
+      <div class="g-caption"><div class="g-caption-label">UI & Polish</div><div class="g-caption-title">Game over screen — FailPanel prefab</div></div>
+    </div>
+    <div class="g-item" data-cat="ui" onclick="openLB(this)">
+      <div class="g-img-wrap"><img src="game assets/音效管理1.png" alt="Audio 1"></div>
+      <div class="g-caption"><div class="g-caption-label">UI & Polish</div><div class="g-caption-title">Audio — VoiceManager setup</div></div>
+    </div>
+    <div class="g-item" data-cat="ui" onclick="openLB(this)">
+      <div class="g-img-wrap"><img src="game assets/音效管理2.png" alt="Audio 2"></div>
+      <div class="g-caption"><div class="g-caption-label">UI & Polish</div><div class="g-caption-title">Audio — sound event scripting</div></div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <div class="footer-left">Sponge<span>Adventure</span></div>
+  <div class="footer-right">ArtCenter College of Design · Creative Technology<br>Made with Unity · 2026</div>
+</footer>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLB(event)">
+  <button class="lb-close" onclick="closeLB()">✕</button>
+  <img id="lb-img" src="" alt="">
+</div>
+
+<script>
+function filterGallery(btn, cat) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.g-item').forEach(item => {
+    item.style.display = (cat === 'all' || item.dataset.cat === cat) ? '' : 'none';
+  });
+}
+function openLB(el) {
+  document.getElementById('lb-img').src = el.querySelector('img').src;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLB(e) {
+  if (!e || e.target.id === 'lightbox' || e.target.classList.contains('lb-close')) {
+    document.getElementById('lightbox').classList.remove('open');
+  }
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('open'); });
+</script>
+</body>
+</html>

@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All Water Meets Again — Poster</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&display=swap');
+
+*{ margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+  width:100%; height:100%;
+  background:#020509;
+  display:flex; align-items:flex-start; justify-content:center;
+  font-family:'Cormorant Garamond', Georgia, serif;
+  overflow-y: auto;
+}
+
+/* ── POSTER FRAME ── */
+.poster {
+  position:relative;
+  width: 100%;
+  max-width: 900px;
+  min-height: 100vh;
+  background: #020509;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* ── CANVAS (particles) ── */
+canvas {
+  position:absolute;
+  top:0; left:0;
+  width:100%; height:100%;
+  z-index:1;
+}
+
+/* ── CONTENT ── */
+.content {
+  position:absolute; inset:0;
+  z-index:10;
+  pointer-events:none;
+  display:flex;
+  flex-direction:column;
+}
+
+/* top rule */
+.top-bar {
+  padding: 52px 60px 0;
+  display:flex; justify-content:space-between; align-items:flex-start;
+}
+.top-eyebrow {
+  font-size: 9px;
+  letter-spacing: 0.38em;
+  text-transform: uppercase;
+  color: rgba(105,150,215,0.35);
+  font-weight:300;
+  line-height:1.8;
+}
+.top-right {
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(105,150,215,0.25);
+  text-align:right;
+  line-height:1.8;
+}
+
+/* thin rule */
+.rule {
+  margin: 28px 60px 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    rgba(105,170,255,0.25) 0%,
+    rgba(175,212,195,0.5) 45%,
+    rgba(255,195,128,0.25) 100%);
+}
+
+/* title block */
+.title-block {
+  padding: 50px 60px 0;
+}
+.title-main {
+  font-size: 78px;
+  font-weight: 300;
+  font-style: italic;
+  color: rgba(220,232,255,0.92);
+  line-height: 1.0;
+  letter-spacing: -0.01em;
+  text-shadow: 0 0 80px rgba(105,170,255,0.18);
+}
+.title-main span {
+  display:block;
+  color: rgba(255,215,175,0.88);
+  text-shadow: 0 0 80px rgba(255,195,128,0.2);
+}
+
+.title-sub {
+  margin-top: 18px;
+  font-size: 11px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(175,212,195,0.55);
+  font-style:normal;
+}
+
+/* center visual zone — particles live here */
+.visual-zone {
+  flex:1;
+  position:relative;
+}
+
+/* quote blocks */
+.quotes {
+  padding: 0 60px;
+  display:flex;
+  flex-direction:column;
+  gap: 0;
+}
+
+.quote-block {
+  padding: 28px 0;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.quote-block:last-child {
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.quote-label {
+  font-size: 8.5px;
+  letter-spacing: 0.38em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  font-style:normal;
+}
+.label-hesse    { color: rgba(130,175,240,0.55); }
+.label-camellia { color: rgba(255,195,128,0.5); }
+.label-bridge   { color: rgba(175,212,195,0.45); }
+
+.quote-text {
+  font-size: 17px;
+  font-weight: 300;
+  font-style: italic;
+  line-height: 1.85;
+  letter-spacing: 0.02em;
+}
+.text-hesse    { color: rgba(200,220,255,0.80); }
+.text-camellia { color: rgba(255,218,170,0.78); }
+.text-bridge   {
+  color: rgba(190,210,225,0.60);
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 20px rgba(175,212,195,0.4);
+  animation: glowPulse 3s ease-in-out infinite;
+}
+@keyframes glowPulse {
+  0%,100% { text-shadow: 0 0 15px rgba(175,212,195,0.3), 0 0 40px rgba(175,212,195,0.1); }
+  50%     { text-shadow: 0 0 25px rgba(175,212,195,0.6), 0 0 70px rgba(175,212,195,0.25); }
+}
+
+/* bottom bar */
+.bottom-bar {
+  padding: 32px 60px 44px;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+.bottom-left {
+  display:flex; flex-direction:column; gap:6px;
+}
+.bottom-label {
+  font-size: 8px;
+  letter-spacing: 0.35em;
+  text-transform:uppercase;
+  color: rgba(105,150,215,0.28);
+}
+.bottom-value {
+  font-size: 13px;
+  font-style:italic;
+  color: rgba(160,185,225,0.45);
+}
+.color-dots {
+  display:flex; gap:10px; align-items:center;
+}
+.cdot {
+  width:10px; height:10px; border-radius:50%;
+}
+
+/* color legend */
+.legend {
+  display:flex; flex-direction:column; gap:8px; align-items:flex-end;
+}
+.legend-row {
+  display:flex; align-items:center; gap:10px;
+}
+.legend-label {
+  font-size: 8px;
+  letter-spacing: 0.28em;
+  text-transform:uppercase;
+  color: rgba(255,255,255,0.2);
+}
+
+.overview {
+  padding: 28px 60px 0;
+  max-width: 680px;
+}
+.overview p {
+  font-size: 13.5px;
+  font-weight: 300;
+  font-style: italic;
+  color: rgba(160,185,225,0.42);
+  line-height: 1.95;
+  letter-spacing: 0.025em;
+}
+.overview em {
+  color: rgba(175,212,195,0.65);
+  font-style: italic;
+}
+@media screen {
+  body::after {
+    content: 'A2 poster · browser zoom to fit';
+    position:fixed; bottom:16px; left:50%;
+    transform:translateX(-50%);
+    font-family:'Cormorant Garamond',serif;
+    font-size:11px; letter-spacing:0.2em;
+    color:rgba(255,255,255,0.18);
+    pointer-events:none;
+  }
+}
+@media print { body{ background:none; } }
+</style>
+</head>
+<body>
+
+<div class="poster">
+  <canvas id="c"></canvas>
+
+  <div class="content">
+
+    <!-- top -->
+    <div class="top-bar">
+      <div class="top-eyebrow">
+        ArtCenter College of Design<br>
+        Dev Studio · 2025
+      </div>
+      <div class="top-right">
+        Browser-based<br>Interactive Installation
+      </div>
+    </div>
+    <div class="rule"></div>
+
+    <!-- title -->
+    <div class="title-block">
+      <div class="title-main">
+        All Water<br>
+        <span>Meets Again</span>
+      </div>
+      <div class="title-sub">Camellia &nbsp;·&nbsp; In response to Hermann Hesse</div>
+    </div>
+
+    <!-- project overview -->
+    <div class="overview">
+      <p>A browser-based interactive piece in dialogue with Hermann Hesse. The cursor generates a warm amber river; a cold blue river already exists on screen. When the two come close enough, their colors merge. Once enough particles have changed, the text advances — until a transition sentence marks the shift in voice: <em>"All the water in the world will meet again — but Hesse never mentioned the wind."</em> From this point, the particles are gradually dispersed. They do not respawn. The screen slowly empties as the final lines appear.</p>
+    </div>
+
+    <!-- visual zone (particles render here) -->
+    <div class="visual-zone"></div>
+
+    <!-- quotes -->
+    <div class="quotes">
+
+      <div class="quote-block">
+        <div class="quote-label label-hesse">Hermann Hesse</div>
+        <div class="quote-text text-hesse">
+          All the water in the world will meet again —<br>
+          the Arctic Ocean and the Nile River<br>
+          will blend in the wet clouds.
+        </div>
+      </div>
+
+      <div class="quote-block">
+        <div class="quote-label label-bridge">Transition</div>
+        <div class="quote-text text-bridge">
+          All the water in the world will meet again —<br>
+          but Hesse never mentioned the wind.
+        </div>
+      </div>
+
+      <div class="quote-block">
+        <div class="quote-label label-camellia">Camellia</div>
+        <div class="quote-text text-camellia">
+          The wind doesn't need to.<br>
+          The wind just moves — through you, past you, and on.<br>
+          Not as loss. Just as motion.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- bottom -->
+    <div class="bottom-bar">
+      <div class="bottom-left">
+        <div class="bottom-label">Medium</div>
+        <div class="bottom-value">p5.js · Browser · Mouse</div>
+        <div style="height:12px;"></div>
+        <div class="bottom-label">Course</div>
+        <div class="bottom-value">Dev Studio · MDP</div>
+      </div>
+
+      <div class="legend">
+        <div class="legend-row">
+          <div class="legend-label">world river</div>
+          <div class="cdot" style="background:rgba(105,170,255,0.8);"></div>
+        </div>
+        <div class="legend-row">
+          <div class="legend-label">your river</div>
+          <div class="cdot" style="background:rgba(255,195,128,0.8);"></div>
+        </div>
+        <div class="legend-row">
+          <div class="legend-label">merged</div>
+          <div class="cdot" style="background:rgba(175,212,195,0.8);"></div>
+        </div>
+        <div class="legend-row">
+          <div class="legend-label">wind</div>
+          <div class="cdot" style="background:rgba(215,230,255,0.4);"></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /poster -->
+
+<script>
+// ── particle river visualisation for poster ──
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+const poster = document.querySelector('.poster');
+
+function resize() {
+  canvas.width  = poster.offsetWidth;
+  canvas.height = poster.offsetHeight || window.innerHeight;
+}
+resize();
+window.addEventListener('resize', () => { resize(); });
+
+const W = canvas.width, H = canvas.height;
+
+// river path — two rivers, one blue one amber
+function makePath(offsetY, amplitude, phase) {
+  const pts = [];
+  for (let i = 0; i <= 200; i++) {
+    const t = i / 200;
+    pts.push({
+      x: W * 0.04 + W * 0.92 * t,
+      y: offsetY
+        + Math.sin(t * Math.PI * 1.8 + phase) * amplitude
+        + Math.sin(t * Math.PI * 4.2 + phase * 1.3) * amplitude * 0.28
+    });
+  }
+  return pts;
+}
+
+const pathW = makePath(H * 0.415, H * 0.10, 0);
+const pathA = makePath(H * 0.455, H * 0.10, 0.6); // slightly offset = two rivers
+
+// ── particle class ──
+class P {
+  constructor(path, type) {
+    this.path = path;
+    this.type = type; // 'world' | 'hand' | 'merged' | 'wind'
+    this.reset(true);
+  }
+
+  reset(rnd) {
+    this.pt = rnd ? Math.random() : 0;
+    const idx = Math.floor(this.pt * (this.path.length - 1));
+    const p   = this.path[Math.min(idx, this.path.length - 1)];
+    this.x  = p.x + (Math.random() - 0.5) * 30;
+    this.y  = p.y + (Math.random() - 0.5) * 30;
+    this.sz = 0.6 + Math.random() * 2.0;
+    this.life    = rnd ? Math.floor(Math.random() * 260) : 0;
+    this.maxLife = 240 + Math.random() * 320;
+    this.trail   = [];
+
+    const n  = Math.min(idx + 1, this.path.length - 1);
+    const dx = this.path[n].x - p.x;
+    const dy = this.path[n].y - p.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const spd = 0.12 + Math.random() * 0.32;
+    this.vx = dx / len * spd + (Math.random() - 0.5) * 0.18;
+    this.vy = dy / len * spd + (Math.random() - 0.5) * 0.18;
+
+    // merged particles drift toward center
+    if (this.type === 'merged') {
+      this.mp = 0.5 + Math.random() * 0.5;
+    } else if (this.type === 'wind') {
+      this.mp = 0.3 + Math.random() * 0.4;
+      this.windPhase = Math.random() * Math.PI * 2;
+    } else {
+      this.mp = 0;
+    }
+  }
+
+  col() {
+    const CS = [105,170,255];
+    const CH = [255,195,128];
+    const CM = [175,212,195];
+    const CW = [215,230,255];
+    let base, target;
+    if (this.type === 'world')  { base = CS; target = CM; }
+    else if (this.type === 'hand')   { base = CH; target = CM; }
+    else if (this.type === 'merged') { base = CM; target = CM; }
+    else                             { base = CM; target = CW; }
+    return [
+      base[0] + (target[0] - base[0]) * this.mp,
+      base[1] + (target[1] - base[1]) * this.mp,
+      base[2] + (target[2] - base[2]) * this.mp
+    ];
+  }
+
+  tick(t) {
+    this.life++;
+    this.trail.push({ x: this.x, y: this.y });
+    if (this.trail.length > 7) this.trail.shift();
+
+    this.pt += 0.0007;
+    if (this.pt > 1) this.pt = 0;
+    const idx = Math.min(Math.floor(this.pt * (this.path.length - 1)), this.path.length - 1);
+    const p   = this.path[idx];
+    const dx  = p.x - this.x, dy = p.y - this.y;
+    const d   = Math.hypot(dx, dy) || 1;
+    if (this.type !== 'wind' && d > 4) {
+      this.vx += dx / d * 0.008;
+      this.vy += dy / d * 0.008;
+    }
+
+    // flow field
+    const ang = (Math.sin(this.x * 0.007 + t * 0.001) + Math.cos(this.y * 0.007 + t * 0.0008)) * Math.PI;
+    this.vx += Math.cos(ang) * 0.005;
+    this.vy += Math.sin(ang) * 0.005;
+
+    // wind drift
+    if (this.type === 'wind') {
+      this.vx += 0.04 + Math.sin(this.windPhase + t * 0.002) * 0.02;
+      this.vy += Math.cos(this.windPhase + t * 0.003) * 0.01 - 0.01;
+    }
+
+    this.vx *= 0.979; this.vy *= 0.979;
+    const spd = Math.hypot(this.vx, this.vy);
+    const cap = this.type === 'wind' ? 2.5 : 1.8;
+    if (spd > cap) { this.vx = this.vx / spd * cap; this.vy = this.vy / spd * cap; }
+    this.x += this.vx; this.y += this.vy;
+  }
+
+  draw() {
+    const fi = Math.min(1, this.life / 50);
+    const fo = Math.max(0, 1 - Math.max(0, this.life - this.maxLife * 0.72) / (this.maxLife * 0.28));
+    const a  = fi * fo;
+    const [r, g, b] = this.col();
+
+    // trail
+    for (let i = 0; i < this.trail.length; i++) {
+      const tt = i / this.trail.length;
+      ctx.beginPath();
+      ctx.arc(this.trail[i].x, this.trail[i].y, this.sz * tt * 0.5, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${r|0},${g|0},${b|0},${a * tt * 0.2})`;
+      ctx.fill();
+    }
+
+    // core
+    const gr = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.sz * 4);
+    gr.addColorStop(0,   `rgba(${r|0},${g|0},${b|0},${a * 0.88})`);
+    gr.addColorStop(0.4, `rgba(${r|0},${g|0},${b|0},${a * 0.22})`);
+    gr.addColorStop(1,   `rgba(${r|0},${g|0},${b|0},0)`);
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.sz * 4, 0, Math.PI * 2);
+    ctx.fillStyle = gr;
+    ctx.fill();
+  }
+
+  dead() {
+    return this.life > this.maxLife
+      || this.x < -80 || this.x > W + 80
+      || this.y < -80 || this.y > H + 80;
+  }
+}
+
+// ── spawn pools ──
+const worldParts  = Array.from({ length: 180 }, () => new P(pathW, 'world'));
+const handParts   = Array.from({ length: 140 }, () => new P(pathA, 'hand'));
+const mergedParts = Array.from({ length: 90  }, () => {
+  // merged particles exist between the two rivers
+  const midPath = pathW.map((p, i) => ({
+    x: (p.x + pathA[Math.min(i, pathA.length - 1)].x) / 2,
+    y: (p.y + pathA[Math.min(i, pathA.length - 1)].y) / 2,
+  }));
+  return new P(midPath, 'merged');
+});
+const windParts = Array.from({ length: 55 }, () => {
+  // wind particles start from right side, spread across upper poster area
+  const wp = pathW.map(p => ({ x: p.x * 0.6 + W * 0.38, y: p.y - H * 0.04 }));
+  const pp = new P(wp, 'wind');
+  pp.x = W * 0.3 + Math.random() * W * 0.6;
+  pp.y = H * 0.25 + Math.random() * H * 0.22;
+  return pp;
+});
+
+let tick = 0;
+
+function render() {
+  ctx.fillStyle = 'rgba(2,5,9,0.38)';
+  ctx.fillRect(0, 0, W, H);
+
+  tick++;
+
+  for (const p of worldParts)  { p.tick(tick); p.draw(); if (p.dead()) p.reset(false); }
+  for (const p of handParts)   { p.tick(tick); p.draw(); if (p.dead()) p.reset(false); }
+  for (const p of mergedParts) { p.tick(tick); p.draw(); if (p.dead()) p.reset(false); }
+  for (const p of windParts)   {
+    p.tick(tick); p.draw();
+    if (p.dead()) {
+      p.x = W * 0.2 + Math.random() * W * 0.7;
+      p.y = H * 0.22 + Math.random() * H * 0.25;
+      p.life = 0; p.trail = [];
+      p.vx = 0.1 + Math.random() * 0.4;
+      p.vy = (Math.random() - 0.5) * 0.2;
+    }
+  }
+
+  requestAnimationFrame(render);
+}
+
+// initial dark fill
+ctx.fillStyle = '#020509';
+ctx.fillRect(0, 0, W, H);
+render();
+</script>
+</body>
+</html>
