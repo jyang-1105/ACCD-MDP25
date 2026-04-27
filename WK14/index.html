@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital Materiality</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #f5f4f0;
+    color: #1a1a1a;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 300;
+    font-size: 15px;
+    line-height: 1.7;
+    padding: 48px 40px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  header { margin-bottom: 64px; }
+
+  header h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 400;
+    font-size: 18px;
+    margin-bottom: 6px;
+  }
+
+  header p { color: #888; font-size: 13px; }
+
+  section { margin-bottom: 72px; }
+
+  h2 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 20px;
+  }
+
+  p { max-width: 640px; }
+  p + p { margin-top: 14px; }
+
+  .axes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px 48px;
+  }
+
+  .axis-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+
+  .axis-desc { font-size: 13px; color: #555; max-width: none; }
+
+  .video-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .video-grid video {
+    width: 100%;
+    display: block;
+    background: #111;
+  }
+
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-top: 24px;
+  }
+
+  .photo-grid img {
+    width: 100%;
+    display: block;
+    object-fit: cover;
+  }
+
+  table {
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 24px;
+  }
+
+  td {
+    padding: 8px 24px 8px 0;
+    vertical-align: top;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  td:first-child {
+    font-family: 'IBM Plex Mono', monospace;
+    color: #888;
+    white-space: nowrap;
+    width: 140px;
+  }
+
+  footer {
+    border-top: 1px solid #ddd;
+    padding-top: 20px;
+    font-size: 12px;
+    color: #aaa;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Digital Materiality</h1>
+  <p>ArtCenter College of Design · MDP Development Year · 2026</p>
+</header>
+
+<section>
+  <h2>About</h2>
+  <p>
+    The images are driven by audio — a live signal gets analyzed and broken into values that control how the visuals move and change. Built in TouchDesigner, the system routes audio through a series of math and filter nodes before it reaches the rendering layer, so what you're seeing is essentially sound translated into motion and texture.
+  </p>
+  <p>
+    The ten videos here are variations made by adjusting different parts of that chain — changing which frequency bands drive which parameters, how much lag is applied, how the colors are mapped. Small shifts in the node network produce pretty different results. The videos were later used as content for a projection installation.
+  </p>
+</section>
+
+<section>
+  <h2>Four Axes of Observation</h2>
+  <div class="axes">
+    <div>
+      <div class="axis-title">Permutation</div>
+      <div class="axis-desc">Most of the ten videos come from the same base network — just with different parameters. Tweaking the frequency range or the math that scales the audio values would shift the whole visual character, sometimes more dramatically than expected.</div>
+    </div>
+    <div>
+      <div class="axis-title">Intention</div>
+      <div class="axis-desc">The original idea was to make something that felt directly tied to sound. In practice, the audio signal had to be smoothed and scaled pretty heavily before it looked good — which means what you're seeing is already a few steps removed from the raw input.</div>
+    </div>
+    <div>
+      <div class="axis-title">Complexity</div>
+      <div class="axis-desc">A small change to the lag or the math multiplier early in the chain would ripple through everything downstream. The system is sensitive in ways that are hard to predict ahead of time — you kind of have to run it and see.</div>
+    </div>
+    <div>
+      <div class="axis-title">Control</div>
+      <div class="axis-desc">The audio analysis output feeds into multiple parameters at once — speed, color, displacement. Adjusting one node changes several things simultaneously, so the network ends up feeling less like a linear chain and more like a set of interdependent relationships.</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Artifacts</h2>
+  <div class="video-grid">
+    <video src="td assets/01.mov" controls loop muted playsinline></video>
+    <video src="td assets/02.mov" controls loop muted playsinline></video>
+    <video src="td assets/03.mov" controls loop muted playsinline></video>
+    <video src="td assets/04.mov" controls loop muted playsinline></video>
+    <video src="td assets/05.mov" controls loop muted playsinline></video>
+    <video src="td assets/06.mov" controls loop muted playsinline></video>
+    <video src="td assets/07.mov" controls loop muted playsinline></video>
+    <video src="td assets/08.mov" controls loop muted playsinline></video>
+    <video src="td assets/09.mov" controls loop muted playsinline></video>
+    <video src="td assets/10.mov" controls loop muted playsinline></video>
+  </div>
+</section>
+
+<section>
+  <h2>Projection Installation</h2>
+  <p>The videos were projected onto a lamp shade. The translucent material diffused the image and let light through, so the colors and motion read differently than they would on a solid surface — softer, and a bit more ambiguous about whether you're looking at something digital or not.</p>
+  <div class="photo-grid">
+    <img src="td assets/投影1.png" alt="Projection 1">
+    <img src="td assets/投影2.png" alt="Projection 2">
+  </div>
+</section>
+
+<footer>
+  Digital Materiality · ArtCenter MDP 2026
+</footer>
+
+</body>
+</html>
