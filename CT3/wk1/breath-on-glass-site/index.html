@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>breath on glass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root{ --paper:#f3eee6; --ink:#1d1a16; --ink-2:#5b544a; --ink-3:#958c7f; --rule:#dcd2c3; --accent:#d9692a; --night:#15120f; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);font:18px/1.6 "Newsreader",Georgia,serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  img,video,svg{display:block;max-width:100%}
+  main{max-width:880px;margin:0 auto;padding:0 24px 96px}
+  header{max-width:880px;margin:0 auto;padding:72px 24px 8px}
+  h1{font:400 clamp(56px,10vw,104px)/.9 "Instrument Serif",Georgia,serif;letter-spacing:-.02em}
+  .by{margin-top:14px;color:var(--ink-2);font-size:16px}
+  h2{font:400 36px/1.1 "Instrument Serif",Georgia,serif;margin:72px 0 14px;padding-top:14px;border-top:1px solid var(--rule)}
+  h3{font:500 18px/1.4 "Newsreader",Georgia,serif;margin:0 0 4px}
+  p{margin:0 0 .9em;max-width:640px}
+  ul{margin:0 0 1em 1.1em;max-width:640px} li{margin:0 0 .3em}
+  .small{font-size:15px;color:var(--ink-2)}
+  figure{margin:22px 0}
+  figcaption{font:12px/1.5 "DM Mono",monospace;color:var(--ink-3);margin-top:8px}
+  .shot{border-radius:4px}
+  .fill{background:#fff7ec;padding:0 3px;border-bottom:1px dashed var(--accent)}
+
+  .ref{display:grid;grid-template-columns:240px 1fr;gap:32px;align-items:start}
+  .phone{border-radius:18px;overflow:hidden;border:5px solid #111;background:#000}
+  .frames{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:4px}
+  .frames img{border-radius:3px;aspect-ratio:360/448;object-fit:cover;width:100%}
+  @media (max-width:700px){ .ref{grid-template-columns:1fr} .phone{max-width:240px} }
+
+  .diagram{background:#fbf8f3;border:1px solid var(--rule);border-radius:6px;padding:14px;overflow-x:auto}
+  .diagram svg{min-width:760px;width:100%;height:auto}
+  .legend{font:12px "DM Mono",monospace;color:var(--ink-2);display:flex;gap:20px;flex-wrap:wrap;margin-top:10px}
+  .legend i{display:inline-block;width:18px;height:11px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+
+  .proto{background:var(--night);border-radius:6px;overflow:hidden;position:relative;aspect-ratio:16/10}
+  .proto iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:none}
+  .proto.live iframe{display:block}
+  .proto .poster{position:absolute;inset:0;background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center}
+  .proto.live .poster{display:none}
+  .btn{appearance:none;cursor:pointer;font:13px "DM Mono",monospace;padding:10px 20px;border-radius:999px;border:1px solid var(--ink);background:var(--paper);color:var(--ink)}
+  .btn:hover{background:var(--ink);color:var(--paper)}
+  .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+
+  .step{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:24px 0;border-top:1px solid var(--rule);align-items:start}
+  .step:first-of-type{border-top:0}
+  .step p{font-size:17px}
+  .step .imgs{display:grid;gap:8px}
+  .step .imgs.two{grid-template-columns:1fr 1fr}
+  @media (max-width:700px){ .step{grid-template-columns:1fr} }
+
+  .scope{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--rule);border-radius:6px;background:#fbf8f3}
+  .scope > div{padding:16px;border-right:1px solid var(--rule)}
+  .scope > div:last-child{border-right:0}
+  .scope h3{margin-bottom:10px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{font:11.5px/1.3 "DM Mono",monospace;padding:5px 9px;border-radius:999px;border:1px solid var(--ink-3)}
+  .chip.out{border-style:dashed;color:var(--ink-3);text-decoration:line-through}
+  .chip.core{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  .chip.new{background:var(--accent);border-color:var(--accent);color:#fff}
+  @media (max-width:760px){ .scope{grid-template-columns:1fr} .scope > div{border-right:0;border-bottom:1px solid var(--rule)} }
+
+  footer{max-width:880px;margin:0 auto;padding:24px 24px 64px;border-top:1px solid var(--rule);font-size:14px;color:var(--ink-2)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>breath on glass</h1>
+  <div class="by"><span class="fill">Your name</span> · Kludging as a Creative Approach to Technology · Oct 2026</div>
+</header>
+
+<main>
+
+<h2>Reference</h2>
+<div class="ref">
+  <figure style="margin:0">
+    <div class="phone"><video poster="images/reference-poster.jpg" controls loop muted playsinline autoplay><source src="video/reference.webm" type="video/webm"><source src="video/reference.mp4" type="video/mp4"></video></div>
+    <figcaption>“i made my fog mirror” · <span class="fill">@creator</span></figcaption>
+  </figure>
+  <div>
+    <p>I found this video of someone breathing on their laptop screen. The screen fogs up, they write “miss you” with their finger, and then it slowly clears. I wanted to figure out how to make it.</p>
+    <p>What I wanted to copy:</p>
+    <ul>
+      <li>opening your mouth fogs the screen</li>
+      <li>the fog is a blurry version of the camera image, not a flat white layer</li>
+      <li>your finger wipes it clear</li>
+      <li>everything fades after a while</li>
+    </ul>
+    <div class="frames">
+      <img src="images/reference-fog.jpg" alt="">
+      <img src="images/reference-writing.jpg" alt="">
+    </div>
+  </div>
+</div>
+
+<h2>System</h2>
+<p>The whole idea, from input to output. The filled boxes are what I built. The dashed ones are things I left out for now.</p>
+<figure class="diagram">
+  <svg viewBox="0 0 1000 400" role="img" aria-label="System diagram">
+    <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#d9692a"/></marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#958c7f"/></marker></defs>
+    <style>
+      .h{font:11px 'DM Mono',monospace;fill:#958c7f;letter-spacing:.1em}
+      .t{font:13px 'DM Mono',monospace;fill:#1d1a16}.s{font:10.5px 'DM Mono',monospace;fill:#5b544a}
+      .gt{font:13px 'DM Mono',monospace;fill:#958c7f}.gs{font:10.5px 'DM Mono',monospace;fill:#aaa194}
+      .b{fill:#f6dcc6;stroke:#1d1a16;stroke-width:1.1}.x{fill:none;stroke:#b5ab9b;stroke-dasharray:5 4;stroke-width:1.1}
+      .l{stroke:#d9692a;stroke-width:1.6;fill:none}.lg{stroke:#958c7f;stroke-width:1.1;fill:none;stroke-dasharray:4 4}
+    </style>
+    <text x="20" y="30" class="h">INPUT</text><text x="216" y="30" class="h">DETECT</text><text x="416" y="30" class="h">GLASS</text><text x="616" y="30" class="h">DRAW</text><text x="826" y="30" class="h">OUTPUT</text>
+
+    <rect x="20" y="50" width="156" height="58" rx="6" class="b"/><text x="34" y="75" class="t">webcam</text><text x="34" y="94" class="s">video of your face + hand</text>
+    <rect x="20" y="170" width="156" height="58" rx="6" class="x"/><text x="34" y="195" class="gt">microphone</text><text x="34" y="214" class="gs">hear the actual breath</text>
+
+    <rect x="216" y="50" width="176" height="58" rx="6" class="b"/><text x="230" y="75" class="t">face tracking</text><text x="230" y="94" class="s">mouth open = breathing</text>
+    <rect x="216" y="128" width="176" height="58" rx="6" class="b"/><text x="230" y="153" class="t">hand tracking</text><text x="230" y="172" class="s">pinch = draw, palm = wipe</text>
+
+    <rect x="416" y="50" width="176" height="58" rx="6" class="b"/><text x="430" y="75" class="t">fog</text><text x="430" y="94" class="s">builds up, fades over time</text>
+    <rect x="416" y="128" width="176" height="58" rx="6" class="b"/><text x="430" y="153" class="t">strokes</text><text x="430" y="172" class="s">where the fog is wiped</text>
+    <rect x="416" y="206" width="176" height="58" rx="6" class="b"/><text x="430" y="231" class="t">drips</text><text x="430" y="250" class="s">water running down</text>
+
+    <rect x="616" y="50" width="170" height="58" rx="6" class="b"/><text x="630" y="75" class="t">live video</text><text x="630" y="94" class="s">sharp, underneath</text>
+    <rect x="616" y="128" width="170" height="58" rx="6" class="b"/><text x="630" y="153" class="t">foggy layer</text><text x="630" y="172" class="s">blurred + whitened</text>
+
+    <rect x="826" y="50" width="156" height="58" rx="6" class="b"/><text x="840" y="75" class="t">screen</text><text x="840" y="94" class="s">laptop</text>
+    <rect x="826" y="170" width="156" height="58" rx="6" class="x"/><text x="840" y="195" class="gt">real glass</text><text x="840" y="214" class="gs">projection / install</text>
+    <rect x="826" y="270" width="156" height="58" rx="6" class="x"/><text x="840" y="295" class="gt">send message</text><text x="840" y="314" class="gs">to someone else</text>
+
+    <path d="M176 79 H216" class="l" marker-end="url(#a)"/>
+    <path d="M176 92 C196 110,196 150,216 157" class="l" marker-end="url(#a)"/>
+    <path d="M392 79 H416" class="l" marker-end="url(#a)"/>
+    <path d="M392 157 H416" class="l" marker-end="url(#a)"/>
+    <path d="M392 170 C404 195,404 228,416 235" class="l" marker-end="url(#a)"/>
+    <path d="M592 79 C604 100,604 150,616 157" class="l" marker-end="url(#a)"/>
+    <path d="M592 157 H616" class="l" marker-end="url(#a)"/>
+    <path d="M592 235 C606 220,606 175,616 168" class="l" marker-end="url(#a)"/>
+    <path d="M786 79 H826" class="l" marker-end="url(#a)"/>
+    <path d="M786 157 C806 140,806 95,826 88" class="l" marker-end="url(#a)"/>
+    <path d="M176 199 C196 199,196 92,216 88" class="lg" marker-end="url(#g)"/>
+    <path d="M904 108 V170" class="lg" marker-end="url(#g)"/>
+    <path d="M904 228 V270" class="lg" marker-end="url(#g)"/>
+    <rect x="200" y="36" width="600" height="244" rx="14" fill="none" stroke="#d9692a" stroke-dasharray="2 5" stroke-linecap="round" stroke-width="1.5"/>
+    <text x="500" y="306" text-anchor="middle" style="font:13px 'DM Mono',monospace;fill:#d9692a">the part I built</text>
+  </svg>
+  <div class="legend"><span><i style="background:#f6dcc6;border:1px solid #1d1a16"></i>built</span><span><i style="border:1px dashed #b5ab9b"></i>not built</span></div>
+</figure>
+
+<h2>What I built</h2>
+<p>I focused on the main loop: breathe, the glass fogs, you write on it, it fades. If that part doesn't feel right, the other parts (a microphone, real glass, sending messages) don't really matter yet. For breathing I just detect an open mouth instead of real breath.</p>
+<div class="proto" id="proto">
+  <iframe id="frame" title="prototype" allow="camera; fullscreen" allowfullscreen></iframe>
+  <div class="poster" style="background-image:url('images/step6-pinch.jpg')"><button class="btn" id="launch">try it (uses webcam)</button></div>
+</div>
+<div class="bar">
+  <button class="btn" id="full">full screen</button>
+  <a class="btn" href="breath-on-glass.html" download style="text-decoration:none">download .html</a>
+  <span class="small">Open your mouth to fog, pinch thumb + index to write, open palm to wipe. No camera: hold space and drag. Works best in Chrome.</span>
+</div>
+
+<h2>Process</h2>
+<p class="small">The screenshots are saved versions of the prototype, all re-run with the same test input so they're comparable.</p>
+
+<div class="step">
+  <div>
+    <h3>1. First version</h3>
+    <p>I used MediaPipe for face and hand tracking. Mouth open adds fog, the index fingertip erases it. It worked on the first day, but the fog looked flat and grey and it didn't feel like glass.</p>
+  </div>
+  <div class="imgs"><img class="shot" src="images/step1-first-version.jpg" alt=""></div>
+</div>
+
+<div class="step">
+  <div>
+    <h3>2. Making the fog look real</h3>
+    <p>I changed the fog into a blurred, brighter copy of the camera image and added tiny water droplets. Wiped edges got a small shadow and highlight, and I added drips.</p>
+  </div>
+  <div class="imgs"><img class="shot" src="images/step2-realistic-fog.jpg" alt=""></div>
+</div>
+
+<div class="step">
+  <div>
+    <h3>3. Lag</h3>
+    <p>My image on screen was moving slower than me. The page waited for the tracking every frame before showing the video. I split them up: the video plays on its own, and tracking runs in the background and only updates the fog.</p>
+  </div>
+  <div class="imgs"><img class="shot" src="images/step3-lag-fix.jpg" alt=""></div>
+</div>
+
+<div class="step">
+  <div>
+    <h3>4. Smoother lines</h3>
+    <p>The tracker only gives about 20 positions a second, so lines looked jagged. I smoothed the positions and drew curves between them instead of straight lines.</p>
+  </div>
+  <div class="imgs two">
+    <figure style="margin:0"><img class="shot" src="images/step4-before.jpg" alt=""><figcaption>before</figcaption></figure>
+    <figure style="margin:0"><img class="shot" src="images/step4-after.jpg" alt=""><figcaption>after</figcaption></figure>
+  </div>
+</div>
+
+<div class="step">
+  <div>
+    <h3>5. Lines breaking</h3>
+    <p>I couldn't finish a shape. The tracker sometimes lost my hand for a frame, and when I talked it thought I was breathing and fogged over what I was writing. I made it ignore short gaps and not fog over new writing.</p>
+  </div>
+  <div class="imgs two">
+    <figure style="margin:0"><img class="shot" src="images/step5-before.jpg" alt=""><figcaption>before</figcaption></figure>
+    <figure style="margin:0"><img class="shot" src="images/step5-after.jpg" alt=""><figcaption>after</figcaption></figure>
+  </div>
+</div>
+
+<div class="step">
+  <div>
+    <h3>6. Pointing → pinching</h3>
+    <p>With a pointing finger there was no way to lift the pen, so every letter connected. I switched to pinching thumb and index: pinch to draw, let go to stop.</p>
+  </div>
+  <div class="imgs"><img class="shot" src="images/step6-pinch.jpg" alt=""></div>
+</div>
+
+<h2>How the scope changed</h2>
+<figure style="margin-top:6px">
+  <div class="scope">
+    <div><h3>Proposal</h3><div class="chips">
+      <span class="chip">breath fogs screen</span><span class="chip">write with finger</span><span class="chip">fog fades</span>
+      <span class="chip">send message</span><span class="chip">real breath sensor</span><span class="chip">real glass</span></div></div>
+    <div><h3>First version</h3><div class="chips">
+      <span class="chip core">mouth = breath</span><span class="chip core">finger = wipe</span><span class="chip">fog fades</span>
+      <span class="chip out">send message</span><span class="chip out">breath sensor</span><span class="chip out">real glass</span></div></div>
+    <div><h3>Final</h3><div class="chips">
+      <span class="chip core">realistic fog</span><span class="chip core">breathe → write → fade</span>
+      <span class="chip new">no lag</span><span class="chip new">smooth lines</span><span class="chip new">pinch to draw</span><span class="chip new">drips</span></div></div>
+  </div>
+  <div class="legend"><span><i style="background:#1d1a16"></i>kept</span><span><i style="background:#d9692a"></i>added along the way</span><span><i style="border:1px dashed #958c7f"></i>dropped</span></div>
+</figure>
+<p>At first I wanted to make the whole thing from the video, including sending the message to someone. After the first version I cut it down to just the fog and writing. Most of my time didn't go into how the fog looks. It went into lag, broken lines, and the gesture, which I didn't expect. Switching from pointing to pinching changed it from wiping glass to something closer to writing with a pen.</p>
+<p>Next I'd like to try using the microphone to detect real breath, and putting a piece of glass in front of the screen.</p>
+
+</main>
+
+<footer>
+  Reference: “i made my fog mirror” (<span class="fill">@creator</span>). Tracking: Google MediaPipe. <span class="fill">Code written with help from Claude (AI).</span>
+</footer>
+
+<script>
+  // the prototype lives in its own file next to this page
+  const box = document.getElementById("proto"), frame = document.getElementById("frame");
+  const launch = () => { if (!box.classList.contains("live")){ frame.src = "breath-on-glass.html"; box.classList.add("live"); } };
+  document.getElementById("launch").onclick = launch;
+  document.getElementById("full").onclick = () => { launch(); (box.requestFullscreen || box.webkitRequestFullscreen).call(box); };
+</script>
+</body>
+</html>
