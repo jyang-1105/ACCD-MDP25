@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>About · The Person in the Name</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=DM+Serif+Display:ital@0;1&family=Reenie+Beanie&family=Special+Elite&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .about {
+      position: relative;
+      max-width: 860px;
+      margin: 20px auto 60px;
+      padding: 56px 56px 70px;
+      background: var(--sheet);
+      box-shadow: 0 1px 2px rgba(0,0,0,.12), 0 10px 30px -14px rgba(0,0,0,.3);
+    }
+    .about h1 { font-family: var(--cut2); font-weight: 400; font-size: clamp(42px, 6.5vw, 76px); line-height: 1; margin: 0 0 24px; }
+    .byline { margin: 0 0 12px; font-size: 30px; transform: rotate(-2deg); }
+    .about h2 {
+      display: table;
+      font-family: var(--cut1); font-weight: 400; font-size: 28px; letter-spacing: .01em;
+      background: var(--ink); color: var(--sheet);
+      padding: 4px 14px 2px; margin: 64px 0 18px; transform: rotate(-1deg);
+    }
+    .about h3 { font-size: 17px; margin: 28px 0 6px; }
+    .about p, .about li { font-size: 16px; }
+    .lede { font-size: 19px !important; line-height: 1.5; }
+    .lede mark { background: linear-gradient(transparent 45%, rgba(244,224,77,.85) 45%, rgba(244,224,77,.85) 88%, transparent 88%); }
+    .about code { font-family: var(--typed); font-size: 14px; background: #ecebe4; padding: 1px 5px; }
+    .diagram { position: relative; margin: 30px 0 8px; background: #fff; padding: 18px; overflow-x: auto; box-shadow: 0 2px 8px rgba(0,0,0,.12); transform: rotate(-.4deg); }
+    .diagram svg { display: block; width: 100%; min-width: 680px; height: auto; }
+    .caption { font-family: var(--hand); color: var(--pen); font-size: 22px; margin-top: 10px; }
+    .qa dt { font-family: var(--cut2); font-size: 24px; margin-top: 28px; }
+    .qa dd { margin: 4px 0 0; }
+    .steps { counter-reset: s; list-style: none; padding: 0; }
+    .steps li { counter-increment: s; position: relative; padding: 0 0 16px 46px; }
+    .steps li::before {
+      content: counter(s);
+      position: absolute; left: 4px; top: -6px;
+      font-family: var(--hand); font-size: 34px; color: var(--pen);
+    }
+    table.services { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 12px; }
+    .services th, .services td { text-align: left; padding: 9px 8px; border-bottom: 1px dashed #c9c9c2; vertical-align: top; }
+    .services th { font-weight: 700; }
+    .video {
+      aspect-ratio: 16 / 9; background: #ecebe4; border: 2px dashed var(--pencil);
+      display: grid; place-items: center; color: var(--pen); font-family: var(--hand); font-size: 28px;
+    }
+    .video video, .video iframe { width: 100%; height: 100%; border: 0; }
+    .cta { display: inline-block; margin-top: 22px; text-decoration: none; }
+    .table-scroll { overflow-x: auto; }
+    @media (max-width: 700px) { .about { padding: 36px 20px 50px; margin: 10px 12px 40px; } }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <a class="brand" href="index.html">The Person in the Name</a>
+    <a class="toplink" href="index.html">Try it</a>
+  </header>
+
+  <article class="about">
+    <span class="tape tape-tl"></span><span class="tape tape-tr"></span>
+    <p class="pen byline">a project by Jia Yang</p>
+    <h1>The Person in&nbsp;the&nbsp;Name</h1>
+    <p class="lede">
+      You type a first name. Wikidata, the database behind Wikipedia, is asked about everyone it knows who shares that name: when they were born, where they are from, who they are.
+      Their guesses are handed to a museum, the museum answers with art, and each artwork calls up more art
+      &mdash; until twelve images are glued into <mark>a mood board of someone who does not exist</mark>.
+    </p>
+    <p>
+      The result is a portrait made entirely of assumptions: the average of everyone with that name who was
+      notable enough to end up on Wikipedia, translated into colours and brushstrokes. The machine does not know you.
+      It only knows the famous strangers who share your name, and it is very confident anyway.
+    </p>
+    <a class="stamp cta" href="index.html">Try it with a name</a>
+
+    <!-- ============================================================ -->
+    <h2>How the chain works</h2>
+
+    <div class="diagram">
+      <svg viewBox="0 0 900 520" role="img" aria-label="Diagram of the causal chain from a name to a mood board">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#1d1b18"/>
+          </marker>
+          <marker id="ahr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#2337b5"/>
+          </marker>
+        </defs>
+        <style>
+          .bx { fill: #fdfdfb; stroke: #1d1b18; stroke-width: 1.2; }
+          .bxd { fill: #1d1b18; }
+          .lb { font: 700 13px "Courier Prime", monospace; fill: #1d1b18; }
+          .lbw { font: 700 13px "Courier Prime", monospace; fill: #fdfdfb; }
+          .sm { font: 11px "Courier Prime", monospace; fill: #5b564d; }
+          .smw { font: 11px "Courier Prime", monospace; fill: #c9c2b4; }
+          .ln { stroke: #1d1b18; stroke-width: 1.2; fill: none; }
+          .lnr { stroke: #2337b5; stroke-width: 1.4; fill: none; }
+          .lnb { stroke: #2337b5; stroke-width: 1.4; fill: none; }
+          .lng { stroke: #2337b5; stroke-width: 1.4; fill: none; }
+          .dash { stroke-dasharray: 4 4; }
+          .col { font: italic 13px "Courier Prime", monospace; fill: #55554f; }
+        </style>
+
+        <!-- column labels -->
+        <text class="col" x="20" y="24">trigger</text>
+        <text class="col" x="170" y="24">3 questions to Wikidata</text>
+        <text class="col" x="420" y="24">museum API</text>
+        <text class="col" x="740" y="24">result</text>
+
+        <!-- name -->
+        <rect class="bxd" x="20" y="220" width="120" height="64"/>
+        <text class="lbw" x="80" y="248" text-anchor="middle">a first name</text>
+        <text class="smw" x="80" y="268" text-anchor="middle">“Jia”</text>
+
+        <!-- guess boxes -->
+        <rect class="bx" x="170" y="80" width="190" height="70"/>
+        <text class="lb" x="185" y="106">born when?</text>
+        <text class="sm" x="185" y="126">→ middle year 1988</text>
+        <text class="sm" x="185" y="142">→ age 38</text>
+
+        <rect class="bx" x="170" y="217" width="190" height="70"/>
+        <text class="lb" x="185" y="243">from where?</text>
+        <text class="sm" x="185" y="263">→ China, 61%</text>
+
+        <rect class="bx" x="170" y="354" width="190" height="70"/>
+        <text class="lb" x="185" y="380">who?</text>
+        <text class="sm" x="185" y="400">→ female, 67%</text>
+        <text class="sm" x="185" y="416">(kept as a label)</text>
+
+        <path class="ln" d="M140,252 C155,252 155,115 168,115" marker-end="url(#ah)"/>
+        <path class="ln" d="M140,252 L168,252" marker-end="url(#ah)"/>
+        <path class="ln" d="M140,252 C155,252 155,389 168,389" marker-end="url(#ah)"/>
+
+        <!-- seeds -->
+        <rect class="bx" x="420" y="80" width="200" height="70"/>
+        <text class="lb" x="435" y="106">art made in 1888</text>
+        <text class="sm" x="435" y="126">birth year − 100</text>
+        <text class="sm" x="435" y="142">created_after = 1888</text>
+
+        <rect class="bx" x="420" y="217" width="200" height="70"/>
+        <text class="lb" x="435" y="243">art made in China</text>
+        <text class="sm" x="435" y="263">search “China”</text>
+
+        <path class="ln dash" d="M360,115 L418,115" marker-end="url(#ah)"/>
+        <path class="ln dash" d="M360,252 L418,252" marker-end="url(#ah)"/>
+        <path class="ln dash" d="M360,389 C640,389 700,440 738,440" marker-end="url(#ah)"/>
+
+        <!-- bounce loop -->
+        <rect class="bx" x="398" y="330" width="244" height="120" rx="60"/>
+        <text class="lb" x="520" y="352" text-anchor="middle">each artwork calls more</text>
+        <text class="sm" x="466" y="374" text-anchor="middle" style="fill:#2337b5">a title word</text>
+        <text class="sm" x="572" y="374" text-anchor="middle" style="fill:#2337b5">same artist</text>
+        <text class="sm" x="466" y="396" text-anchor="middle" style="fill:#2337b5">same place</text>
+        <text class="sm" x="572" y="396" text-anchor="middle" style="fill:#2337b5">100 years back</text>
+        <text class="sm" x="466" y="418" text-anchor="middle" style="fill:#2337b5">same decade</text>
+        <text class="sm" x="572" y="418" text-anchor="middle" style="fill:#2337b5">same technique</text>
+
+        <path class="lnr" d="M520,150 C520,190 640,200 640,250 C640,300 600,320 590,330" marker-end="url(#ahr)"/>
+        <path class="lnr" d="M520,287 L520,328" marker-end="url(#ahr)"/>
+        <path class="lnb" d="M410,365 C360,330 360,470 418,435"/>
+        <path class="lng" d="M630,365 C680,330 680,470 622,435"/>
+        <text class="sm" x="520" y="478" text-anchor="middle">2 → 4 → 6 artworks</text>
+
+        <!-- result -->
+        <rect class="bxd" x="740" y="200" width="140" height="150"/>
+        <text class="lbw" x="810" y="240" text-anchor="middle">mood board</text>
+        <text class="smw" x="810" y="262" text-anchor="middle">12 artworks</text>
+        <text class="smw" x="810" y="278" text-anchor="middle">zoomed details</text>
+        <text class="smw" x="810" y="294" text-anchor="middle">a quoted title</text>
+        <text class="smw" x="810" y="310" text-anchor="middle">palette · keywords</text>
+        <text class="smw" x="810" y="326" text-anchor="middle">“imagined person”</text>
+
+        <rect class="bx" x="740" y="410" width="140" height="56"/>
+        <text class="sm" x="810" y="434" text-anchor="middle">portrait card</text>
+        <text class="sm" x="810" y="452" text-anchor="middle">+ confidence %</text>
+        <path class="ln" d="M810,410 L810,352" marker-end="url(#ah)"/>
+
+        <path class="ln" d="M642,390 C700,390 700,275 738,275" marker-end="url(#ah)"/>
+      </svg>
+    </div>
+    <p class="caption">the whole chain. dashed lines carry a guess, pen lines carry a link between artworks.</p>
+
+    <ol class="steps">
+      <li><strong>Trigger.</strong> The visitor types a first name and presses <em>Ask the machines</em>. That single submit is the only human action; everything after it is servers talking to servers.</li>
+      <li><strong>Three questions.</strong> The name goes to Wikidata as one SPARQL query that collects up to 400 people whose given name matches: their birth years (the middle one becomes the guessed birth year), their citizenships (the most common becomes the guessed origin) and their recorded sex. Each receipt shows how many people the answer is based on. If Wikidata knows no one with the name, the receipt asks a name-guessing service instead (<code>agify.io</code>, <code>nationalize.io</code> or <code>genderize.io</code>), and if that has no answer either, the letters of the name pick a value and the receipt says so.</li>
+      <li><strong>Guesses become search terms.</strong> The guessed country becomes a search word. The guessed age is turned into a birth year, minus one hundred &mdash; the year a great-great-grandparent might have been born &mdash; and becomes a date filter (<code>created_after</code> / <code>created_before</code>). Both are sent to the Cleveland Museum of Art's open access API. If Cleveland doesn't answer, the same question goes to The Met, which replies only with ID numbers, so every artwork costs one more request.</li>
+      <li><strong>Art calls more art.</strong> Each artwork that comes back has a title, an artist, a place, a date and a technique. The machine turns one of these into the next request, in one of six ways:
+        <em>a word from its title</em> (“Evening Lake” leads to something else with “lake” in its name),
+        <em>the same artist</em>, <em>the same place</em> (by someone else), <em>the same decade</em> (somewhere else in the world),
+        <em>the same technique</em>, or <em>the same place a hundred years earlier</em>, repeating the rule that turned the guessed birth year into the first search.
+        An artwork never leaves by the door it came in through, and the least-used kind of link is always tried first, so every board mixes all six. When several artworks would fit, the machine picks the one that adds an object type, an artist or a place the board does not have yet. Two seeds become four, four become six. On the board, every link is a pen arrow with its reason scribbled next to it.</li>
+      <li><strong>The mood board.</strong> The twelve artworks are laid out in an editorial grid at different sizes. Between them sit round close-ups cut from the pictures, one artwork title on a torn black strip and a scribbled note of the guesses. Beside the board, the keywords are printed as label-maker tape, and the palette is measured from the pictures themselves: each image is shrunk to 24×24 pixels and its most common colour becomes a paint chip. The three original guesses are printed beside the board as the portrait of an imagined person.</li>
+    </ol>
+
+    <h3>Rules that keep the chain honest</h3>
+    <ul>
+      <li><strong>Deterministic.</strong> Every choice is made by a random generator seeded with the name, so the same name always walks the same path. Change one letter and the whole chain changes.</li>
+      <li><strong>Visible.</strong> Every request is printed in a live log, and every artwork is pinned to the board with a thread pointing to the data that caused it.</li>
+      <li><strong>Graceful failure.</strong> If a service has no answer, the machine admits it and invents a value from the letters of the name, and labels it as invented.</li>
+    </ul>
+
+    <!-- ============================================================ -->
+    <h2>Responses to the brief</h2>
+    <dl class="qa">
+      <dt>What kind of data is passed around?</dt>
+      <dd>
+        It starts as the smallest possible piece of personal data: a first name, a few letters.
+        It is turned into statistics (an age, a nationality probability, a gender probability), then into
+        museum search parameters (a year, a place), then into images and their metadata (titles, artists, places, dates,
+        techniques), then back into search words, and finally into a mood board of images, details, words and colours read from the pixels. At every hop the data changes type &mdash;
+        text, number, percentage, date, colour, picture &mdash; but each form is derived only from the one before it.
+      </dd>
+
+      <dt>Which services are chained together?</dt>
+      <dd>
+        <div class="table-scroll">
+        <table class="services">
+          <thead><tr><th>Service</th><th>Receives</th><th>Returns</th></tr></thead>
+          <tbody>
+            <tr><td>Wikidata query service</td><td>a name, inside three SPARQL queries</td><td>birth years, citizenships and recorded sex of everyone with that given name</td></tr>
+            <tr><td>agify.io, nationalize.io, genderize.io (backup)</td><td>a name</td><td>a predicted age, country or gender with a confidence</td></tr>
+            <tr><td>Cleveland Museum of Art API</td><td>a word, an artist, or a date range</td><td>matching open-access artworks with metadata and images</td></tr>
+            <tr><td>The Met Collection API (backup)</td><td>a word, an artist, or a date range; then one ID at a time</td><td>a list of ID numbers; then each object's metadata and image</td></tr>
+          </tbody>
+        </table>
+        </div>
+        Wikidata was built to describe notable people. The museum APIs were built for scholarship.
+        Neither was meant to be connected to the other, which is where the unexpected outcomes come from.
+      </dd>
+
+      <dt>What does the trigger look like?</dt>
+      <dd>
+        A single text field and one button. The trigger is deliberately minimal: the visitor gives away almost nothing,
+        and watches how much the system builds from it. A name can also be passed in the address
+        (<code>?name=Jia</code>), so the chain can be fired from a link.
+      </dd>
+
+      <dt>What is the end result?</dt>
+      <dd>
+        A mood board &mdash; twelve artworks at different sizes, zoomed-in details, a quoted title, a colour palette and a set of keywords &mdash; titled
+        <em>“[Name], as imagined by machines.”</em> Beside it sits the portrait that produced it, with every confidence
+        percentage left visible. Visitors who enter their own name usually find the result oddly fitting and obviously
+        wrong at the same time. That gap is the point: it shows how quickly a fragment of data is inflated into an
+        identity, and how much aesthetic weight a guess can carry once it has passed through enough machines.
+      </dd>
+
+      <dt>Why celebrate the mechanism?</dt>
+      <dd>
+        The useful version of this project would be one request: “show me art I might like.” Instead the request
+        takes a detour through demographics, genealogy, language, geography and art-historical cataloguing, roughly thirty
+        requests across five servers. Like a Rube Goldberg machine, the detour is the work; the log and the
+        threads exist so that the detour can be seen.
+      </dd>
+    </dl>
+
+    <!-- ============================================================ -->
+    <h2>Video</h2>
+    <p>A screen recording of one full run, from typing a name to the finished mood board.</p>
+    <div class="video">
+      <!-- Replace this placeholder with your recording, e.g.
+           <video src="media/demo.mp4" controls playsinline></video>
+           or a YouTube / Vimeo <iframe>. -->
+      video goes here
+    </div>
+
+    <!-- ============================================================ -->
+    <h2>Credits &amp; notes</h2>
+    <p>
+      Artwork data and images: <a href="https://openaccess-api.clevelandart.org/">Cleveland Museum of Art Open Access API</a> and <a href="https://metmuseum.github.io/">The Met Collection API</a> (public-domain works only).
+      People data: <a href="https://www.wikidata.org/">Wikidata</a> (CC0). Backup name predictions:
+      <a href="https://agify.io">agify.io</a>, <a href="https://nationalize.io">nationalize.io</a>,
+      <a href="https://genderize.io">genderize.io</a>, which allow about 100 free lookups a day per network.
+      Every answer is kept in the visitor's browser, so the same name never has to be asked twice.
+    </p>
+    <p>
+      Built with plain HTML, CSS and JavaScript, no libraries, and hosted on GitHub Pages.
+      Nothing typed into the site is stored by it; the name is only sent to the services listed above.
+    </p>
+  </article>
+
+  <footer class="footer">
+    <span>The Person in the Name, Jia Yang, 2026</span>
+    <a href="index.html">Back to the machine</a>
+  </footer>
+</body>
+</html>

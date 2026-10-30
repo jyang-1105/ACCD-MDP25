@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Person in the Name</title>
+  <meta name="description" content="Type a name. Three prediction machines guess who carries it, a museum answers with art, and the art calls more art, until a mood board is glued together.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=DM+Serif+Display:ital@0;1&family=Reenie+Beanie&family=Special+Elite&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <a class="brand" href="index.html">The Person in the Name</a>
+    <a class="toplink" href="about.html">About</a>
+  </header>
+
+  <!-- 1. TRIGGER -->
+  <section id="intro" class="intro">
+    <div class="sheet intro-sheet">
+      <span class="tape tape-tl"></span><span class="tape tape-tr"></span>
+      <h1 id="intro-title" class="ransom" aria-label="The Person in the Name"></h1>
+      <form id="name-form" class="name-form" autocomplete="off">
+        <label for="name-input">Who is</label>
+        <input id="name-input" type="text" maxlength="40" required>
+        <span class="qmark">?</span>
+        <button type="submit" class="stamp">Ask the machines</button>
+      </form>
+      <p class="pen intro-pen">try your own name, or a friend's</p>
+      <p class="intro-note">
+        Wikidata is asked about everyone who shares this name: when they were born, where they are from, who they are.
+        Their guesses go to a museum. The museum answers with art, and the art calls more art,
+        until everything is glued into one mood board. Nothing here is about you, only about the name.
+      </p>
+    </div>
+  </section>
+
+  <!-- 2. THE MACHINE -->
+  <main id="stage" class="stage" hidden>
+    <svg id="threads" class="threads" aria-hidden="true"></svg>
+
+    <aside class="machine">
+      <div id="name-display" class="ransom name-display" aria-live="polite"></div>
+
+      <div class="receipts">
+        <article class="receipt" id="card-age">
+          <h3>wikidata.org</h3>
+          <p class="r-q">How old is a <span class="r-name"></span>?</p>
+          <p class="r-val">…</p>
+          <p class="r-detail">waiting</p>
+          <p class="r-meter"></p>
+        </article>
+        <article class="receipt" id="card-country">
+          <h3>wikidata.org</h3>
+          <p class="r-q">Where is a <span class="r-name"></span> from?</p>
+          <p class="r-val">…</p>
+          <p class="r-detail">waiting</p>
+          <p class="r-meter"></p>
+        </article>
+        <article class="receipt" id="card-gender">
+          <h3>wikidata.org</h3>
+          <p class="r-q">Who is a <span class="r-name"></span>?</p>
+          <p class="r-val">…</p>
+          <p class="r-detail">waiting</p>
+          <p class="r-meter"></p>
+        </article>
+      </div>
+
+      <div class="roll">
+        <h3>Every request, as it happens</h3>
+        <ol id="log" class="log"></ol>
+        <p id="counter" class="counter"></p>
+      </div>
+    </aside>
+
+    <section class="board-wrap">
+      <p id="status" class="pen status">warming up…</p>
+      <div id="board" class="board"></div>
+      <div class="board-actions">
+        <button id="retry-btn" class="stamp" hidden>Try again</button>
+        <button id="compose-btn" class="stamp" hidden>Glue the mood board</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- 3. THE END RESULT -->
+  <section id="moodboard" class="moodboard" hidden>
+    <div class="mb-head">
+      <h2 id="mb-title" class="ransom mb-title"></h2>
+      <p class="pen mb-pen">as imagined by machines</p>
+      <p id="mb-sub" class="mb-sub"></p>
+    </div>
+    <div class="mb-grid">
+      <div id="mb-collage" class="mb-collage"></div>
+      <aside class="mb-side">
+        <div class="index-card">
+          <span class="tape tape-tc"></span>
+          <h3>The imagined person</h3>
+          <dl id="mb-portrait" class="mb-portrait"></dl>
+          <span class="ink-stamp">guessed</span>
+        </div>
+        <div id="mb-palette" class="chips"></div>
+        <div id="mb-keywords" class="dymos"></div>
+        <p class="pen mb-disclaimer">every line on this page is a guess made from a string of letters</p>
+      </aside>
+    </div>
+    <div class="mb-actions">
+      <button id="again-btn" class="stamp">Try another name</button>
+      <button id="chain-btn" class="stamp stamp-quiet">Back to the chain</button>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <span>Data from Wikidata, agify.io, nationalize.io, genderize.io, the Cleveland Museum of Art and The Met</span>
+    <span>version 8 (Oct 30)</span>
+    <a href="about.html">How it works</a>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
