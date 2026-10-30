@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Heard, Not Understood</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #fff;
+    color: #111;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    line-height: 1.4;
+  }
+  main { max-width: 1040px; margin: 0 auto; padding: 48px 24px 40px; }
+
+  /* ---------- header ---------- */
+  header { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
+  h1 { font-size: 40px; margin: 0; letter-spacing: -0.5px; }
+  .sub { margin: 6px 0 0; color: #666; }
+  .count { font-size: 14px; color: #666; text-align: right; }
+  .count b { font-size: 32px; color: #111; display: block; font-weight: bold; }
+
+  /* ---------- controls ---------- */
+  .controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 32px 0 16px; }
+  .button {
+    display: inline-block; padding: 10px 18px; border: 1px solid #111; background: #fff; color: #111;
+    font: inherit; font-size: 15px; cursor: pointer; user-select: none;
+  }
+  .button:hover, .button.active { background: #111; color: #fff; }
+  .button.small { padding: 6px 12px; font-size: 13px; }
+  .button.disabled { opacity: 0.3; pointer-events: none; }
+  .sens { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #666; margin-left: auto; }
+  .sens input { accent-color: #111; width: 110px; }
+  .status { font-size: 13px; color: #888; margin: 0 0 12px; min-height: 18px; }
+  .status.error { color: #b00020; }
+
+  /* ---------- live strip ---------- */
+  .live { border: 1px solid #111; }
+  #spectrogram { display: block; width: 100%; height: 120px; background: #fff; }
+  .now { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid #111; }
+  .now div { padding: 10px 14px; font-size: 14px; }
+  .now div + div { border-left: 1px solid #111; }
+  .now .k { color: #888; font-size: 12px; display: block; margin-bottom: 2px; }
+  .level { display: inline-block; width: 80px; height: 6px; border: 1px solid #bbb; margin-left: 8px; vertical-align: middle; }
+  .level i { display: block; height: 100%; width: 0; background: #111; }
+
+  /* ---------- field guide ---------- */
+  .guideHead { display: flex; justify-content: space-between; align-items: baseline; margin: 48px 0 16px; gap: 12px; flex-wrap: wrap; }
+  h2 { font-size: 22px; margin: 0; }
+  .hint { color: #888; font-size: 13px; }
+  .empty { border: 1px dashed #bbb; padding: 40px; text-align: center; color: #888; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 0; border-top: 1px solid #111; border-left: 1px solid #111; }
+  .card { border-right: 1px solid #111; border-bottom: 1px solid #111; padding: 14px; position: relative; background: #fff; }
+  .card.selected { background: #f2f2f2; }
+  .card canvas { display: block; width: 100%; aspect-ratio: 1; }
+  .no { font-size: 12px; color: #888; display: flex; justify-content: space-between; }
+  .label { font-size: 17px; font-weight: bold; margin: 8px 0 2px; }
+  .conf { font-size: 13px; color: #666; }
+  .like { font-size: 13px; margin-top: 10px; }
+  .like .k, .tr .k { color: #888; font-size: 12px; display: block; }
+  .tr { margin-top: 10px; font-size: 13px; }
+  .tr .blank { display: block; border-bottom: 1px solid #111; height: 18px; }
+  .cardActions { display: flex; gap: 8px; margin-top: 12px; }
+  .cardActions .button { flex: 1; text-align: center; }
+
+  /* ---------- compare ---------- */
+  #compare { margin-top: 48px; border: 1px solid #111; padding: 20px; }
+  .cmpTop { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; }
+  .cmpTop > div { text-align: center; }
+  .cmpTop canvas { width: 160px; height: 160px; display: block; margin: 0 auto; }
+  .cmpName { text-align: center; font-size: 14px; margin-top: 6px; }
+  .sim { text-align: center; }
+  .sim b { font-size: 44px; display: block; }
+  .sim span { font-size: 13px; color: #666; }
+  .bars { margin-top: 20px; }
+  .barRow { display: grid; grid-template-columns: 1fr 200px 1fr; align-items: center; gap: 10px; font-size: 13px; padding: 3px 0; }
+  .barRow .l { display: flex; justify-content: flex-end; }
+  .barRow .c { text-align: center; }
+  .barRow i { display: block; height: 8px; background: #111; }
+  .barRow.human i { background: #fff; border: 1px solid #111; }
+  .legend { font-size: 12px; color: #888; margin-top: 10px; text-align: center; }
+
+  footer { margin-top: 56px; font-size: 12px; color: #888; border-top: 1px solid #eee; padding-top: 16px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>Heard, Not Understood</h1>
+      <p class="sub">An AI's field guide to the animals around you.</p>
+    </div>
+    <div class="count"><b id="count">0</b>animals heard</div>
+  </header>
+
+  <div class="controls">
+    <span class="button disabled" id="micButton">Start listening</span>
+    <label class="button disabled" id="fileLabel">
+      Upload sounds
+      <input type="file" id="fileInput" accept="audio/*" multiple hidden>
+    </label>
+    <label class="sens">
+      Sensitivity
+      <input type="range" id="sens" min="1" max="10" step="1" value="8">
+      <span id="sensText"></span>
+    </label>
+  </div>
+  <p id="status" class="status">Loading AI model…</p>
+
+  <section class="live">
+    <canvas id="spectrogram"></canvas>
+    <div class="now">
+      <div><span class="k">AI hears <span id="level" class="level"><i></i></span></span><span id="nowAnimal">—</span></div>
+      <div><span class="k">To the AI, it also sounds like</span><span id="nowHuman">—</span></div>
+    </div>
+  </section>
+
+  <div class="guideHead">
+    <h2>Field guide</h2>
+    <span class="hint">Pick two entries to compare them.</span>
+    <span>
+      <span class="button small disabled" id="pngButton">Save as image</span>
+      <span class="button small disabled" id="csvButton">Save as CSV</span>
+    </span>
+  </div>
+  <div id="empty" class="empty">Nothing yet. Start listening or upload a bird call.</div>
+  <div id="grid" class="grid"></div>
+
+  <section id="compare" hidden>
+    <h2>Compare</h2>
+    <div class="cmpTop" style="margin-top:16px">
+      <div><canvas id="cmpA"></canvas><div class="cmpName" id="cmpAName"></div></div>
+      <div class="sim"><b id="simValue"></b><span>alike, to the AI</span></div>
+      <div><canvas id="cmpB"></canvas><div class="cmpName" id="cmpBName"></div></div>
+    </div>
+    <div class="bars" id="bars"></div>
+    <div class="legend">■ animal sound &nbsp;&nbsp; □ human-world sound</div>
+  </section>
+
+  <footer>
+    The AI decides what it heard. The sound itself decides what the mark looks like:
+    louder sounds make bigger marks, higher sounds make sharper marks, the rhythm of a call sets how many strokes it has,
+    and the less sure the AI is, the fainter the mark. The translation is always left blank.<br><br>
+    Model: YAMNet (521 sound classes) via Google MediaPipe. Everything runs in your browser; no audio is uploaded.
+  </footer>
+</main>
+
+<script type="module">
+
+const MODEL_URL = "https://storage.googleapis.com/mediapipe-models/audio_classifier/yamnet/float32/1/yamnet.tflite";
+
+/* ======================================================
+   Sound categories
+   ====================================================== */
+// The YAMNet classes that are animals or animal sounds.
+const ANIMAL = new Set([
+  "Animal", "Domestic animals, pets", "Dog", "Bark", "Yip", "Howl", "Bow-wow", "Growling", "Whimper (dog)",
+  "Cat", "Purr", "Meow", "Hiss", "Caterwaul", "Livestock, farm animals, working animals", "Horse", "Clip-clop",
+  "Neigh, whinny", "Cattle, bovinae", "Moo", "Cowbell", "Pig", "Oink", "Goat", "Bleat", "Sheep", "Fowl",
+  "Chicken, rooster", "Cluck", "Crowing, cock-a-doodle-doo", "Turkey", "Gobble", "Duck", "Quack", "Goose", "Honk",
+  "Wild animals", "Roaring cats (lions, tigers)", "Roar", "Bird", "Bird vocalization, bird call, bird song",
+  "Chirp, tweet", "Squawk", "Pigeon, dove", "Coo", "Crow", "Caw", "Owl", "Hoot", "Bird flight, flapping wings",
+  "Canidae, dogs, wolves", "Rodents, rats, mice", "Mouse", "Patter", "Insect", "Cricket", "Mosquito",
+  "Fly, housefly", "Buzz", "Bee, wasp, etc.", "Frog", "Croak", "Snake", "Rattle", "Whale vocalization"
+]);
+// Very general labels that say nothing about what the sound "is like".
+const GENERIC = new Set([
+  "Animal", "Domestic animals, pets", "Wild animals", "Livestock, farm animals, working animals",
+  "Silence", "Noise", "Environmental noise", "Static", "Hum", "Inside, small room", "Inside, large room or hall",
+  "Inside, public space", "Outside, urban or manmade", "Outside, rural or natural", "Field recording"
+]);
+const FAMILIES = {
+  bird: ["Bird", "Bird vocalization, bird call, bird song", "Chirp, tweet", "Squawk", "Pigeon, dove", "Coo", "Crow", "Caw",
+         "Owl", "Hoot", "Bird flight, flapping wings", "Fowl", "Chicken, rooster", "Cluck", "Crowing, cock-a-doodle-doo",
+         "Turkey", "Gobble", "Duck", "Quack", "Goose", "Honk"],
+  insect: ["Insect", "Cricket", "Mosquito", "Fly, housefly", "Buzz", "Bee, wasp, etc."],
+  frog: ["Frog", "Croak", "Snake", "Rattle", "Whale vocalization"],
+};
+function familyOf(name) {
+  for (const [fam, list] of Object.entries(FAMILIES)) if (list.includes(name)) return fam;
+  return "mammal";
+}
+
+/* ======================================================
+   State + elements
+   ====================================================== */
+const $ = (id) => document.getElementById(id);
+const status = $("status");
+let classifier = null;
+let audioCtx = null;
+const entries = [];
+let selected = [];
+
+function setStatus(text, isError = false) {
+  status.textContent = text;
+  status.classList.toggle("error", isError);
+}
+
+/* ======================================================
+   Load the AI model
+   Tries a few versions of the MediaPipe library, in case one fails.
+   ====================================================== */
+const SOURCES = [
+  { lib: "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-audio@0.10/+esm", wasm: "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-audio@0.10/wasm" },
+  { lib: "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-audio@1.1.0/audio_bundle.mjs", wasm: "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-audio@1.1.0/wasm" },
+  { lib: "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-audio", wasm: "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-audio/wasm" },
+];
+async function loadModel() {
+  const errors = [];
+  for (const src of SOURCES) {
+    try {
+      const mod = await import(src.lib);
+      const lib = mod.AudioClassifier ? mod : (mod.default || mod);
+      const files = await lib.FilesetResolver.forAudioTasks(src.wasm);
+      return await lib.AudioClassifier.createFromOptions(files, {
+        baseOptions: { modelAssetPath: MODEL_URL },
+        scoreThreshold: 0
+      });
+    } catch (err) {
+      console.error(src.lib, err);
+      errors.push(err && err.message ? err.message : String(err));
+    }
+  }
+  throw new Error(errors.join(" | "));
+}
+
+if (location.protocol === "file:") {
+  setStatus("This page was opened directly as a file. In VS Code, right-click the file and choose \"Open with Live Server\".", true);
+} else {
+  try {
+    classifier = await loadModel();
+    setStatus("AI model ready. Start listening, or upload a bird call.");
+    ["micButton", "fileLabel"].forEach((id) => $(id).classList.remove("disabled"));
+  } catch (err) {
+    setStatus("Could not load the AI model. Error: " + err.message, true);
+  }
+}
+
+/* ======================================================
+   AI results helpers
+   ====================================================== */
+// classify() returns one result per ~1 s of audio. Average all of them into one score per class.
+function averageScores(results) {
+  const sum = new Map();
+  let n = 0;
+  for (const r of results) {
+    const cats = r.classifications?.[0]?.categories || [];
+    if (!cats.length) continue;
+    n++;
+    for (const c of cats) sum.set(c.categoryName, (sum.get(c.categoryName) || 0) + c.score);
+  }
+  const out = new Map();
+  if (n) for (const [k, v] of sum) out.set(k, v / n);
+  return out;
+}
+function sortScores(map) {
+  return [...map.entries()].map(([name, score]) => ({ name, score })).sort((a, b) => b.score - a.score);
+}
+function readScores(map) {
+  const sorted = sortScores(map);
+  const animal = sorted.find((s) => ANIMAL.has(s.name) && !GENERIC.has(s.name)) || sorted.find((s) => ANIMAL.has(s.name));
+  const human = sorted.filter((s) => !ANIMAL.has(s.name) && !GENERIC.has(s.name)).slice(0, 3);
+  const animalTotal = sorted.filter((s) => ANIMAL.has(s.name)).reduce((m, s) => Math.max(m, s.score), 0);
+  return { sorted, animal, human, animalTotal };
+}
+const pct = (x) => `${Math.round(x * 100)}%`;
+
+/* ======================================================
+   Sound features (what the mark will look like)
+   ====================================================== */
+function fft(re, im) {
+  const n = re.length;
+  for (let i = 1, j = 0; i < n; i++) {
+    let bit = n >> 1;
+    for (; j & bit; bit >>= 1) j ^= bit;
+    j ^= bit;
+    if (i < j) { [re[i], re[j]] = [re[j], re[i]]; [im[i], im[j]] = [im[j], im[i]]; }
+  }
+  for (let len = 2; len <= n; len <<= 1) {
+    const ang = (-2 * Math.PI) / len;
+    for (let i = 0; i < n; i += len) {
+      for (let k = 0; k < len / 2; k++) {
+        const wr = Math.cos(ang * k), wi = Math.sin(ang * k);
+        const ar = re[i + k + len / 2], ai = im[i + k + len / 2];
+        const tr = ar * wr - ai * wi, ti = ar * wi + ai * wr;
+        re[i + k + len / 2] = re[i + k] - tr; im[i + k + len / 2] = im[i + k] - ti;
+        re[i + k] += tr; im[i + k] += ti;
+      }
+    }
+  }
+}
+// Returns magnitude spectra for frames of the signal.
+function spectra(samples, size = 1024, hop = 512, maxFrames = 600) {
+  const frames = [];
+  const step = Math.max(hop, Math.floor((samples.length - size) / maxFrames));
+  for (let start = 0; start + size <= samples.length; start += step) {
+    const re = new Float32Array(size), im = new Float32Array(size);
+    for (let i = 0; i < size; i++) re[i] = samples[start + i] * (0.5 - 0.5 * Math.cos((2 * Math.PI * i) / (size - 1)));
+    fft(re, im);
+    const mag = new Float32Array(size / 2);
+    for (let i = 0; i < size / 2; i++) mag[i] = Math.hypot(re[i], im[i]);
+    frames.push(mag);
+  }
+  return frames;
+}
+function features(samples, sampleRate) {
+  const size = 2048;
+  const frames = spectra(samples, size, 1024, 400);
+  const rms = [], cents = [];
+  for (const mag of frames) {
+    let e = 0, num = 0;
+    for (let i = 1; i < mag.length; i++) { e += mag[i] * mag[i]; num += i * mag[i]; }
+    const total = mag.reduce((a, b) => a + b, 0) || 1;
+    rms.push(Math.sqrt(e) / size);
+    cents.push(((num / total) * sampleRate) / size);
+  }
+  const maxR = Math.max(...rms, 1e-6);
+  const active = rms.map((r, i) => (r > 0.3 * maxR ? cents[i] : null)).filter((c) => c !== null).sort((a, b) => a - b);
+  const centroid = active.length ? active[Math.floor(active.length / 2)] : 1000;
+  let onsets = 0;
+  for (let i = 1; i < rms.length; i++) if (rms[i] > 0.35 * maxR && rms[i] > rms[i - 1] * 1.6) onsets++;
+  const env = [];
+  for (let i = 0; i < 32; i++) {
+    const a = Math.floor((i / 32) * rms.length), b = Math.max(a + 1, Math.floor(((i + 1) / 32) * rms.length));
+    env.push(Math.max(...rms.slice(a, b), 0) / maxR);
+  }
+  return {
+    loud: Math.min(1, Math.max(0.25, Math.sqrt(maxR) * 4)),
+    pitch: Math.min(1, Math.max(0, Math.log(centroid / 300) / Math.log(8000 / 300))),
+    beats: Math.min(18, Math.max(1, onsets)),
+    env,
+  };
+}
+
+/* ======================================================
+   Drawing a mark
+   ====================================================== */
+function seeded(seed) {
+  let s = seed % 2147483647 || 1;
+  return () => (s = (s * 16807) % 2147483647) / 2147483647;
+}
+function drawMark(canvas, e, cssSize) {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = cssSize * dpr; canvas.height = cssSize * dpr;
+  const g = canvas.getContext("2d");
+  g.scale(dpr, dpr);
+  g.clearRect(0, 0, cssSize, cssSize);
+  paintMark(g, cssSize / 2, cssSize / 2, cssSize, e);
+}
+function paintMark(g, cx, cy, size, e) {
+  const { loud, pitch, beats, env } = e.feat;
+  const rand = seeded(e.seed);
+  const R = size * 0.44 * (0.55 + 0.45 * loud);
+  const conf = Math.min(1, e.animal.score / 0.6);
+  g.save();
+  g.strokeStyle = g.fillStyle = `rgba(17,17,17,${0.2 + 0.8 * conf})`;
+  g.lineCap = "round";
+  if (conf < 0.5) g.setLineDash([2, 4]);
+  const width = 0.8 + (1 - pitch) * 2.6;  // low sounds = heavy strokes, high sounds = fine strokes
+  g.lineWidth = width;
+
+  if (e.family === "bird") {
+    const n = 8 + beats * 3;
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + rand() * 0.15;
+      const len = R * (0.3 + 0.7 * env[i % env.length]);
+      const inner = R * 0.12;
+      g.beginPath();
+      g.moveTo(cx + Math.cos(a) * inner, cy + Math.sin(a) * inner);
+      g.lineTo(cx + Math.cos(a) * len, cy + Math.sin(a) * len);
+      g.stroke();
+      if (pitch > 0.45) {  // high calls get a sharp tick at the tip
+        const t = a + (rand() > 0.5 ? 0.5 : -0.5);
+        g.beginPath();
+        g.moveTo(cx + Math.cos(a) * len, cy + Math.sin(a) * len);
+        g.lineTo(cx + Math.cos(a) * len + Math.cos(t) * R * 0.12 * pitch, cy + Math.sin(a) * len + Math.sin(t) * R * 0.12 * pitch);
+        g.stroke();
+      }
+    }
+  } else if (e.family === "insect") {
+    const n = 40 + beats * 18;
+    for (let i = 0; i < n; i++) {
+      const a = rand() * Math.PI * 2, r = Math.sqrt(rand()) * R * (0.4 + 0.6 * env[i % env.length]);
+      g.beginPath();
+      g.arc(cx + Math.cos(a) * r, cy + Math.sin(a) * r, 0.6 + (1 - pitch) * 1.8, 0, Math.PI * 2);
+      g.fill();
+    }
+  } else if (e.family === "frog") {
+    const rings = Math.min(9, 2 + beats);
+    for (let k = 1; k <= rings; k++) {
+      const base = (k / rings) * R;
+      g.beginPath();
+      for (let i = 0; i <= 64; i++) {
+        const a = (i / 64) * Math.PI * 2;
+        const w = 1 + 0.08 * Math.sin(a * (3 + Math.round(pitch * 8))) * env[(i + k * 5) % env.length];
+        const x = cx + Math.cos(a) * base * w, y = cy + Math.sin(a) * base * w;
+        i ? g.lineTo(x, y) : g.moveTo(x, y);
+      }
+      g.stroke();
+    }
+  } else {
+    const n = 3 + beats;
+    g.lineWidth = width + 1.5;
+    for (let i = 0; i < n; i++) {
+      const r = R * (0.25 + 0.75 * ((i + 1) / n));
+      const start = rand() * Math.PI * 2;
+      g.beginPath();
+      g.arc(cx, cy, r, start, start + Math.PI * (0.4 + 1.2 * env[i % env.length]));
+      g.stroke();
+    }
+  }
+  g.restore();
+}
+
+/* ======================================================
+   Field guide entries
+   ====================================================== */
+function makeEntry({ source, samples, sampleRate, scores, url }) {
+  const read = readScores(scores);
+  if (!read.animal) return null;
+  const e = {
+    no: entries.length + 1,
+    time: new Date(),
+    source,
+    url,
+    scores,
+    animal: read.animal,
+    human: read.human,
+    family: familyOf(read.animal.name),
+    feat: features(samples, sampleRate),
+    seed: Math.floor(Math.random() * 1e9) + 1,
+  };
+  entries.push(e);
+  addCard(e);
+  $("count").textContent = entries.length;
+  return e;
+}
+
+function addCard(e) {
+  $("empty").hidden = true;
+  ["pngButton", "csvButton"].forEach((id) => $(id).classList.remove("disabled"));
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `
+    <div class="no"><span>No. ${String(e.no).padStart(3, "0")}</span><span>${e.time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span></div>
+    <canvas></canvas>
+    <div class="label"></div>
+    <div class="conf"></div>
+    <div class="like"><span class="k">Sounds like (to the AI)</span><span class="likeText"></span></div>
+    <div class="tr"><span class="k">Translation</span><span class="blank"></span></div>
+    <div class="cardActions">
+      <span class="button small play">Play</span>
+      <span class="button small pick">Compare</span>
+    </div>`;
+  card.querySelector(".label").textContent = e.animal.name;
+  card.querySelector(".conf").textContent = `${pct(e.animal.score)} sure · ${e.source}`;
+  card.querySelector(".likeText").textContent = e.human.length ? e.human.map((h) => `${h.name} ${pct(h.score)}`).join(" · ") : "—";
+  $("grid").prepend(card);
+  drawMark(card.querySelector("canvas"), e, card.querySelector("canvas").clientWidth || 200);
+
+  const audio = new Audio(e.url);
+  card.querySelector(".play").addEventListener("click", () => { audio.currentTime = 0; audio.play(); });
+  card.querySelector(".pick").addEventListener("click", () => toggleCompare(e, card));
+}
+
+/* ======================================================
+   Compare two entries
+   ====================================================== */
+function toggleCompare(e, card) {
+  const i = selected.findIndex((s) => s.e === e);
+  if (i >= 0) { selected.splice(i, 1); card.classList.remove("selected"); }
+  else {
+    if (selected.length === 2) { const old = selected.shift(); old.card.classList.remove("selected"); }
+    selected.push({ e, card }); card.classList.add("selected");
+  }
+  renderCompare();
+}
+function similarity(a, b) {
+  let dot = 0, na = 0, nb = 0;
+  const keys = new Set([...a.keys(), ...b.keys()]);
+  for (const k of keys) { const x = a.get(k) || 0, y = b.get(k) || 0; dot += x * y; na += x * x; nb += y * y; }
+  return na && nb ? dot / Math.sqrt(na * nb) : 0;
+}
+function renderCompare() {
+  const box = $("compare");
+  if (selected.length < 2) { box.hidden = true; return; }
+  box.hidden = false;
+  const [A, B] = selected.map((s) => s.e);
+  drawMark($("cmpA"), A, 160); drawMark($("cmpB"), B, 160);
+  $("cmpAName").textContent = `No. ${A.no} · ${A.animal.name} · ${A.source}`;
+  $("cmpBName").textContent = `No. ${B.no} · ${B.animal.name} · ${B.source}`;
+  $("simValue").textContent = pct(similarity(A.scores, B.scores));
+
+  const names = new Set();
+  sortScores(A.scores).filter((s) => !GENERIC.has(s.name)).slice(0, 6).forEach((s) => names.add(s.name));
+  sortScores(B.scores).filter((s) => !GENERIC.has(s.name)).slice(0, 6).forEach((s) => names.add(s.name));
+  const rows = [...names].map((n) => ({ n, a: A.scores.get(n) || 0, b: B.scores.get(n) || 0 }))
+    .sort((x, y) => Math.max(y.a, y.b) - Math.max(x.a, x.b));
+  const max = Math.max(...rows.map((r) => Math.max(r.a, r.b)), 0.01);
+  $("bars").innerHTML = "";
+  for (const r of rows) {
+    const row = document.createElement("div");
+    row.className = "barRow" + (ANIMAL.has(r.n) ? "" : " human");
+    row.innerHTML = `<div class="l"><i style="width:${(r.a / max) * 100}%"></i></div><div class="c"></div><div><i style="width:${(r.b / max) * 100}%"></i></div>`;
+    row.querySelector(".c").textContent = r.n;
+    $("bars").appendChild(row);
+  }
+}
+
+/* ======================================================
+   Live strip: spectrogram + "AI hears"
+   ====================================================== */
+const spec = $("spectrogram");
+const sg = spec.getContext("2d");
+function sizeSpec() {
+  const dpr = window.devicePixelRatio || 1;
+  spec.width = spec.clientWidth * dpr; spec.height = spec.clientHeight * dpr;
+  sg.fillStyle = "#fff"; sg.fillRect(0, 0, spec.width, spec.height);
+}
+sizeSpec();
+let lastSamples = null;  // redraw the last uploaded sound if the window is resized
+window.addEventListener("resize", () => { if (!mic && lastSamples) drawFileSpectrogram(lastSamples); else sizeSpec(); });
+
+function drawColumn(x, w, vals) {
+  // vals: loudness per frequency bin, 0..1. Log frequency axis: low at the bottom, high at the top.
+  const h = spec.height, bins = vals.length;
+  for (let y = 0; y < h; y++) {
+    const v = Math.max(0, Math.min(1, vals[Math.floor(Math.pow(bins - 1, 1 - y / h))]));
+    const c = Math.round(255 - 255 * v);
+    sg.fillStyle = `rgb(${c},${c},${c})`;
+    sg.fillRect(x, y, w, 1);
+  }
+}
+function drawFileSpectrogram(samples) {
+  lastSamples = samples;
+  sizeSpec();
+  const W = spec.width, H = spec.height;
+  const frames = spectra(samples, 1024, 512, Math.min(W, 1200));
+  if (!frames.length) return;
+  let peak = 1e-6;
+  for (const m of frames) for (const v of m) peak = Math.max(peak, v);
+  const bins = frames[0].length;
+  const img = sg.createImageData(W, H);
+  for (let x = 0; x < W; x++) {
+    const m = frames[Math.min(frames.length - 1, Math.floor((x / W) * frames.length))];
+    for (let y = 0; y < H; y++) {
+      const db = 20 * Math.log10(m[Math.floor(Math.pow(bins - 1, 1 - y / H))] / peak + 1e-9);
+      const v = Math.max(0, Math.min(1, (db + 60) / 60));  // show the loudest 60 dB
+      const c = Math.round(255 - 255 * v), k = (y * W + x) * 4;
+      img.data[k] = img.data[k + 1] = img.data[k + 2] = c; img.data[k + 3] = 255;
+    }
+  }
+  sg.putImageData(img, 0, 0);
+}
+// Slider 1–10: higher = more sensitive = lower score needed to catch an animal.
+function threshold() { return 0.05 + (10 - parseFloat($("sens").value)) * 0.04; }
+function showSens() { $("sensText").textContent = `catches at ${pct(threshold())}`; }
+$("sens").addEventListener("input", showSens);
+showSens();
+
+function showNow(read, live = false) {
+  const top = read.sorted.find((s) => !GENERIC.has(s.name));
+  if (read.animal && read.animalTotal > 0.03) {
+    $("nowAnimal").textContent = `${read.animal.name} · ${pct(read.animalTotal)}` +
+      (live && read.animalTotal < threshold() ? ` (needs ${pct(threshold())} to catch)` : "");
+  } else {
+    $("nowAnimal").textContent = top ? `No animal · top guess: ${top.name} ${pct(top.score)}` : "No animal";
+  }
+  $("nowHuman").textContent = read.human.length ? read.human.map((h) => `${h.name} ${pct(h.score)}`).join(" · ") : "—";
+}
+
+/* ======================================================
+   Upload sounds
+   ====================================================== */
+$("fileInput").addEventListener("change", async (ev) => {
+  const files = [...ev.target.files];
+  ev.target.value = "";
+  if (!classifier || !files.length) return;
+  stopMic();
+  audioCtx = audioCtx || new AudioContext();
+  let added = 0;
+  for (const file of files) {
+    setStatus(`Listening to "${file.name}"…`);
+    try {
+      const buffer = await audioCtx.decodeAudioData(await file.arrayBuffer());
+      const mono = toMono(buffer);
+      drawFileSpectrogram(mono);
+      const scores = averageScores(classifier.classify(mono, buffer.sampleRate));
+      const read = readScores(scores);
+      showNow(read);
+      const name = file.name.replace(/\.[^.]+$/, "");
+      if (makeEntry({ source: name, samples: mono, sampleRate: buffer.sampleRate, scores, url: URL.createObjectURL(file) })) added++;
+    } catch (err) {
+      console.error(err);
+      setStatus(`Could not read "${file.name}". Try an mp3 or wav file.`, true);
+    }
+  }
+  setStatus(`Done. Added ${added} of ${files.length} sound${files.length > 1 ? "s" : ""} to the field guide.`);
+});
+function toMono(buffer) {
+  const out = new Float32Array(buffer.length);
+  for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+    const d = buffer.getChannelData(ch);
+    for (let i = 0; i < d.length; i++) out[i] += d[i] / buffer.numberOfChannels;
+  }
+  return out;
+}
+
+/* ======================================================
+   Live microphone
+   ====================================================== */
+let mic = null;
+$("micButton").addEventListener("click", () => (mic ? stopMic() : startMic()));
+
+async function startMic() {
+  if (!classifier) return;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false } });
+    audioCtx = audioCtx || new AudioContext();
+    await audioCtx.resume();
+    const ctx = audioCtx;
+    const source = ctx.createMediaStreamSource(stream);
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 2048;
+    const node = ctx.createScriptProcessor(16384, 1, 1);
+    const windowSize = Math.round(ctx.sampleRate * 1.0);
+    let ring = new Float32Array(0);
+    let lastCatch = 0;
+
+    node.onaudioprocess = (ev) => {
+      const input = ev.inputBuffer.getChannelData(0);
+      const joined = new Float32Array(ring.length + input.length);
+      joined.set(ring); joined.set(input, ring.length);
+      ring = joined.slice(-windowSize * 2);  // keep ~2 s
+      if (ring.length < windowSize) return;
+
+      const last = ring.slice(-windowSize);
+      const scores = averageScores(classifier.classify(last, ctx.sampleRate));
+      const read = readScores(scores);
+      showNow(read, true);
+
+      // input level meter, so you can see whether the microphone hears anything
+      let peak = 0;
+      for (let i = 0; i < input.length; i++) peak = Math.max(peak, Math.abs(input[i]));
+      $("level").firstElementChild.style.width = `${Math.min(100, Math.sqrt(peak) * 100)}%`;
+      const now = performance.now();
+      if (read.animal && read.animalTotal >= threshold() && now - lastCatch > 2500) {
+        lastCatch = now;
+        const clip = ring.slice();
+        makeEntry({ source: "microphone", samples: clip, sampleRate: ctx.sampleRate, scores, url: wavURL(clip, ctx.sampleRate) });
+        setStatus(`Heard: ${read.animal.name}. Added to the field guide.`);
+      }
+    };
+
+    source.connect(analyser);
+    source.connect(node);
+    node.connect(ctx.destination);
+
+    // scrolling spectrogram
+    const freq = new Float32Array(analyser.frequencyBinCount);
+    const draw = () => {
+      if (!mic) return;
+      analyser.getFloatFrequencyData(freq);
+      const vals = freq.map((db) => (db + 95) / 65);
+      const step = 2 * (window.devicePixelRatio || 1);
+      sg.drawImage(spec, -step, 0);
+      drawColumn(spec.width - step, step, vals.subarray(0, 512));
+      mic.raf = requestAnimationFrame(draw);
+    };
+
+    mic = { stream, node, source, analyser, raf: 0 };
+    sizeSpec();
+    draw();
+    $("micButton").textContent = "Stop listening";
+    $("micButton").classList.add("active");
+    setStatus("Listening… When the AI hears an animal, it adds a mark to the field guide.");
+  } catch (err) {
+    console.error(err);
+    setStatus("Microphone not available. Allow microphone access and open the page with Live Server.", true);
+  }
+}
+function stopMic() {
+  if (!mic) return;
+  cancelAnimationFrame(mic.raf);
+  mic.node.disconnect(); mic.source.disconnect(); mic.analyser.disconnect();
+  mic.stream.getTracks().forEach((t) => t.stop());
+  mic = null;
+  $("micButton").textContent = "Start listening";
+  $("micButton").classList.remove("active");
+  setStatus("Stopped listening.");
+}
+
+// Turn recorded samples into a playable WAV file.
+function wavURL(samples, rate) {
+  const buf = new ArrayBuffer(44 + samples.length * 2);
+  const v = new DataView(buf);
+  const w = (o, s) => [...s].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  w(0, "RIFF"); v.setUint32(4, 36 + samples.length * 2, true); w(8, "WAVE"); w(12, "fmt ");
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  w(36, "data"); v.setUint32(40, samples.length * 2, true);
+  for (let i = 0; i < samples.length; i++) v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, samples[i])) * 0x7fff, true);
+  return URL.createObjectURL(new Blob([buf], { type: "audio/wav" }));
+}
+
+/* ======================================================
+   Save the field guide
+   ====================================================== */
+function download(url, name) {
+  const a = document.createElement("a");
+  a.href = url; a.download = name; a.click();
+}
+$("csvButton").addEventListener("click", () => {
+  const esc = (x) => `"${String(x).replace(/"/g, '""')}"`;
+  const rows = [["No.", "Time", "Source", "AI hears", "Sure", "Sounds like (to the AI)", "Translation"]];
+  for (const e of entries) rows.push([e.no, e.time.toLocaleString(), e.source, e.animal.name, pct(e.animal.score),
+    e.human.map((h) => `${h.name} ${pct(h.score)}`).join(" · "), ""]);
+  download(URL.createObjectURL(new Blob([rows.map((r) => r.map(esc).join(",")).join("\n")], { type: "text/csv" })), "field-guide.csv");
+});
+$("pngButton").addEventListener("click", () => {
+  const cols = 4, cw = 300, ch = 400, pad = 60;
+  const rowsN = Math.ceil(entries.length / cols);
+  const c = document.createElement("canvas");
+  c.width = cols * cw + pad * 2; c.height = rowsN * ch + pad * 2 + 80;
+  const g = c.getContext("2d");
+  g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
+  g.fillStyle = "#111"; g.font = "bold 36px Helvetica Neue, Helvetica, Arial";
+  g.fillText("Heard, Not Understood", pad, pad + 20);
+  g.font = "18px Helvetica Neue, Helvetica, Arial"; g.fillStyle = "#666";
+  g.fillText(`An AI's field guide · ${entries.length} animals heard · ${new Date().toLocaleDateString()}`, pad, pad + 52);
+  entries.forEach((e, i) => {
+    const x = pad + (i % cols) * cw, y = pad + 90 + Math.floor(i / cols) * ch;
+    paintMark(g, x + cw / 2 - 10, y + 120, 220, e);
+    g.fillStyle = "#888"; g.font = "14px Helvetica Neue, Helvetica, Arial";
+    g.fillText(`No. ${String(e.no).padStart(3, "0")} · ${e.source}`, x, y + 255);
+    g.fillStyle = "#111"; g.font = "bold 18px Helvetica Neue, Helvetica, Arial";
+    g.fillText(e.animal.name.slice(0, 28), x, y + 280);
+    g.fillStyle = "#666"; g.font = "14px Helvetica Neue, Helvetica, Arial";
+    g.fillText(`Sounds like: ${e.human[0] ? e.human[0].name : "—"}`.slice(0, 36), x, y + 302);
+    g.fillText("Translation:", x, y + 330);
+    g.fillStyle = "#111"; g.fillRect(x + 85, y + 332, 180, 1);
+  });
+  download(c.toDataURL("image/png"), "field-guide.png");
+});
+</script>
+</body>
+</html>
