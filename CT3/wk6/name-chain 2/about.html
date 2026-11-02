@@ -188,7 +188,7 @@
     <ol class="steps">
       <li><strong>Trigger.</strong> The visitor types a first name and presses <em>Ask the machines</em>. That single submit is the only human action; everything after it is servers talking to servers.</li>
       <li><strong>Three questions.</strong> The name goes to Wikidata as one SPARQL query that collects up to 400 people whose given name matches: their birth years (the middle one becomes the guessed birth year), their citizenships (the most common becomes the guessed origin) and their recorded sex. Each receipt shows how many people the answer is based on. If Wikidata knows no one with the name, the receipt asks a name-guessing service instead (<code>agify.io</code>, <code>nationalize.io</code> or <code>genderize.io</code>), and if that has no answer either, the letters of the name pick a value and the receipt says so.</li>
-      <li><strong>Guesses become search terms.</strong> The guessed country becomes a search word. The guessed age is turned into a birth year, minus one hundred &mdash; the year a great-great-grandparent might have been born &mdash; and becomes a date filter (<code>created_after</code> / <code>created_before</code>). Both are sent to the Cleveland Museum of Art's open access API. If Cleveland doesn't answer, the same question goes to The Met, which replies only with ID numbers, so every artwork costs one more request.</li>
+      <li><strong>Guesses become search terms.</strong> The guessed country becomes a search word. The guessed age is turned into a birth year, minus one hundred &mdash; the year a great-great-grandparent might have been born &mdash; and becomes a date filter (<code>created_after</code> / <code>created_before</code>). Both are sent to The Met's collection API. The Met answers a search with ID numbers only, so every artwork costs one more request; the machine reads them one at a time, with a short pause, because The Met limits how fast one visitor may ask. If The Met doesn't answer, the same question goes to the Cleveland Museum of Art.</li>
       <li><strong>Art calls more art.</strong> Each artwork that comes back has a title, an artist, a place, a date and a technique. The machine turns one of these into the next request, in one of six ways:
         <em>a word from its title</em> (“Evening Lake” leads to something else with “lake” in its name),
         <em>the same artist</em>, <em>the same place</em> (by someone else), <em>the same decade</em> (somewhere else in the world),
@@ -224,8 +224,8 @@
           <tbody>
             <tr><td>Wikidata query service</td><td>a name, inside three SPARQL queries</td><td>birth years, citizenships and recorded sex of everyone with that given name</td></tr>
             <tr><td>agify.io, nationalize.io, genderize.io (backup)</td><td>a name</td><td>a predicted age, country or gender with a confidence</td></tr>
-            <tr><td>Cleveland Museum of Art API</td><td>a word, an artist, or a date range</td><td>matching open-access artworks with metadata and images</td></tr>
-            <tr><td>The Met Collection API (backup)</td><td>a word, an artist, or a date range; then one ID at a time</td><td>a list of ID numbers; then each object's metadata and image</td></tr>
+            <tr><td>The Met Collection API</td><td>a word, an artist, or a date range; then one ID at a time</td><td>a list of ID numbers; then each object's metadata and image</td></tr>
+            <tr><td>Cleveland Museum of Art API (backup)</td><td>a word, an artist, or a date range</td><td>matching open-access artworks with metadata and images</td></tr>
           </tbody>
         </table>
         </div>

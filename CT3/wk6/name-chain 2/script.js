@@ -2,8 +2,8 @@
    The Person in the Name — the causal chain
    ------------------------------------------------------------
    name ─┬─▶ agify.io        ─▶ age ─▶ birth year − 100 ─┐
-         ├─▶ nationalize.io  ─▶ country ─────────────────┼─▶ Cleveland Museum of Art
-         └─▶ genderize.io    ─▶ gender (kept as a label) │   (or The Met, if Cleveland is silent)
+         ├─▶ (Wikidata first, these three as backup) ────┼─▶ The Met
+         └─▶ genderize.io    ─▶ gender (kept as a label) │   (or Cleveland, if The Met is silent)
                                                          │        │
                                                          │   each artwork calls the next by:
                                                          │   a word in its title · its artist · its place
@@ -21,14 +21,17 @@ const CFG = {
   rowHeight: 180,          // vertical space per slot (px)
   delay: 450,              // pause between steps so people can watch the chain (ms)
   timeout: 9000,           // give up on any server that takes longer than this (ms)
+  backupTimeout: 4000,     // the backup museum gets less patience
   pickFromTop: 14,         // choose among the N most relevant museum results
-  metObjects: 6,           // The Met answers with ID numbers; fetch this many objects per search
-  museums: ['cma', 'met'], // which museum is asked first; ['met', 'cma'] asks The Met first
+  metObjects: 6,           // The Met answers with ID numbers; read at most this many objects per search
+  metPause: 150,           // pause between two Met object requests (ms), to stay under its speed limit
+  museums: ['met', 'cma'], // which museum is asked first; ['cma', 'met'] asks Cleveland first
   maxPerPlace: 3,          // at most this many pictures from one place, so one country can't take over
 };
 
 const CMA_API = 'https://openaccess-api.clevelandart.org/api/artworks/';
 const MET_API = 'https://collectionapi.metmuseum.org/public/collection/v1';
+const MET_SEARCH = 'https://collectionapi.metmuseum.org/public/collection/v1.1/search';   // v1/search was retired on 2026-10-01
 const MUSEUM_NAME = { cma: 'the Cleveland Museum of Art', met: 'The Met' };
 
 /* Some country names differ from how the museums record places. */
@@ -145,6 +148,7 @@ function freshState(name) {
     requests: 0,
     hosts: new Set(),
     museums: [...CFG.museums],   // museums that still answer, in the order they are asked
+    strikes: {},        // failures per museum; two and it is no longer asked
     t0: performance.now(),
     guesses: {},
     profile: null,      // the one Wikidata answer, shared by the three receipts
@@ -188,17 +192,17 @@ function updateCounter() {
 }
 function setStatus(t) { $('#status').textContent = t; }
 
-async function getJSON(url, host, label) {
+async function getJSON(url, host, label, timeout = CFG.timeout) {
   S.requests++; S.hosts.add(host); updateCounter();
   const li = logLine(`<b>${esc(host)}</b> ${esc(label)}`);
   let res;
   try {
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), CFG.timeout);
+    const timer = setTimeout(() => ctrl.abort(), timeout);
     res = await fetch(url, { signal: ctrl.signal }).finally(() => clearTimeout(timer));
   } catch (err) {
     li.classList.add('err');
-    logAppend(li, err.name === 'AbortError' ? `too slow, gave up after ${CFG.timeout / 1000} s` : 'no answer (blocked or offline)');
+    logAppend(li, err.name === 'AbortError' ? `too slow, gave up after ${timeout / 1000} s` : 'no answer (blocked or offline)');
     err.network = true;
     throw err;
   }
@@ -488,13 +492,13 @@ async function cmaSearch(spec, label) {
   for (const as of spec.place ? ['culture', 'q'] : ['q']) {
     const base = cmaParams(spec, as);
     const tag = spec.place && as === 'q' ? ' (as a word)' : '';
-    const { json: c, li: lc } = await getJSON(`${CMA_API}?${new URLSearchParams({ ...base, limit: 1, fields: 'id' })}`, 'clevelandart.org', `how many: ${label}${tag}`);
+    const { json: c, li: lc } = await getJSON(`${CMA_API}?${new URLSearchParams({ ...base, limit: 1, fields: 'id' })}`, 'clevelandart.org', `how many: ${label}${tag}`, CFG.backupTimeout);
     const total = c.info ? c.info.total : 0;
     logAppend(lc, `${fmt(total)} matches`);
     if (!total) continue;
     const page = 40;
     const skip = Math.floor(S.rng() * Math.max(0, Math.min(total, 1000) - page));
-    const { json, li } = await getJSON(`${CMA_API}?${new URLSearchParams({ ...base, limit: page, skip })}`, 'clevelandart.org', `open at #${skip + 1}`);
+    const { json, li } = await getJSON(`${CMA_API}?${new URLSearchParams({ ...base, limit: page, skip })}`, 'clevelandart.org', `open at #${skip + 1}`, CFG.backupTimeout);
     const list = (json.data || []).map(cmaRecord).filter(Boolean);
     logAppend(li, `${list.length} with pictures`);
     return list;
@@ -515,25 +519,48 @@ function metRecord(o) {
     technique: o.medium || null, type: o.classification || o.objectName || null, url: o.objectURL,
   };
 }
+/* The Met limits how fast one visitor may ask, so the machine is frugal here:
+   one search request, then objects read one at a time with a short pause,
+   stopping as soon as two usable ones are found. Objects already read are kept
+   in the browser and never asked for twice. */
+async function metObject(id) {
+  const saved = recall('met-object', String(id));
+  if (saved) return saved.none ? null : saved;
+  await sleep(CFG.metPause);
+  const { json: o, li } = await getJSON(`${MET_API}/objects/${id}`, 'metmuseum.org', `object ${id}`);
+  const rec = metRecord(o);
+  logAppend(li, rec ? short(o.title, 26) : 'no open picture');
+  keep('met-object', String(id), rec || { none: true });
+  return rec;
+}
 async function metSearch(spec, label) {
   const p = { hasImages: 'true', q: spec.q || spec.artist || spec.place || spec.fallbackQ || 'painting' };
-  if (spec.artist) p.artistOrCulture = 'true';
+  if (spec.artist) p.artistOrCulture = 'true';   // an artist's name, not any mention of it
   if (spec.from != null && spec.to != null) { p.dateBegin = spec.from; p.dateEnd = spec.to; }
-  const { json, li } = await getJSON(`${MET_API}/search?${new URLSearchParams(p)}`, 'metmuseum.org', label);
-  const all = json.objectIDs || [];
-  const start = Math.floor(S.rng() * Math.max(0, Math.min(all.length, 2000) - 60));   // a different stretch for each name
-  const ids = all.slice(start, start + 60);
-  logAppend(li, `${fmt(json.total || 0)} ID numbers`);
-  const chosen = [];
-  while (ids.length && chosen.length < CFG.metObjects) chosen.push(ids.splice(Math.floor(S.rng() * ids.length), 1)[0]);
-  const objects = await Promise.all(chosen.map(async (id) => {
+  // open the result list at a point chosen by the name, so different names see different objects
+  let offset = Math.floor(S.rng() * 5) * 20;
+  let { json, li } = await getJSON(`${MET_SEARCH}?${new URLSearchParams({ ...p, limit: 30, offset })}`, 'metmuseum.org', label);
+  if (!(json.objectIDs || []).length && offset) {
+    offset = 0;
+    ({ json, li } = await getJSON(`${MET_SEARCH}?${new URLSearchParams({ ...p, limit: 30, offset })}`, 'metmuseum.org', `${label}, from the start`));
+  }
+  const ids = (json.objectIDs || []).slice();
+  logAppend(li, `${fmt(json.total || ids.length)} matches`);
+  const found = [];
+  let tries = 0, failures = 0;
+  while (ids.length && found.length < 2 && tries < CFG.metObjects) {
+    const id = ids.splice(Math.floor(S.rng() * ids.length), 1)[0];
+    tries++;
     try {
-      const { json: o, li: l } = await getJSON(`${MET_API}/objects/${id}`, 'metmuseum.org', `object ${id}`);
-      logAppend(l, o.primaryImageSmall ? short(o.title, 26) : 'no picture');
-      return metRecord(o);
-    } catch { return null; }
-  }));
-  return objects.filter(Boolean);
+      const rec = await metObject(id);
+      failures = 0;
+      if (rec) found.push(rec);
+    } catch (err) {
+      if (err.status === 404) continue;        // an ID with no record: just skip it
+      if (++failures >= 3) throw err;          // three silences in a row: The Met has stopped answering
+    }
+  }
+  return found;
 }
 
 const placeCount = (place) => S.works.filter((w) => w.data.place === place).length;
@@ -549,8 +576,9 @@ async function museumSearch(spec, label) {
       if (varied.length) return varied;
       if (!fallback.length) fallback = list;
     } catch (err) {
-      // this museum is blocked or broken: stop asking it for the rest of the run
-      S.museums = S.museums.filter((x) => x !== m);
+      // too slow: stop asking at once. Any other failure: give it a second chance.
+      S.strikes[m] = (S.strikes[m] || 0) + 1;
+      if (err.name === 'AbortError' || S.strikes[m] >= 2) S.museums = S.museums.filter((x) => x !== m);
     }
   }
   return fallback;
