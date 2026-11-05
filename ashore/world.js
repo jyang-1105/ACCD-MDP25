@@ -52,14 +52,14 @@ function palette(k) {
   const d = THREE.MathUtils.smoothstep(k, 0.62, 1.0);
   return {
     d,
-    top: lerpC(0x03060f, 0x2a3f6e, d),
-    horizon: lerpC(0x10264a, 0xf5b07a, d),
-    fog: lerpC(0x0a1830, 0xb8a49a, d),
+    top: lerpC(0x060c1c, 0x2a3f6e, d),
+    horizon: lerpC(0x1a3560, 0xf5b07a, d),
+    fog: lerpC(0x10223f, 0xb8a49a, d),
     sun: lerpC(0x9fb6ff, 0xffb37a, d),
-    sunI: THREE.MathUtils.lerp(1.15, 2.4, d),
-    hemiSky: lerpC(0x3a5590, 0x9fb0d8, d),
-    hemiGround: lerpC(0x05070a, 0x4a3a30, d),
-    hemiI: THREE.MathUtils.lerp(1.45, 1.0, d),
+    sunI: THREE.MathUtils.lerp(1.5, 2.4, d),
+    hemiSky: lerpC(0x5a78b8, 0x9fb0d8, d),
+    hemiGround: lerpC(0x141a24, 0x4a3a30, d),
+    hemiI: THREE.MathUtils.lerp(1.7, 1.0, d),
     stars: 1 - d,
   };
 }
@@ -68,13 +68,14 @@ export function createWorld(container, { lowQuality = false } = {}) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(devicePixelRatio, lowQuality ? 1 : 2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.0;
+  renderer.toneMappingExposure = 1.12;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   container.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(52, 1, 0.1, 2000);
+  const fill = new THREE.PointLight(0xa8c4ff, 9, 18, 1.4); fill.position.set(0, 1.5, 0); camera.add(fill); scene.add(camera);
 
   // ---- sky dome
   const sunDir = new THREE.Vector3();
@@ -170,7 +171,7 @@ export function createWorld(container, { lowQuality = false } = {}) {
   const waterU = THREE.UniformsUtils.merge([THREE.UniformsLib.fog, {
     uTime: { value: 0 }, uSunDir: { value: sunDir }, uSun: { value: new THREE.Color() },
     uTop: { value: new THREE.Color() }, uHorizon: { value: new THREE.Color() },
-    uDeep: { value: new THREE.Color(0x02101c) }, uShallow: { value: new THREE.Color(0x0f5a5c) },
+    uDeep: { value: new THREE.Color(0x05182a) }, uShallow: { value: new THREE.Color(0x15706e) },
     uShoreX: { value: B2 - 50 }, uShalX: { value: B1 - 50 }, uLevel: { value: 0 },
   }]);
   const waveGLSL = WAVES.map(([dx, dz, st, L]) => `q += gerstner(vec4(${dx.toFixed(2)}, ${dz.toFixed(2)}, ${st.toFixed(2)}, ${L.toFixed(1)}), p, t, b);`).join('\n');
@@ -336,6 +337,24 @@ export function createWorld(container, { lowQuality = false } = {}) {
   }
   const fx = { bubbles: pool(1500, 0.16), sparkles: pool(800, 0.2), hums: pool(400, 0.28) };
 
+  // ---- glowing jellyfish drifting in the Deep
+  const jellies = [];
+  {
+    const bellG = new THREE.SphereGeometry(0.5, 20, 12, 0, Math.PI * 2, 0, Math.PI * 0.55);
+    const tentG = new THREE.CylinderGeometry(0.015, 0.004, 1.6, 4, 8, true);
+    let sd = 21; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 16; i++) {
+      const col = [0x7fd8ff, 0xc89bff, 0x9fffe0, 0xffa8d8][i % 4];
+      const mat = new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 1.6, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide });
+      const g = new THREE.Group();
+      const bell = new THREE.Mesh(bellG, mat); g.add(bell);
+      for (let k = 0; k < 6; k++) { const t = new THREE.Mesh(tentG, mat); t.position.set(Math.cos(k) * 0.25, -0.8, Math.sin(k) * 0.25); g.add(t); }
+      const s = 0.5 + rnd() * 0.9; g.scale.setScalar(s);
+      g.userData = { x: 4 + rnd() * 42, z: 3 + rnd() * 34, y: -0.8 - rnd() * 1.6, ph: rnd() * 6, sp: 0.2 + rnd() * 0.4 };
+      scene.add(g); jellies.push(g);
+    }
+  }
+
   // ---- post-processing
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
@@ -401,6 +420,16 @@ export function createWorld(container, { lowQuality = false } = {}) {
       w.jarMat.emissiveIntensity = 0.6 + 1.2 * e + 4 * w.pulse;
       w.light.intensity = e * (5 + 14 * w.pulse);
       w.jar.getWorldPosition(w.jarWorld);
+    }
+    for (const j of jellies) {
+      const u = j.userData, k = time * u.sp + u.ph;
+      j.position.copy(W(u.x + Math.sin(k * 0.3) * 4, u.z + Math.cos(k * 0.23) * 3, u.y + level * 0.5 + Math.sin(k * 1.3) * 0.3));
+      j.children[0].scale.set(1 + Math.sin(k * 3) * 0.12, 1 - Math.sin(k * 3) * 0.1, 1 + Math.sin(k * 3) * 0.12);
+    }
+    // fireflies over the dunes
+    if (Math.random() < dt * 6) {
+      const x = 80 + Math.random() * 30, z = Math.random() * 40;
+      fx.hums.emit(W(x, z, ground(x, z) + 0.6 + Math.random() * 2), new THREE.Vector3((Math.random() - 0.5) * 0.4, 0.15, (Math.random() - 0.5) * 0.4), new THREE.Color(0xd8ff8a).multiplyScalar(1 - P.d), 3.5);
     }
     fx.bubbles.update(dt); fx.sparkles.update(dt); fx.hums.update(dt);
     grade.uniforms.uTime.value = time;

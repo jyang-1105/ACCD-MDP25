@@ -28,6 +28,16 @@ const FIN = (() => {
 })();
 const RING = new THREE.RingGeometry(0.85, 0.95, 48);
 const GLOW_TEX = glowTexture();
+const BEAM_TEX = (() => {
+  const cv = document.createElement('canvas'); cv.width = 32; cv.height = 256;
+  const g = cv.getContext('2d'); const gr = g.createLinearGradient(0, 0, 0, 256);
+  gr.addColorStop(0, 'rgba(255,230,170,0)'); gr.addColorStop(0.6, 'rgba(255,230,170,0.55)'); gr.addColorStop(1, 'rgba(255,240,200,0.9)');
+  g.fillStyle = gr; g.fillRect(0, 0, 32, 256);
+  const h = g.createLinearGradient(0, 0, 32, 0); h.addColorStop(0, 'rgba(0,0,0,1)'); h.addColorStop(0.5, 'rgba(0,0,0,0)'); h.addColorStop(1, 'rgba(0,0,0,1)');
+  g.globalCompositeOperation = 'destination-out'; g.fillStyle = h; g.fillRect(0, 0, 32, 256);
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t;
+})();
+const DOWN = new THREE.Vector3(0, -1, 0);
 
 const M = {
   skin: [0xf2cdb4, 0xd9a07c, 0x8d5a3e, 0xf6dcc8, 0xb07a58].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.55 })),
@@ -88,6 +98,8 @@ export class Merfolk {
     this.ringMat = new THREE.MeshBasicMaterial({ color: 0xffe2a0, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false });
     this.ring = new THREE.Mesh(new THREE.RingGeometry(0.75, 0.9, 48, 1, Math.PI / 2, 0.001), this.ringMat);
     this.ring.rotation.x = -Math.PI / 2; this.ring.visible = false; this.g.add(this.ring);
+    this.beam = new THREE.Sprite(new THREE.SpriteMaterial({ map: BEAM_TEX, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0 }));
+    this.beam.scale.set(0.9, 7, 1); this.beam.center.set(0.5, 0); this.beam.position.y = 1.8; this.g.add(this.beam);
     this.youRing = new THREE.Mesh(RING, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false }));
     this.youRing.rotation.x = -Math.PI / 2; this.youRing.visible = false; this.g.add(this.youRing);
 
@@ -98,6 +110,8 @@ export class Merfolk {
 
   dispose() { this.scene.remove(this.g); this.ribbons.forEach(r => this.scene.remove(r.mesh)); }
 
+  hand(out = new THREE.Vector3()) { return this.arms[1].localToWorld(out.set(0, -0.52, 0)); }
+  handL(out = new THREE.Vector3()) { return this.arms[0].localToWorld(out.set(0, -0.52, 0)); }
   anchor(k, out = new THREE.Vector3()) {
     if (k === 0) return this.body.localToWorld(out.set(0, 1.47, 0.07));
     if (k === 1) return this.arms[1].localToWorld(out.set(0, -0.5, 0));
@@ -168,6 +182,18 @@ export class Merfolk {
     if (a.understood) { this.arms[0].rotation.set(-0.7, 0, -0.5); this.arms[1].rotation.set(-0.7, 0, 0.5); }
     else if (!r.hands) { this.arms[0].rotation.set(0.6, 0, 0.35); this.arms[1].rotation.set(0.6, 0, -0.35); }  // clasped behind the back
     else { this.arms[0].rotation.set(-stroke, 0, -0.18); this.arms[1].rotation.set(stroke, 0, 0.18); }
+    // reaching: toward the hand she holds, or up to call for help
+    const aim = (arm, worldTarget) => {
+      this.g.updateMatrixWorld(true);
+      const local = this.body.worldToLocal(worldTarget.clone()).sub(arm.position).normalize();
+      arm.quaternion.setFromUnitVectors(DOWN, local);
+    };
+    if (opts.holdTarget) aim(this.arms[1], opts.holdTarget);
+    if (opts.heldBy && r.hands) aim(this.arms[0], opts.heldBy);
+    const sig = a.signal > 0 && !a.foam;
+    if (sig && !opts.holdTarget) { const up = this.g.position.clone().add(new THREE.Vector3(0.15, 4, 0)); aim(this.arms[1], up); }
+    this.beam.material.opacity = THREE.MathUtils.lerp(this.beam.material.opacity, sig ? 0.75 + 0.2 * Math.sin(time * 6) : 0, dt * 4);
+    this.beam.visible = this.beam.material.opacity > 0.02;
     this.eyes.forEach(e => e.visible = r.sight); this.lids.forEach(e => e.visible = !r.sight);
 
     // markers

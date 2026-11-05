@@ -419,7 +419,7 @@ void main(){
   vec3 H = normalize(normalize(sunDir) + vec3(0, 0, 1));
   // the Sparkle slider sets how many glints there are (and, more gently, how bright)
   float amt = clamp(sparkle, 0.0, 2.0);
-  float I = glint(px, 6.0, 1.0, mix(0.015, 0.16, sun) * amt, H) + glint(px, 17.0, 4.0, mix(0.012, 0.16, sun) * amt, H) * 1.6;
+  float I = glint(px, 6.0, 1.0, mix(0.012, 0.12, sun) * amt, H) + glint(px, 17.0, 4.0, mix(0.01, 0.11, sun) * amt, H) * 1.6;
   vec3 c = mix(mix(vec3(1.0, 0.96, 0.88), vec3(1.0, 0.72, 0.42), warmth), vec3(0.75, 0.85, 1.0), night);
   o = vec4(c * I * sqrt(amt) * (0.12 + 1.6 * sun) * (1.0 - night * 0.8), 1.0);
 }`;
@@ -453,8 +453,13 @@ void main(){
 // encode height to 8-bit for reading back (time-as-height capture)
 const READ_FRAG = `#version 300 es
 precision highp float;
-in vec2 uv; out vec4 o; uniform sampler2D s;
-void main(){ float h = texture(s, uv).r; o = vec4(clamp(h * 1.5 + 0.5, 0.0, 1.0), 0, 0, 1); }`;
+in vec2 uv; out vec4 o; uniform sampler2D s; uniform vec2 texel;
+void main(){
+  // ripple = how steep the water is here (independent of the overall water level)
+  float gx = texture(s, uv + vec2(texel.x, 0)).r - texture(s, uv - vec2(texel.x, 0)).r;
+  float gy = texture(s, uv + vec2(0, texel.y)).r - texture(s, uv - vec2(0, texel.y)).r;
+  o = vec4(clamp(length(vec2(gx, gy)) * 20.0, 0.0, 1.0), 0, 0, 1);
+}`;   // ripple strength, up or down
 
 function compile(type, src) {
   const sh = gl.createShader(type); gl.shaderSource(sh, src); gl.compileShader(sh);
@@ -492,7 +497,7 @@ function makeTarget(w, h, internal, format, type, filter) {
 }
 
 let sim = [], simW = 0, simH = 0, aspect = 1;
-let readT = null, glintT = null, bloomT = [], starT = null; const READ_W = 128; let READ_H = 80;
+let readT = null, glintT = null, bloomT = [], starT = null; const READ_W = 192; let READ_H = 80;
 function resize() {
   const dpr = Math.min(devicePixelRatio || 1, 2);
   canvas.width = Math.round(innerWidth * dpr); canvas.height = Math.round(innerHeight * dpr);
@@ -843,16 +848,17 @@ function toggleRecord() {
 // ---------- output 2: time as height ----------
 // every few frames the wave crests are read back as a binary layer;
 // layers stack upward, so an expanding ripple becomes a cone.
-const LAYER_EVERY = 4, LAYER_MAX = 300, CREST = 0.035;
+const LAYER_EVERY = 4, LAYER_MAX = 300, CREST = 0.034;   // minimum slope that counts as a ripple
 let capturing = false, layers = [], layerW = 0, layerH = 0;
 const readBuf = new Uint8Array(READ_W * 512 * 4);
 function captureLayer() {
   gl.bindFramebuffer(gl.FRAMEBUFFER, readT.fb); gl.viewport(0, 0, READ_W, READ_H);
   gl.useProgram(readProg.pr);
   gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, sim[0].tex); gl.uniform1i(readProg.u.s, 0);
+  gl.uniform2f(readProg.u.texel, 1 / simW, 1 / simH);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
   gl.readPixels(0, 0, READ_W, READ_H, gl.RGBA, gl.UNSIGNED_BYTE, readBuf);
-  const thr = Math.round((CREST * 1.5 + 0.5) * 255);
+  const thr = Math.round(CREST * 20.0 * 255);
   const m = new Uint8Array(READ_W * READ_H);
   for (let i = 0; i < m.length; i++) m[i] = readBuf[i * 4] > thr ? 1 : 0;
   layers.push(m); layerW = READ_W; layerH = READ_H;
@@ -978,7 +984,7 @@ function step(now) {
   gl.bindFramebuffer(gl.FRAMEBUFFER, starT.fb); gl.viewport(0, 0, starT.w, starT.h);
   gl.useProgram(starProg.pr); gl.uniform1i(starProg.u.t, 0);
   gl.bindTexture(gl.TEXTURE_2D, bloomT[1].tex); gl.uniform2f(starProg.u.tx, 1 / bloomT[1].w, 1 / bloomT[1].h);
-  gl.uniform1f(starProg.u.thr, 0.12);
+  gl.uniform1f(starProg.u.thr, 0.3);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -986,7 +992,7 @@ function step(now) {
   gl.useProgram(renderProg.pr);
   [glintT, ...bloomT, starT].forEach((t, i) => { gl.activeTexture(gl.TEXTURE2 + i); gl.bindTexture(gl.TEXTURE_2D, t.tex); });
   ['G', 'B1', 'B2', 'B3', 'B4', 'ST'].forEach((n, i) => gl.uniform1i(renderProg.u[n], 2 + i));
-  gl.uniform1f(renderProg.u.starAmt, 1.4);
+  gl.uniform1f(renderProg.u.starAmt, 0.55);
   gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, sim[0].tex); gl.uniform1i(renderProg.u.s, 0);
   gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, photoTex); gl.uniform1i(renderProg.u.photo, 1);
   gl.uniform2f(renderProg.u.texel, 1 / simW, 1 / simH);

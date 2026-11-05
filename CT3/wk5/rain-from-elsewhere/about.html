@@ -6,435 +6,235 @@
 <title>About · Rain from Elsewhere</title>
 <style>
   :root {
-    --paper: #f3f1ec;
-    --sheet: #fbfaf7;
-    --ink: #15191c;
-    --muted: #6a6f73;
-    --faint: #9a9ea1;
-    --line: #dedad2;
-    --accent: #23a99e;
-    --accent-soft: #d6efeb;
+    --paper: #f4f3ef;
+    --ink: #16191b;
+    --muted: #74787b;
+    --line: #e0ddd6;
+    --accent: #1fa397;
     --sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
   }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
-  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.6;
-    -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums; }
-  a { color: inherit; text-decoration-color: var(--accent); text-underline-offset: 3px; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans);
+    font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; }
+  img, video { display: block; width: 100%; }
 
-  .topbar { position: sticky; top: 0; z-index: 5; display: flex; justify-content: space-between; align-items: center;
-    padding: 14px 28px; background: rgba(243, 241, 236, .86); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-    border-bottom: 1px solid var(--line); font-size: 13px; }
-  .topbar .brand { font-weight: 500; text-decoration: none; letter-spacing: -.01em; }
-  .topbar nav { display: flex; gap: 22px; }
-  .topbar nav a { text-decoration: none; color: var(--muted); }
-  .topbar nav a:hover { color: var(--ink); }
-  .topbar .open { color: var(--ink) !important; font-weight: 500; }
+  /* top bar */
+  .top { position: sticky; top: 0; z-index: 9; display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 40px; background: rgba(244, 243, 239, .88); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); font-size: 13px; }
+  .top a { text-decoration: none; }
+  .top .name { font-weight: 500; }
+  .top .go { color: var(--muted); }
+  .top .go:hover { color: var(--ink); }
 
-  main { max-width: 980px; margin: 0 auto; padding: 0 28px 80px; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 40px; }
 
   /* hero */
-  .hero { padding: 80px 0 40px; }
-  .eyebrow { font-size: 11px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0 0 22px; }
-  h1 { font-size: clamp(48px, 8vw, 96px); font-weight: 300; letter-spacing: -.045em; line-height: .95; margin: 0 0 32px; }
-  h1 em { font-style: normal; color: var(--accent); }
-  .lede { font-size: clamp(19px, 2.2vw, 23px); line-height: 1.45; letter-spacing: -.01em; max-width: 760px; margin: 0 0 18px; }
-  .hero-img { margin: 44px 0 0; position: relative; }
-  .hero-img img { width: 100%; display: block; border-radius: 6px; }
-  .btn { display: inline-flex; align-items: center; gap: 10px; margin-top: 18px; padding: 12px 20px; border-radius: 999px;
-    background: var(--ink); color: var(--sheet); font-size: 14px; font-weight: 500; text-decoration: none; }
-  .btn:hover { background: #2a3035; }
+  .hero { padding: 72px 0 48px; display: grid; grid-template-columns: 7fr 5fr; gap: 40px; align-items: end; }
+  .eyebrow { margin: 0 0 18px; font-size: 12px; color: var(--muted); }
+  h1 { margin: 0; font-size: clamp(56px, 8.5vw, 124px); font-weight: 300; letter-spacing: -.05em; line-height: .9; }
+  h1 span { color: var(--accent); }
+  .hero p.lede { margin: 0 0 22px; font-size: 18px; line-height: 1.45; letter-spacing: -.01em; }
+  .btn { display: inline-block; padding: 11px 20px; border-radius: 999px; background: var(--ink); color: var(--paper);
+    font-size: 13px; font-weight: 500; text-decoration: none; }
+  .btn:hover { background: #2c3236; }
+  .full { margin: 0 0 8px; }
+  .full img { border-radius: 4px; }
 
-  /* sections */
-  section { padding: 72px 0 8px; border-top: 1px solid var(--line); margin-top: 56px; }
-  .sec-head { display: grid; grid-template-columns: 90px 1fr; gap: 0 20px; align-items: baseline; margin-bottom: 28px; }
-  .num { font-size: 13px; font-weight: 500; color: var(--accent); letter-spacing: .04em; }
-  h2 { font-size: clamp(30px, 4vw, 44px); font-weight: 300; letter-spacing: -.03em; line-height: 1.05; margin: 0; }
-  .body { margin-left: 110px; }
-  .body > p { max-width: 680px; }
-  h3 { font-size: 17px; font-weight: 500; letter-spacing: -.01em; margin: 36px 0 8px; }
-  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; background: #e9e6df; padding: 1px 6px; border-radius: 4px; }
+  /* sections: title + short text on the left, pictures on the right */
+  section { display: grid; grid-template-columns: 4fr 8fr; gap: 48px; padding: 88px 0 0; }
+  .side { position: sticky; top: 84px; align-self: start; }
+  .num { display: block; font-size: 12px; color: var(--accent); margin-bottom: 10px; }
+  h2 { margin: 0 0 16px; font-size: 30px; font-weight: 400; letter-spacing: -.025em; line-height: 1.1; }
+  .side p { margin: 0 0 14px; color: #3b4044; max-width: 380px; }
+  .side ul { margin: 6px 0 0; padding: 0; list-style: none; max-width: 380px; }
+  .side li { padding: 9px 0; border-top: 1px solid var(--line); color: #3b4044; }
+  .side li b { font-weight: 500; color: var(--ink); }
 
-  /* figures */
-  .grid { display: grid; gap: 16px; margin: 26px 0 8px; }
-  .g2 { grid-template-columns: 1fr 1fr; }
-  .g4 { grid-template-columns: repeat(4, 1fr); }
+  .pics { display: grid; gap: 14px; }
+  .two { grid-template-columns: 1fr 1fr; }
+  .four { grid-template-columns: 1fr 1fr; }
   figure { margin: 0; }
-  figure img, figure video { width: 100%; display: block; border-radius: 4px; background: #e6e3dc; }
-  figure.tall img { aspect-ratio: 3 / 4; object-fit: cover; }
-  figure.wide img { aspect-ratio: 16 / 10; object-fit: cover; }
-  figcaption { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.45; }
-  figcaption b { color: var(--ink); font-weight: 500; }
-  .slot { display: grid; place-items: center; text-align: center; border: 1.5px dashed #c6c1b7; border-radius: 4px; color: var(--faint);
-    font-size: 12px; line-height: 1.5; padding: 18px; background: repeating-linear-gradient(135deg, transparent 0 10px, rgba(0,0,0,.018) 10px 20px); }
-  .slot code { background: transparent; color: var(--muted); }
-  figure.tall .slot { aspect-ratio: 3 / 4; }
-  figure.wide .slot, .video .slot { aspect-ratio: 16 / 9; }
+  figure img, figure video { border-radius: 3px; background: #e7e4dd; }
+  .portrait img { aspect-ratio: 4 / 5; object-fit: cover; }
+  .land img { aspect-ratio: 16 / 10; object-fit: cover; }
+  figcaption { margin-top: 8px; font-size: 12px; color: var(--muted); }
+  figcaption b { font-weight: 500; color: var(--ink); }
+  .small { margin-top: 26px; }
+  .small .pics { grid-template-columns: 1fr 1fr 1fr; }
 
-  /* diagram */
-  .diagram { margin: 28px 0 10px; background: var(--sheet); border: 1px solid var(--line); border-radius: 8px; padding: 22px; overflow-x: auto; }
-  .diagram svg { display: block; width: 100%; min-width: 760px; height: auto; }
+  /* the simple flow line */
+  .flow { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; padding: 26px 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line);
+    font-size: clamp(20px, 2.4vw, 30px); font-weight: 300; letter-spacing: -.02em; }
+  .flow i { font-style: normal; color: var(--accent); }
+  .flow small { display: block; font-size: 11px; color: var(--muted); letter-spacing: 0; font-weight: 400; margin-top: 2px; }
+  .flow > span { display: inline-block; }
+  .legend { margin-top: 14px; font-size: 12px; color: var(--muted); }
 
-  /* steps */
-  .steps { list-style: none; counter-reset: s; padding: 0; margin: 22px 0 0; max-width: 720px; }
-  .steps li { counter-increment: s; position: relative; padding: 0 0 20px 44px; }
-  .steps li::before { content: counter(s, decimal-leading-zero); position: absolute; left: 0; top: 2px; font-size: 12px; font-weight: 500; color: var(--accent); }
-  .steps strong { font-weight: 500; }
+  .io { display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px; }
+  .io h3 { margin: 0 0 4px; font-size: 12px; font-weight: 500; color: var(--muted); }
+  .io p { margin: 0; padding: 12px 0; border-top: 1px solid var(--line); font-size: 17px; letter-spacing: -.01em; }
+  .io p span { display: block; font-size: 12px; color: var(--muted); letter-spacing: 0; }
 
-  /* tables */
-  .table-wrap { overflow-x: auto; margin: 20px 0 6px; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 560px; }
-  th, td { text-align: left; vertical-align: top; padding: 11px 12px 11px 0; border-bottom: 1px solid var(--line); }
-  th { font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
-  td:first-child { font-weight: 500; white-space: nowrap; }
+  .layers img { border: 1px solid var(--line); }
+  .slot { display: grid; place-items: center; aspect-ratio: 16 / 5; border: 1px dashed #c8c3b9; border-radius: 3px; color: var(--muted); font-size: 12px; text-align: center; }
 
-  /* why list */
-  .why { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 22px 0 0; }
-  .why div { background: var(--sheet); border: 1px solid var(--line); border-radius: 8px; padding: 16px 18px; font-size: 14.5px; }
-  .why b { display: block; font-weight: 500; margin-bottom: 4px; }
+  footer { margin-top: 110px; padding: 28px 0 40px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 10px 30px;
+    justify-content: space-between; font-size: 12px; color: var(--muted); }
+  footer a { color: var(--muted); }
+  kbd { font: inherit; padding: 0 5px; border: 1px solid var(--line); border-radius: 3px; background: #fbfaf7; }
 
-  .note { font-size: 14px; color: var(--muted); max-width: 680px; border-left: 2px solid var(--accent); padding: 2px 0 2px 14px; margin: 22px 0; }
-
-  footer { max-width: 980px; margin: 0 auto; padding: 28px; display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); }
-
-  @media (max-width: 760px) {
-    .topbar nav a:not(.open) { display: none; }
-    .sec-head { grid-template-columns: 1fr; }
-    .body { margin-left: 0; }
-    .g2, .g4, .why { grid-template-columns: 1fr 1fr; }
-    main { padding: 0 16px 60px; }
+  @media (max-width: 860px) {
+    .wrap, .top { padding-left: 16px; padding-right: 16px; }
+    .hero, section { grid-template-columns: 1fr; gap: 24px; }
+    .hero { padding-top: 48px; }
+    section { padding-top: 64px; }
+    .side { position: static; }
+    .small .pics { grid-template-columns: 1fr 1fr; }
   }
-  @media (max-width: 480px) { .g2, .g4, .why { grid-template-columns: 1fr; } }
+  @media (max-width: 480px) { .two, .four, .io { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 
-<header class="topbar">
-  <a class="brand" href="index.html">Rain from Elsewhere</a>
-  <nav>
-    <a href="#observe">Observe</a>
-    <a href="#sketch">Sketch</a>
-    <a href="#system">System</a>
-    <a href="#io">Input / Output</a>
-    <a href="#time">Time as height</a>
-    <a href="#video">Video</a>
-    <a class="open" href="index.html">Open the water →</a>
-  </nav>
+<header class="top">
+  <a class="name" href="index.html">Rain from Elsewhere</a>
+  <a class="go" href="index.html">Open the water →</a>
 </header>
 
-<main>
+<div class="wrap">
+
   <div class="hero">
-    <p class="eyebrow">Creative Technology 3 · Week 5 · Simulation · Jia Yang</p>
-    <h1>Rain <em>from</em><br>Elsewhere</h1>
-    <p class="lede">
-      A water surface on the screen is moved by rain that is falling, right now, somewhere else.
-      I can pick Chengdu, where I grew up, or let the system find whichever city is raining hardest at this moment.
-      Live precipitation becomes drops, wind becomes drift, and the real position of the sun in that city decides
-      how light falls through the water onto a photograph lying underneath.
-    </p>
-    <p class="lede" style="color: var(--muted)">
-      I live in Los Angeles, where it almost never rains. The piece is a small window onto weather I can't feel here.
-    </p>
-    <a class="btn" href="index.html">Open the water →</a>
-    <figure class="hero-img">
-      <img src="media/state-noon.jpg" alt="The water surface at a clear noon: a net of sunlight on the floor, ripples and glints">
-      <figcaption><b>Clear noon in Los Angeles.</b> No rain, light wind. A net of sunlight moves across the floor and a few glints flash on the ripples.</figcaption>
-    </figure>
+    <div>
+      <p class="eyebrow">CT3 · Week 5 · Simulation · Jia Yang</p>
+      <h1>Rain <span>from</span><br>Elsewhere</h1>
+    </div>
+    <div>
+      <p class="lede">I made a water surface that reacts to the real weather in another city. It barely rains in LA, so I mostly watch Chengdu, where I'm from. There's also an Auto mode that jumps to whichever city has the most rain right now.</p>
+      <a class="btn" href="index.html">Open the water →</a>
+    </div>
   </div>
 
-  <!-- ===================================================== -->
+  <figure class="full">
+    <img src="media/state-noon.jpg" alt="The piece on screen: Los Angeles at noon, no rain">
+    <figcaption><b>Los Angeles around noon.</b> No rain today, so it's just wind and sunlight.</figcaption>
+  </figure>
+
+  <!-- 01 -->
   <section id="observe">
-    <div class="sec-head"><span class="num">01</span><h2>Observe</h2></div>
-    <div class="body">
-      <p>
-        I started from my own photographs of water. Looking at them, I noticed that almost nothing in them is "water" itself.
-        What I see is what water does to everything else: it <strong>bends</strong> whatever lies beneath it,
-        it <strong>gathers sunlight</strong> into a bright moving net on the floor, and it throws back
-        <strong>tiny flashes</strong> wherever a piece of the surface happens to mirror the sun.
-      </p>
-      <div class="grid g2">
-        <figure class="tall">
-          <img src="media/photo-1.jpg" alt="My photograph of water" onerror="this.outerHTML='<div class=&quot;slot&quot;>My photo of water<br><code>media/photo-1.jpg</code></div>'">
-          <figcaption><b>My photo 1.</b> Refraction: the floor is cut into soft curves by the surface.</figcaption>
-        </figure>
-        <figure class="tall">
-          <img src="media/photo-2.jpg" alt="My photograph of water" onerror="this.outerHTML='<div class=&quot;slot&quot;>My photo of water<br><code>media/photo-2.jpg</code></div>'">
-          <figcaption><b>My photo 2.</b> Ripples and the bright lines of light they make.</figcaption>
-        </figure>
+    <div class="side">
+      <span class="num">01</span>
+      <h2>Observe</h2>
+      <p>I started with two photos I took. In both of them you can barely see the water itself. What stands out is the rocks looking bent, the lines of light on the bottom, and the sparkles on top, so that's what I tried to simulate.</p>
+    </div>
+    <div>
+      <div class="pics two">
+        <figure class="portrait"><img src="media/photo-1.jpg" alt="My photo: water over rocks"><figcaption>Rocks under the water</figcaption></figure>
+        <figure class="portrait"><img src="media/photo-2.jpg" alt="My photo: sun sparkling on water"><figcaption>Sun on the water</figcaption></figure>
       </div>
-
-      <h3>Visual references</h3>
-      <p>Two found images that describe the feeling I want: smooth, liquid, slightly grainy and pastel.</p>
-      <div class="grid g2">
-        <figure class="tall"><img src="media/ref-1.jpg" alt="Reference: an image seen through rippled glass, stretched into curved streaks">
-          <figcaption><b>Reference A</b> (found image). An image pulled into curved streaks by a rippled surface. This is refraction.</figcaption></figure>
-        <figure class="tall"><img src="media/ref-2.jpg" alt="Reference: grainy pastel ripples spreading in rings">
-          <figcaption><b>Reference B</b> (found image). Rings spreading outward, carrying colour, with a fine grain over everything.</figcaption></figure>
+      <div class="small">
+        <div class="pics">
+          <figure class="portrait"><img src="media/ref-1.jpg" alt="Found reference: image stretched by a rippled surface"></figure>
+          <figure class="portrait"><img src="media/ref-2.jpg" alt="Found reference: grainy pastel ripples"></figure>
+        </div>
+        <figcaption>Two images I found that have the mood I was going for.</figcaption>
       </div>
-
-      <h3>Which technique from the lecture could make this?</h3>
-      <p>
-        The rings are waves travelling across a surface, so the surface can be a <strong>field</strong>: a grid where every cell
-        stores a height and a speed, updated by the wave equation. Once the surface exists, everything else follows from its
-        <strong>slope</strong>: the slope bends the photo underneath (refraction), concentrates light (caustics),
-        and decides which tiny facets mirror the sun (glints).
-      </p>
     </div>
   </section>
 
-  <!-- ===================================================== -->
+  <!-- 02 -->
   <section id="sketch">
-    <div class="sec-head"><span class="num">02</span><h2>Sketch &amp; choosing an algorithm</h2></div>
-    <div class="body">
-      <div class="grid g2">
-        <figure class="wide">
-          <img src="media/sketch.jpg" alt="Hand sketch from class" onerror="this.outerHTML='<div class=&quot;slot&quot;>Hand sketch from class<br><code>media/sketch.jpg</code></div>'">
-          <figcaption><b>Five-minute sketch in class.</b></figcaption>
-        </figure>
-        <figure class="wide">
-          <img src="media/sketch-2.jpg" alt="Second sketch" onerror="this.outerHTML='<div class=&quot;slot&quot;>Second sketch (optional)<br><code>media/sketch-2.jpg</code></div>'">
-          <figcaption><b>Mapping the system:</b> rain → drops → surface → light.</figcaption>
-        </figure>
-      </div>
-
-      <h3>Directions I tried first</h3>
-      <p>
-        Before this, I prototyped two other ideas. One was an <strong>erosion and sediment</strong> system: raindrop agents
-        flowed downhill over a height field taken from a photo, and the terrain was drawn as pixel contour lines.
-        The other looked at <strong>cell packing</strong> from an acrylic-pour photo, where growing cells push against each other.
-        Both worked, but they felt like diagrams of nature. I wanted something that feels like being next to water,
-        smooth and quiet, so I moved to a wave field.
-      </p>
-
-      <h3>Why a wave field</h3>
-      <div class="why">
-        <div><b>It is the form I observed.</b>Ripples are literally solutions of the wave equation. Rings, interference and reflection appear on their own, without being drawn.</div>
-        <div><b>One field drives everything.</b>Refraction, caustics and glints are all read from the same slope, so they always agree with each other.</div>
-        <div><b>It can be smooth.</b>The whole simulation runs on the GPU at screen resolution, 60 frames a second, which keeps the motion silky.</div>
-        <div><b>It has memory.</b>A drop that fell ten seconds ago is still travelling. The surface is a short record of recent weather, which suits the idea of time as height.</div>
-      </div>
+    <div class="side">
+      <span class="num">02</span>
+      <h2>Sketch</h2>
+      <p>I tried a couple of other ideas first, an erosion sim and a cell growing thing, but they felt more like diagrams than water.</p>
+      <p>In the end I went with a wave simulation. Ripples come out of it on their own, and the bending, the light lines and the sparkles can all be worked out from the shape of the water.</p>
+    </div>
+    <div>
+      <figure class="land"><img src="media/sketch.jpg" alt="My sketch of the system"><figcaption>My sketch</figcaption></figure>
     </div>
   </section>
 
-  <!-- ===================================================== -->
+  <!-- 03 -->
   <section id="system">
-    <div class="sec-head"><span class="num">03</span><h2>The system</h2></div>
-    <div class="body">
-      <div class="diagram">
-        <svg viewBox="0 0 960 470" role="img" aria-label="Diagram: live weather drives raindrop agents and wind, which act on a wave field; the field's slope refracts the photo, bends the caustics and decides the glints">
-          <defs>
-            <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#15191c"/></marker>
-            <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#23a99e"/></marker>
-          </defs>
-          <style>
-            .t { font: 500 13px "Helvetica Neue", Helvetica, Arial, sans-serif; fill: #15191c; }
-            .tw { font: 500 13px "Helvetica Neue", Helvetica, Arial, sans-serif; fill: #fbfaf7; }
-            .s { font: 11.5px "Helvetica Neue", Helvetica, Arial, sans-serif; fill: #6a6f73; }
-            .sw { font: 11.5px "Helvetica Neue", Helvetica, Arial, sans-serif; fill: #b9c2c4; }
-            .k { font: 500 10px "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing: .12em; fill: #9a9ea1; }
-            .box { fill: #fbfaf7; stroke: #15191c; stroke-width: 1.1; }
-            .dark { fill: #15191c; }
-            .acc { fill: #d6efeb; stroke: #23a99e; stroke-width: 1.1; }
-            .ln { stroke: #15191c; stroke-width: 1.1; fill: none; }
-            .la { stroke: #23a99e; stroke-width: 1.4; fill: none; }
-            .dash { stroke-dasharray: 4 4; }
-          </style>
-          <text class="k" x="20" y="22">INPUT</text>
-          <text class="k" x="250" y="22">AGENTS &amp; FORCES</text>
-          <text class="k" x="500" y="22">FIELD</text>
-          <text class="k" x="740" y="22">OUTPUT</text>
-
-          <!-- input -->
-          <rect class="dark" x="20" y="44" width="190" height="140" rx="6"/>
-          <text class="tw" x="36" y="70">Open-Meteo, live</text>
-          <text class="sw" x="36" y="92">precipitation (mm)</text>
-          <text class="sw" x="36" y="110">wind speed + direction</text>
-          <text class="sw" x="36" y="128">cloud cover</text>
-          <text class="sw" x="36" y="146">solar radiation (W/m²)</text>
-          <text class="sw" x="36" y="164">time zone of the city</text>
-
-          <rect class="box" x="20" y="214" width="190" height="62" rx="6"/>
-          <text class="t" x="36" y="240">City + clock</text>
-          <text class="s" x="36" y="260">sun elevation &amp; azimuth</text>
-
-          <rect class="box" x="20" y="306" width="190" height="62" rx="6"/>
-          <text class="t" x="36" y="332">Hand</text>
-          <text class="s" x="36" y="352">click / drag on the water</text>
-
-          <!-- agents -->
-          <rect class="acc" x="250" y="44" width="200" height="82" rx="6"/>
-          <text class="t" x="266" y="70">Raindrop agents</text>
-          <text class="s" x="266" y="90">born at a rate set by mm of rain</text>
-          <text class="s" x="266" y="108">position · radius · strength</text>
-
-          <rect class="box" x="250" y="146" width="200" height="62" rx="6"/>
-          <text class="t" x="266" y="172">Wind</text>
-          <text class="s" x="266" y="192">drift + a fine constant ruffle</text>
-
-          <rect class="box" x="250" y="228" width="200" height="62" rx="6"/>
-          <text class="t" x="266" y="254">Light</text>
-          <text class="s" x="266" y="274">intensity · warmth · night</text>
-
-          <rect class="acc" x="250" y="310" width="200" height="82" rx="6"/>
-          <text class="t" x="266" y="336">Glint agents</text>
-          <text class="s" x="266" y="356">one facet per cell, reads slope</text>
-          <text class="s" x="266" y="374">flashes when it mirrors the sun</text>
-
-          <!-- field -->
-          <rect class="dark" x="500" y="96" width="190" height="196" rx="6"/>
-          <text class="tw" x="516" y="124">Wave field</text>
-          <text class="sw" x="516" y="146">GPU grid, ½ screen res</text>
-          <text class="sw" x="516" y="164">each cell: height, speed</text>
-          <text class="sw" x="516" y="182">2D wave equation</text>
-          <text class="sw" x="516" y="200">9-point neighbourhood</text>
-          <text class="sw" x="516" y="218">damping 0.998 / step</text>
-          <text class="sw" x="516" y="236">advected by wind</text>
-          <text class="sw" x="516" y="268" style="fill:#7fdcd2">→ slope</text>
-
-          <rect class="box" x="500" y="322" width="190" height="62" rx="6"/>
-          <text class="t" x="516" y="348">Texture: my photo</text>
-          <text class="s" x="516" y="368">the floor under the water</text>
-
-          <!-- outputs -->
-          <rect class="box" x="740" y="44" width="200" height="62" rx="6"/>
-          <text class="t" x="756" y="70">Refraction</text>
-          <text class="s" x="756" y="90">photo bent by slope, RGB split</text>
-          <rect class="box" x="740" y="122" width="200" height="62" rx="6"/>
-          <text class="t" x="756" y="148">Caustics</text>
-          <text class="s" x="756" y="168">moving light net, bent by ripples</text>
-          <rect class="box" x="740" y="200" width="200" height="62" rx="6"/>
-          <text class="t" x="756" y="226">Glints + bloom</text>
-          <text class="s" x="756" y="246">brighter flashes spread further</text>
-          <rect class="dark" x="740" y="290" width="200" height="56" rx="6"/>
-          <text class="tw" x="756" y="314">Screen / projection</text>
-          <text class="sw" x="756" y="332">+ video with live caption</text>
-          <rect class="acc" x="740" y="364" width="200" height="62" rx="6"/>
-          <text class="t" x="756" y="390">Time as height</text>
-          <text class="s" x="756" y="410">crests stacked → .obj</text>
-
-          <!-- arrows -->
-          <path class="ln" d="M210,85 L248,85" marker-end="url(#a)"/>
-          <path class="ln" d="M210,125 C230,125 230,177 248,177" marker-end="url(#a)"/>
-          <path class="ln" d="M210,160 C236,160 236,250 248,252" marker-end="url(#a)"/>
-          <path class="ln" d="M210,245 C228,245 230,262 248,264" marker-end="url(#a)"/>
-          <path class="ln dash" d="M210,330 C236,330 236,118 248,116" marker-end="url(#a)"/>
-          <path class="la" d="M450,85 C478,85 478,140 498,140" marker-end="url(#b)"/>
-          <path class="ln" d="M450,177 L498,177" marker-end="url(#a)"/>
-          <path class="ln" d="M350,290 L350,308" marker-end="url(#a)"/>
-          <path class="la" d="M500,272 C474,272 474,330 452,332" marker-end="url(#b)"/>
-          <path class="ln" d="M690,130 C716,130 716,75 738,75" marker-end="url(#a)"/>
-          <path class="ln" d="M690,165 C716,165 716,153 738,153" marker-end="url(#a)"/>
-          <path class="ln" d="M690,353 C722,353 722,96 738,94" marker-end="url(#a)"/>
-          <path class="la" d="M450,365 C490,365 490,307 600,307 C705,307 712,232 738,232" marker-end="url(#b)"/>
-          <path class="ln" d="M840,262 L840,288" marker-end="url(#a)"/>
-          <path class="ln dash" d="M690,282 C712,282 712,395 738,395" marker-end="url(#a)"/>
-          <text class="s" x="350" y="448" text-anchor="middle">teal = agents and what they read · dashed = optional</text>
-        </svg>
+    <div class="side">
+      <span class="num">03</span>
+      <h2>System</h2>
+      <p>The water is a grid. Every cell has a height and a speed, and keeps moving toward the average of the cells around it, which is what makes waves spread out.</p>
+      <p>Raindrops get dropped in depending on how much it's raining in the city. Then the slope of the water is used to bend the image underneath and to place the light lines and sparkles.</p>
+    </div>
+    <div>
+      <div class="flow">
+        <span>Rain<small>Open-Meteo, mm</small></span><i>→</i>
+        <span>Drops<small>agents</small></span><i>→</i>
+        <span>Water<small>wave field</small></span><i>→</i>
+        <span>Light<small>real sun position</small></span><i>→</i>
+        <span>Screen<small>the image, bent</small></span>
       </div>
-
-      <ol class="steps">
-        <li><strong>Weather in.</strong> Every ten minutes the page asks Open-Meteo for the current weather in eight cities: Chengdu, Los Angeles, London, Seattle, Tokyo, Singapore, Hong Kong and Bergen. I can pick one, or choose <em>Auto</em>, which follows whichever city has the most rain right now.</li>
-        <li><strong>Raindrop agents.</strong> The precipitation sets a rate (drops per second grows with the square root of millimetres). Each drop is born at a random moment, at a random place, with its own radius and strength, and lands as a soft dent in the surface. A dry city sends no drops at all.</li>
-        <li><strong>The field.</strong> The surface is a grid on the GPU. Every step, each cell looks at its eight neighbours and accelerates toward their average, which is the 2D wave equation. A little damping lets ripples fade slowly, and the wind slides the whole surface downwind and keeps a faint ruffle on it.</li>
-        <li><strong>Light.</strong> From the city's latitude, longitude and the real time, the page works out where the sun is in that sky. Measured solar radiation sets its strength; clouds soften it; after sunset the water turns dim and blue. Changes ease in over a few seconds, so switching cities feels like the light moving.</li>
-        <li><strong>Reading the slope.</strong> The slope of the surface bends my photo (refraction, with a small RGB split), bends a moving net of caustic light on the floor, and is read by thousands of <em>glint agents</em>. Each glint sits in a cell with its own wobbling facet and flashes only when it mirrors the sun toward the viewer. Glints are very bright, so they pass through a bloom: brighter flashes spread further, which is why they look different sizes.</li>
-      </ol>
-      <p class="note">
-        Field: the water surface. Texture: my photo underneath. Agents: raindrops that write into the field, and glints that read from it.
-      </p>
+      <p class="legend">Field: the water · Texture: the image underneath · Agents: raindrops and sparkles</p>
     </div>
   </section>
 
-  <!-- ===================================================== -->
+  <!-- 04 -->
   <section id="io">
-    <div class="sec-head"><span class="num">04</span><h2>Input &amp; output</h2></div>
-    <div class="body">
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th></th><th>What</th><th>What it changes</th></tr></thead>
-          <tbody>
-            <tr><td>Input</td><td>Live weather data (Open-Meteo): precipitation, wind, cloud cover, solar radiation</td><td>How often and how hard drops fall; drift and ruffle of the surface; strength and colour of the light</td></tr>
-            <tr><td>Input</td><td>The city's position and local time</td><td>Where the sun is, so the direction of glints and glare, golden hour, night</td></tr>
-            <tr><td>Input</td><td>Hand (click or drag)</td><td>Touch the water directly</td></tr>
-            <tr><td>Output</td><td>Screen or projection</td><td>The live water, with the city, local time and weather shown in a corner</td></tr>
-            <tr><td>Output</td><td>Video (<code>R</code>)</td><td>An .mp4 recording with the city and data burned into the frame</td></tr>
-            <tr><td>Output</td><td>3D object (<code>L</code>, then <code>E</code>)</td><td>An .obj of the surface stacked through time, for rendering or 3D printing (see below)</td></tr>
-          </tbody>
-        </table>
+    <div class="side">
+      <span class="num">04</span>
+      <h2>Input &amp; output</h2>
+      <p>You can pick from eight cities, or let Auto choose.</p>
+    </div>
+    <div class="io">
+      <div>
+        <h3>Input</h3>
+        <p>Live weather<span>rain, wind, clouds, sunlight</span></p>
+        <p>The city's time<span>where the sun is, day or night</span></p>
+        <p>My hand<span>click or drag the water</span></p>
+      </div>
+      <div>
+        <h3>Output</h3>
+        <p>Screen or projection<span>with the city and weather in a corner</span></p>
+        <p>Video<span>press <kbd>R</kbd></span></p>
+        <p>3D object<span>time as height, press <kbd>L</kbd> then <kbd>E</kbd></span></p>
       </div>
     </div>
   </section>
 
-  <!-- ===================================================== -->
+  <!-- 05 -->
   <section id="time">
-    <div class="sec-head"><span class="num">05</span><h2>Time as height</h2></div>
-    <div class="body">
-      <p>
-        While capturing, the system reads the surface ten times a second and keeps only the crests of the waves as a thin layer.
-        The layers are stacked upward, one on top of the other. A single drop becomes a <strong>cone</strong>: its ring is small at the
-        bottom and wider at every layer above. Heavy rain makes a forest of overlapping cones; a dry, windy afternoon makes a fine
-        horizontal texture. The object is a frozen record of a few minutes of somebody else's weather.
-      </p>
-      <div class="grid g2">
-        <figure class="wide">
-          <img src="media/layers.jpg" alt="Render of the stacked layers" onerror="this.outerHTML='<div class=&quot;slot&quot;>Render of the exported .obj<br><code>media/layers.jpg</code></div>'">
-          <figcaption><b>Stacked layers</b>, exported as .obj and rendered in Blender.</figcaption>
-        </figure>
-        <figure class="wide">
-          <img src="media/print.jpg" alt="3D print" onerror="this.outerHTML='<div class=&quot;slot&quot;>3D print (optional)<br><code>media/print.jpg</code></div>'">
-          <figcaption><b>Printed</b> (optional).</figcaption>
-        </figure>
-      </div>
+    <div class="side">
+      <span class="num">05</span>
+      <h2>Time as height</h2>
+      <p>When you capture, the ripples get saved as layers and stacked on top of each other, so you can see a few seconds of rain at once. Each drop leaves a column of rings that get wider as they go up.</p>
+    </div>
+    <div>
+      <figure class="land layers"><img src="media/layers.jpg" alt="Render of the stacked layers" onerror="this.outerHTML='<div class=&quot;slot&quot;>render of the exported .obj<br>media/layers.jpg</div>'"><figcaption>About 20 seconds of rain, 300 layers</figcaption></figure>
     </div>
   </section>
 
-  <!-- ===================================================== -->
+  <!-- 06 -->
   <section id="video">
-    <div class="sec-head"><span class="num">06</span><h2>How it changes over time</h2></div>
-    <div class="body">
-      <p>The same water under four kinds of weather. The floor here is one of the built-in placeholder floors; the final version uses my photograph.</p>
-      <div class="grid g4">
-        <figure class="wide"><img src="media/state-noon.jpg" alt="Clear noon"><figcaption><b>Clear noon.</b> Strong caustics, glints.</figcaption></figure>
-        <figure class="wide"><img src="media/state-rain.jpg" alt="Rain under overcast sky"><figcaption><b>Rain, overcast.</b> Soft light, rings.</figcaption></figure>
-        <figure class="wide"><img src="media/state-dusk.jpg" alt="Golden hour"><figcaption><b>Golden hour.</b> Low, warm sun.</figcaption></figure>
-        <figure class="wide"><img src="media/state-night.jpg" alt="Night"><figcaption><b>Night.</b> Dim and blue.</figcaption></figure>
-      </div>
-
-      <h3>Video</h3>
-      <div class="video">
-        <figure>
-          <video src="media/demo.mp4" controls playsinline muted loop onerror="this.outerHTML='<div class=&quot;slot&quot;>Screen recording<br><code>media/demo.mp4</code><br>record it with R inside the piece</div>'"></video>
-          <figcaption><b>32 seconds, rendered at 60 fps.</b> Clear noon in Los Angeles with a hand moving through the water → rain at night in Chengdu → golden hour drizzle → the bare surface. To show several conditions in one clip, the weather values in this recording are set by hand (the interface says “demo data”); the live piece uses real data.</figcaption>
-        </figure>
+    <div class="side">
+      <span class="num">06</span>
+      <h2>Over time</h2>
+      <p>This is the same screen at different times and in different weather. The light follows the actual sun position in each city, so nights get dark and sunsets get warm.</p>
+      <p style="font-size:12px;color:var(--muted)">For the video and these screenshots I typed in the weather myself so I could show a few cities at once (that's why it says demo data). Normally it uses live data.</p>
+    </div>
+    <div>
+      <figure><video src="media/demo.mp4" controls playsinline muted loop></video><figcaption>Screen recording, 32 s</figcaption></figure>
+      <div class="pics four" style="margin-top:14px">
+        <figure class="land"><img src="media/state-noon.jpg" alt="Noon"><figcaption>Los Angeles, noon</figcaption></figure>
+        <figure class="land"><img src="media/state-rain.jpg" alt="Rain"><figcaption>Bergen, rain</figcaption></figure>
+        <figure class="land"><img src="media/state-dusk.jpg" alt="Sunset"><figcaption>Los Angeles, sunset</figcaption></figure>
+        <figure class="land"><img src="media/state-night.jpg" alt="Night"><figcaption>Chengdu, rain at night</figcaption></figure>
       </div>
     </div>
   </section>
 
-  <!-- ===================================================== -->
-  <section id="notes">
-    <div class="sec-head"><span class="num">07</span><h2>Notes &amp; credits</h2></div>
-    <div class="body">
-      <p>
-        Weather data: <a href="https://open-meteo.com/">Open-Meteo</a>, used under CC BY 4.0. The values are model estimates of current
-        conditions, updated every 15 minutes, not readings from a rain gauge.
-        Sun position: the standard low-precision solar position formula, accurate to well under a degree.
-      </p>
-      <p>
-        Built with plain HTML and WebGL2, no libraries. The wave simulation, refraction, caustics, glints and bloom are all written as
-        shaders in <code>index.html</code>. Reference images A and B are found images, used here only as visual references.
-      </p>
-      <h3>Controls</h3>
-      <p>
-        Click or drag: touch the water · <code>H</code> hide interface · <code>F</code> switch floor · <code>O</code> load a photo ·
-        <code>R</code> record video · <code>L</code> capture layers · <code>E</code> export 3D · <code>Space</code> pause
-      </p>
-    </div>
-  </section>
-</main>
-
-<footer>
-  <span>Rain from Elsewhere · Jia Yang · 2026</span>
-  <a href="index.html">Open the water →</a>
-</footer>
+  <footer>
+    <span>Weather: <a href="https://open-meteo.com/">Open-Meteo</a> (CC BY 4.0) · HTML + WebGL2, no libraries</span>
+    <span><kbd>H</kbd> hide UI · <kbd>F</kbd> floor · <kbd>O</kbd> photo · <kbd>R</kbd> record · <kbd>L</kbd> / <kbd>E</kbd> 3D</span>
+    <span>Jia Yang, 2026</span>
+  </footer>
+</div>
 </body>
 </html>
