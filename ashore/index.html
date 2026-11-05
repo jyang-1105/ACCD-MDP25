@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ashore</title>
+<meta name="description" content="A wordless game about trading away the body to reach a shore where nobody can hear what it cost.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#eef2f6; --muted:#9fb0c2; --glass:rgba(8,14,24,.72); --line:rgba(255,255,255,.12);
+  --voice:#f7f3ea; --hands:#d9483b; --sight:#3e7fc9; --walking:#e8b931; --gold:#ffd38a; --pink:#ff8fa3;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#05080d;color:var(--ink);font:15px/1.45 "Public Sans",system-ui,sans-serif;overflow:hidden}
+#stage{position:fixed;inset:0}
+#stage canvas{display:block;width:100%;height:100%;touch-action:none}
+.hidden{display:none !important}
+button{font:inherit;font-weight:600;color:var(--ink);background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:999px;padding:10px 18px;cursor:pointer;transition:background .2s,border-color .2s,transform .1s}
+button:hover{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.3)}
+button:active{transform:scale(.98)}
+button.primary{background:var(--ink);color:#0a0f16;border-color:var(--ink)}
+button.primary:hover{background:#fff}
+.serif{font-family:"Cormorant Garamond",Georgia,serif}
+kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid rgba(255,255,255,.35);border-bottom-width:2px;border-radius:5px;font:600 12px "Public Sans",sans-serif;text-align:center;margin-right:4px}
+
+/* ---------- title ---------- */
+#title{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:0 8vw;background:linear-gradient(90deg,rgba(3,6,12,.82) 0%,rgba(3,6,12,.35) 55%,rgba(3,6,12,0) 100%)}
+#title h1{font-family:"Cormorant Garamond",serif;font-weight:500;font-size:clamp(64px,11vw,150px);letter-spacing:.02em;margin:0;line-height:.9}
+#title p.lede{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:clamp(18px,2vw,24px);color:#cfd9e4;max-width:560px;margin:18px 0 32px}
+#title .btns{display:flex;gap:12px;flex-wrap:wrap}
+#title .small{color:var(--muted);font-size:13px;margin-top:22px;max-width:520px}
+#title .ribbons{display:flex;gap:10px;margin-top:28px}
+#title .ribbons span{display:flex;align-items:center;gap:6px;font-size:13px;color:#cfd9e4}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+
+/* ---------- message card ---------- */
+.card{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(520px,calc(100vw - 32px));background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:18px;padding:28px 30px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.card h2{font-family:"Cormorant Garamond",serif;font-weight:500;font-size:34px;margin:0 0 6px}
+.card .msg{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:30px;margin:18px 0;color:var(--gold)}
+.card p{color:#c9d4df;margin:8px 0}
+.card .keys{color:var(--muted);font-size:13px;margin:16px 0 20px;line-height:1.9}
+
+/* ---------- HUD ---------- */
+#hud{position:fixed;inset:0;pointer-events:none}
+#tide{position:absolute;top:16px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px}
+#tidePill{background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:999px;padding:7px 16px;font-weight:600;font-size:14px;white-space:nowrap}
+#tidePill.low{background:rgba(232,185,49,.92);color:#1a1405;border-color:transparent}
+#tidePill.dawn{background:rgba(255,190,140,.92);color:#2a1406}
+#dawnBar{width:220px;height:3px;background:rgba(255,255,255,.15);border-radius:3px;overflow:hidden}
+#dawnBar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#6c86c9,#ffb37a)}
+#toast{position:absolute;top:84px;left:50%;transform:translateX(-50%);font-family:"Cormorant Garamond",serif;font-size:24px;font-style:italic;text-shadow:0 2px 12px rgba(0,0,0,.8);text-align:center;width:min(760px,90vw);transition:opacity .6s}
+#me{position:absolute;left:18px;bottom:18px;background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:14px;padding:12px 14px;min-width:260px}
+#me .rbs{display:flex;gap:6px;margin:6px 0 8px}
+.rb{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 9px;border-radius:999px;background:rgba(255,255,255,.08)}
+.rb.lost{opacity:.3;text-decoration:line-through}
+#me .msgline{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:18px;color:var(--gold)}
+#me .state{font-size:13px;color:#c9d4df;margin-top:4px;max-width:300px}
+#prompt{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+#prompt .p{background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:14px;white-space:nowrap}
+#prompt .p.hot{border-color:var(--gold);box-shadow:0 0 24px rgba(255,211,138,.35)}
+#help{position:absolute;right:18px;bottom:18px;color:var(--muted);font-size:12px;text-align:right;line-height:1.8}
+.bubble{position:absolute;transform:translate(-50%,-100%);background:rgba(255,248,235,.95);color:#2a1d0c;font-family:"Cormorant Garamond",serif;font-style:italic;font-size:19px;padding:6px 14px;border-radius:14px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.35);transition:opacity .8s}
+.bubble:after{content:"";position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);border:7px solid transparent;border-top-color:rgba(255,248,235,.95);border-bottom:0}
+.label3d{position:absolute;transform:translate(-50%,-50%);font-size:12px;letter-spacing:.2em;color:rgba(255,255,255,.6);font-weight:700;text-shadow:0 2px 8px rgba(0,0,0,.8)}
+
+/* ---------- choice (the Witch) ---------- */
+#choice{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:6vh;background:radial-gradient(ellipse at 50% 40%,rgba(30,90,70,.15),rgba(2,6,10,.75) 70%)}
+#choice h2{font-family:"Cormorant Garamond",serif;font-weight:500;font-size:clamp(28px,3.4vw,44px);margin:0;text-align:center}
+#choice p.sub{color:#c9d4df;margin:8px 0 22px;text-align:center}
+#choice .opts{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;padding:0 16px}
+.opt{width:220px;text-align:left;border-radius:16px;padding:16px 18px;background:var(--glass);border:1px solid var(--line);pointer-events:auto}
+.opt:hover{border-color:var(--c)}
+.opt .k{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:700;margin-bottom:6px}
+.opt .d{font-weight:400;font-size:13px;color:#c9d4df;line-height:1.45}
+.opt .lose{font-weight:400;font-size:12px;color:var(--muted);margin-top:8px}
+#choice .back{margin-top:16px}
+
+/* ---------- understanding mini-game ---------- */
+#mini{position:fixed;left:50%;bottom:120px;transform:translateX(-50%);width:min(440px,92vw);text-align:center;pointer-events:none}
+#mini .who{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:22px;text-shadow:0 2px 10px rgba(0,0,0,.8)}
+#mini .ringwrap{position:relative;width:120px;height:120px;margin:10px auto}
+#mini svg{position:absolute;inset:0}
+#mini .pulse{position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;background:radial-gradient(circle,#fff 0%,var(--gold) 40%,rgba(255,211,138,0) 70%)}
+#mini .how{font-size:13px;color:#dfe7ef;text-shadow:0 2px 8px rgba(0,0,0,.8)}
+#mini .patience{width:160px;height:3px;margin:8px auto 0;background:rgba(255,255,255,.15);border-radius:3px;overflow:hidden}
+#mini .patience i{display:block;height:100%;background:#ff9a7a;width:100%}
+
+/* ---------- ending ---------- */
+#ending{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(3,6,10,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:16px}
+#ending .box{width:min(640px,100%);max-height:92vh;overflow:auto;background:var(--glass);border:1px solid var(--line);border-radius:20px;padding:30px 32px}
+#ending h2{font-family:"Cormorant Garamond",serif;font-weight:500;font-size:42px;margin:0}
+#ending .msg{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:22px;color:var(--gold);margin:6px 0 18px}
+#ending ol{list-style:none;padding:0;margin:0 0 18px;border-left:1px solid var(--line)}
+#ending li{padding:4px 0 4px 16px;font-size:14px;position:relative;color:#d6dee7}
+#ending li:before{content:"";position:absolute;left:-4px;top:13px;width:7px;height:7px;border-radius:50%;background:var(--muted)}
+#ending li b{color:var(--muted);font-weight:600;font-size:12px;margin-right:8px}
+#ending .room{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0 22px}
+#ending .room div{background:rgba(255,255,255,.06);border-radius:12px;padding:10px 12px}
+#ending .room strong{display:block;font-size:24px}
+#ending .room span{font-size:12px;color:var(--muted)}
+#ending .btns{display:flex;gap:10px;flex-wrap:wrap}
+
+/* ---------- experiment panel ---------- */
+#panel{position:fixed;top:0;right:0;bottom:0;width:360px;background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-left:1px solid var(--line);overflow-y:auto;padding:20px 20px 40px;pointer-events:auto}
+#panel h3{font-family:"Cormorant Garamond",serif;font-weight:500;font-size:30px;margin:0}
+#panel .q{color:var(--muted);font-size:13px;margin:4px 0 14px}
+#panel h4{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:20px 0 8px}
+#panel .row{margin:12px 0}
+#panel .row .top{display:flex;justify-content:space-between;font-weight:600;font-size:14px}
+#panel .row small{display:block;color:var(--muted);font-size:12px}
+#panel output{color:var(--muted);font-weight:400}
+#panel input[type=range]{width:100%;accent-color:#eef2f6}
+#panel .chk{display:flex;gap:8px;align-items:flex-start;font-size:14px;font-weight:600;margin:10px 0}
+#panel .chk input{margin-top:3px;accent-color:#eef2f6}
+#panel select{width:100%;font:inherit;background:rgba(255,255,255,.08);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px}
+#panel .btns{display:flex;flex-wrap:wrap;gap:6px}
+#panel .btns button{padding:7px 12px;font-size:13px}
+#panel button.on{background:var(--ink);color:#0a0f16}
+#panel .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+#panel .stats div{background:rgba(255,255,255,.06);border-radius:10px;padding:8px}
+#panel .stats strong{display:block;font-size:20px}
+#panel .stats span{font-size:11px;color:var(--muted)}
+#panel .stats .key{background:var(--ink);color:#0a0f16}
+#panel .stats .key span{color:#333}
+#panel .preset{display:block;width:100%;text-align:left;border-radius:12px;margin-bottom:6px;font-weight:400;font-size:13px}
+#panel .preset b{font-weight:700}
+#panel table{width:100%;border-collapse:collapse;font-size:12px}
+#panel td,#panel th{padding:5px 3px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+#panel th{color:var(--muted);font-weight:600}
+#panel td.big{font-weight:700;font-size:14px}
+#panel details{margin-top:14px;font-size:13px;color:#c9d4df} #panel summary{cursor:pointer;font-weight:600}
+#watchHelp{position:fixed;left:18px;top:14px;color:var(--muted);font-size:12px;line-height:1.8;pointer-events:none}
+#follow{position:fixed;left:18px;top:44px;background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:12px 14px;max-width:360px;pointer-events:auto}
+#follow .rbs{display:flex;gap:6px;margin:6px 0}
+
+@media (max-width: 760px){
+  #panel{width:100%;top:auto;height:52vh;border-left:0;border-top:1px solid var(--line)}
+  #me{min-width:0;right:18px}
+  #help{display:none}
+}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+
+<div id="title">
+  <h1>Ashore</h1>
+  <p class="lede">A mermaid traded her voice to walk on land, and found that the people there could not hear what she had given up.</p>
+  <div class="btns">
+    <button class="primary" id="btnPlay">Play as a merfolk</button>
+    <button id="btnWatch">Watch the night &nbsp;·&nbsp; experiment</button>
+  </div>
+  <div class="ribbons">
+    <span><i class="dot" style="background:var(--voice)"></i>Voice</span>
+    <span><i class="dot" style="background:var(--hands)"></i>Hands</span>
+    <span><i class="dot" style="background:var(--sight)"></i>Sight</span>
+    <span><i class="dot" style="background:var(--walking)"></i>Walking</span>
+  </div>
+  <p class="small">Every merfolk begins with four abilities, worn as four ribbons. Each step closer to the shore costs one of them. Sound on, headphones if you have them.</p>
+</div>
+
+<div id="intro" class="card hidden">
+  <h2>Your message</h2>
+  <div class="msg" id="introMsg"></div>
+  <p>Carry it to the shore. Make someone there understand it before dawn.</p>
+  <div class="keys">
+    <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> swim · drag to look around<br>
+    <kbd>Space</kbd> hum in the Deep · tap a shoulder on the Shore<br>
+    <kbd>E</kbd> give a ribbon to someone who has lost it<br>
+    Borders open only at low tide, when the bell rings and the sea goes quiet.
+  </div>
+  <button class="primary" id="btnBegin">Begin</button>
+</div>
+
+<div id="hud" class="hidden">
+  <div id="tide"><div id="tidePill">The Deep</div><div id="dawnBar"><i></i></div></div>
+  <div id="toast"></div>
+  <div id="me">
+    <div class="msgline" id="meMsg"></div>
+    <div class="rbs" id="meRibs"></div>
+    <div class="state" id="meState"></div>
+  </div>
+  <div id="prompt"></div>
+  <div id="help"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> swim &nbsp; drag: look &nbsp; <kbd>Esc</kbd> menu</div>
+  <div id="bubbles"></div>
+</div>
+
+<div id="choice" class="hidden">
+  <h2>“Two more,” says the Sea Witch.</h2>
+  <p class="sub">You will arrive on the Shore with one ability left. Which will you keep?</p>
+  <div class="opts">
+    <button class="opt" data-keep="hands" style="--c:var(--hands)"><div class="k"><i class="dot" style="background:var(--hands)"></i>Keep Hands</div><div class="d">Touch a shoulder to be noticed. Give a ribbon to someone.</div><div class="lose">You lose Sight and Walking: dark, and you cannot move on your own.</div></button>
+    <button class="opt" data-keep="sight" style="--c:var(--sight)"><div class="k"><i class="dot" style="background:var(--sight)"></i>Keep Sight</div><div class="d">See who is around you. Hold a Land Dweller’s gaze.</div><div class="lose">You lose Hands and Walking: you need someone to lead you.</div></button>
+    <button class="opt" data-keep="walking" style="--c:var(--walking)"><div class="k"><i class="dot" style="background:var(--walking)"></i>Keep Walking</div><div class="d">Go where you want. Step into someone’s view.</div><div class="lose">You lose Hands and Sight: you walk in the dark.</div></button>
+  </div>
+  <button class="back" id="btnNotYet">Not yet. Step back into the sea.</button>
+</div>
+
+<div id="mini" class="hidden">
+  <div class="who" id="miniWho">A Land Dweller turned around.</div>
+  <div class="ringwrap">
+    <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="6"/>
+      <circle id="miniArc" cx="60" cy="60" r="52" fill="none" stroke="#ffd38a" stroke-width="6" stroke-linecap="round" transform="rotate(-90 60 60)" stroke-dasharray="0 400"/>
+      <circle cx="60" cy="60" r="30" fill="none" stroke="rgba(255,211,138,.5)" stroke-width="1.5" stroke-dasharray="3 4"/></svg>
+    <div class="pulse" id="miniPulse"></div>
+  </div>
+  <div class="how" id="miniHow"></div>
+  <div class="patience"><i id="miniPat"></i></div>
+</div>
+
+<div id="ending" class="hidden">
+  <div class="box">
+    <h2 id="endTitle"></h2>
+    <div class="msg" id="endMsg"></div>
+    <ol id="endStory"></ol>
+    <div class="room" id="endRoom"></div>
+    <div class="btns">
+      <button class="primary" id="btnAgain">Play again</button>
+      <button id="btnEndWatch">Watch a night as an experiment</button>
+      <button id="btnEndMenu">Menu</button>
+    </div>
+  </div>
+</div>
+
+<div id="watchUI" class="hidden">
+  <div id="watchHelp">Drag: turn · Scroll: zoom · WASD: move · Click a merfolk: see only what she sees · Space: pause · Esc: menu</div>
+  <div id="follow" class="hidden"></div>
+  <div id="panel">
+    <h3>Ashore</h3>
+    <div class="q">How many people have to give things up for the most people to be understood? Does that change when the Land Dwellers are busier?</div>
+    <div class="stats" id="wStats"></div>
+    <h4>Run</h4>
+    <div class="btns">
+      <button id="wPause">Pause</button><button id="wReset">Reset</button><button id="wReplay">Replay same night</button>
+    </div>
+    <div class="btns" style="margin-top:6px" id="wSpeed">
+      <button data-s="1" class="on">1×</button><button data-s="2">2×</button><button data-s="4">4×</button><button data-s="8">8×</button>
+    </div>
+    <h4>Change while it runs</h4>
+    <div class="row"><div class="top">How many givers <output id="oGivers"></output></div><small>Givers hand a ribbon to anyone nearby who has lost it, even if that means they can’t cross.</small><input type="range" id="sGivers" min="0" max="30" step="1"></div>
+    <div class="row"><div class="top">How many Land Dwellers <output id="oDwellers"></output></div><input type="range" id="sDwellers" min="1" max="8" step="1"></div>
+    <div class="row"><div class="top">How busy they are <output id="oBusy"></output></div><small>Busier = longer between the moments they turn around.</small><input type="range" id="sBusy" min="0" max="100" step="5"></div>
+    <div class="row"><div class="top">Low tides before dawn <output id="oTides"></output></div><small>Borders open only at low tide, one border per tide.</small><input type="range" id="sTides" min="1" max="8" step="1"></div>
+    <label class="chk"><input type="checkbox" id="cKinder"><span>Being helped makes you kinder</span></label>
+    <h4>Assumptions you can test</h4>
+    <label class="chk"><input type="checkbox" id="cFar"><span>Land Dwellers stand far up the shore</span></label>
+    <div class="row"><div class="top">At the Shore, merfolk keep</div><select id="sKeep"><option value="random">one ability at random</option><option value="hands">Hands</option><option value="sight">Sight</option><option value="walking">Walking</option></select></div>
+    <h4>Three nights to compare</h4>
+    <button class="preset" data-p='{"givers":0,"busy":0.6,"far":false}'><b>A · Nobody gives.</b> Everyone tries to get there alone.</button>
+    <button class="preset" data-p='{"givers":20,"busy":0.6,"far":false}'><b>B · Most people give.</b> Twenty of thirty will give.</button>
+    <button class="preset" data-p='{"givers":20,"busy":0.6,"far":true}'><b>C · Most give, shore far away.</b> You have to walk to be noticed.</button>
+    <button id="wBatch" style="margin-top:6px">Run 20 nights instantly</button>
+    <div id="wHistWrap" class="hidden"><h4>Results so far</h4><table><thead><tr><th>Settings</th><th>Underst.</th><th>Shore</th><th>Gifts</th></tr></thead><tbody id="wHist"></tbody></table></div>
+    <details><summary>The rules in this model</summary>
+      <ul>
+        <li>30 merfolk start in the Deep Sea with four ribbons: Voice, Hands, Sight, Walking.</li>
+        <li>Borders open only at low tide, one border per tide. The Shallows cost Voice. The Shore costs two more: you need three left, and you keep one.</li>
+        <li>Without Walking you move only while someone who can walk is next to you. Without Sight you drift. Without Hands you can’t give.</li>
+        <li>A giver with Hands and Sight walks to anyone within 8 m missing a ribbon she has, and gives it.</li>
+        <li>Land Dwellers face their dinner. Now and then one turns and notices the closest merfolk within 12 m. Ten seconds of attention and she is understood.</li>
+        <li>Nobody goes back. At dawn, everyone not understood becomes sea foam.</li>
+      </ul>
+    </details>
+    <p style="margin-top:16px"><button id="wMenu">Menu</button></p>
+  </div>
+</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module" src="./game.js"></script>
+</body>
+</html>
