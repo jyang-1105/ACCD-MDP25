@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Messages That Arrive When You're Not Looking</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Reenie+Beanie&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Reenie+Beanie&family=Noto+Serif+SC:wght@600;900&display=swap" rel="stylesheet">
 <style>
   html,body{margin:0;height:100%;background:#f2eee4;overflow:hidden;cursor:default}
   canvas{position:fixed;inset:0;width:100%;height:100%}
@@ -36,7 +36,7 @@ const rough = (() => { let s = 1; const r = () => (s = (s*16807) % 2147483647) /
       ctx.beginPath(); for (let i=0;i<=n;i++){ const t = st + (Math.PI*2+over)*i/n, rr = rad*(1+0.022*Math.sin(t*2+ph)) + j(a)*.5;
         const x = cx + Math.cos(t)*rr*k, y = cy + Math.sin(t)*rr/k; i ? ctx.lineTo(x,y) : ctx.moveTo(x,y); } fill ? ctx.fill() : ctx.stroke(); } }; })();
 
-const BLUE = "#2b4ac0", PINK = "#f0479f", INK = "#3a2a8a", HAND = '"Reenie Beanie", cursive';
+const BLUE = "#2b4ac0", PINK = "#f0479f", INK = "#3a2a8a", HAND = '"Reenie Beanie", cursive', PRINT = '"Noto Serif SC", serif';
 
 // sample messages on Chengdu's clock [minutes, english, chinese] — swap in a real chat log
 // You fall asleep at 23:30 in LA = 15:30 in Chengdu. You wake at 07:30 = 23:30 there.
@@ -95,6 +95,8 @@ function setClosed(c){
 // ---------- drawing ----------
 function text(t, x, y, color, size, align="center", alpha=1, rot=0){ ctx.save(); ctx.translate(x,y); ctx.rotate(rot); ctx.globalAlpha = alpha;
   ctx.fillStyle = color; ctx.font = `${size}px ${HAND}`; ctx.textAlign = align; ctx.textBaseline = "middle"; ctx.fillText(t, 0, 0); ctx.restore(); }
+function ptext(t, x, y, color, size, align="center", alpha=1, weight=600, track=0){ ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = color; ctx.font = `${weight} ${size}px ${PRINT}`;
+  ctx.textAlign = align; ctx.textBaseline = "middle"; try{ ctx.letterSpacing = track + "px"; }catch(e){} ctx.fillText(t, x, y); ctx.restore(); }
 function hatchPatch(p){ ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.strokeStyle = `rgba(240,71,159,${p.a})`; ctx.lineWidth = 2.2;
   for (let d=-p.h/2; d<p.h/2; d+=5) rough.line(ctx, -p.w/2 + rough.j(8), d, p.w/2 + rough.j(8), d + p.w*0.18, 1.5); ctx.restore(); }
 
@@ -128,24 +130,24 @@ function draw(now){
       text(m.text, m.x, m.y, INK, 34, "center", a, m.rot);
       text(`${m.zh}   ·   her ${fmt(m.t)}, your ${fmt(m.t - 16*60)}`, m.x, m.y + 26, INK, 22, "center", a*.55, m.rot);
     });
-    text(both(cdMin), W - 30, 34, PINK, 32, "right");
+    ptext(both(cdMin).toUpperCase(), W - 30, 30, PINK, 12, "right", 1, 600, 2);
     return;
   }
 
   drawEye(cx, cy, ew, false);
-  if (!started){ text("click, then close your eyes", cx, cy + ew*0.55 + 20, BLUE, 44); return; }
+  if (!started){ ptext("Put on headphones. Click, then close your eyes.", cx, cy + ew*0.55 + 26, BLUE, 20); return; }
   if (lastSummary && lastSummary.n){
     const r = 46; ctx.strokeStyle = PINK; ctx.lineWidth = 2.2; rough.circle(ctx, cx, cy + ew*0.55 + 58, r, 2);
-    text(String(lastSummary.n), cx, cy + ew*0.55 + 60, PINK, 78);
-    text(lastSummary.end ? "her whole evening, while you slept" : "came while you were gone", cx, cy + ew*0.55 + 132, BLUE, 34);
-    if (lastSummary.half) text(`${lastSummary.half} you only half heard`, cx, cy + ew*0.55 + 166, BLUE, 26, "center", .6);
+    ptext(String(lastSummary.n), cx, cy + ew*0.55 + 60, PINK, 48, "center", 1, 900);
+    ptext(lastSummary.end ? "her whole evening, while you slept" : "came while you were gone", cx, cy + ew*0.55 + 132, BLUE, 20);
+    if (lastSummary.half) ptext(`${lastSummary.half} you only half heard — nothing is read twice`, cx, cy + ew*0.55 + 162, BLUE, 14, "center", .6);
   } else if (lastSummary && lastSummary.end){
-    text("good morning. it's night there now", cx, cy + ew*0.55 + 40, BLUE, 40);
+    ptext("Good morning. It's night there now.", cx, cy + ew*0.55 + 40, BLUE, 20);
   } else {
-    text("close your eyes", cx, cy + ew*0.55 + 30, BLUE, 44);
-    if (!camOk) text("(hold space)", cx, cy + ew*0.55 + 68, BLUE, 28, "center", .5);
+    ptext("Close your eyes.", cx, cy + ew*0.55 + 30, BLUE, 20);
+    if (!camOk) ptext("NO CAMERA? HOLD SPACE", cx, cy + ew*0.55 + 64, BLUE, 11, "center", .5, 600, 2);
   }
-  text(both(cdMin), W - 30, 34, PINK, 32, "right", .7);
+  ptext(both(cdMin).toUpperCase(), W - 30, 30, PINK, 12, "right", .7, 600, 2);
 }
 
 let lastNow = performance.now(), scribbleClock = 0;

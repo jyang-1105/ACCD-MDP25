@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Turn the Earth to Speak</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Reenie+Beanie&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Reenie+Beanie&family=Noto+Serif+SC:wght@600;900&display=swap" rel="stylesheet">
 <style>
   html,body{margin:0;height:100%;background:#f2eee4;overflow:hidden}
   canvas{position:fixed;inset:0;width:100%;height:100%;cursor:grab;touch-action:none}
   canvas.dragging{cursor:grabbing}
   #paper{position:fixed;inset:0;pointer-events:none;mix-blend-mode:multiply;opacity:.6}
-  form{position:fixed;left:50%;bottom:34px;transform:translateX(-50%);width:min(440px,80vw)}
+  form{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);width:clamp(220px,calc(100vw - 680px),360px)}
   input{width:100%;background:transparent;border:0;border-bottom:1.5px solid rgba(43,74,192,.55);color:#2b4ac0;
     font-family:"Reenie Beanie",cursive;font-size:30px;padding:2px 4px;outline:none;text-align:center}
   input::placeholder{color:rgba(43,74,192,.4)}
@@ -20,7 +20,7 @@
 <body>
 <canvas id="c"></canvas>
 <div id="paper"></div>
-<form id="form"><input id="inp" maxlength="50" placeholder="write something home" autocomplete="off"></form>
+<form id="form"><input id="inp" maxlength="50" placeholder="write something home ↵" autocomplete="off"></form>
 
 <script>
 (() => {
@@ -47,7 +47,7 @@ const rough = (() => { let s = 1; const r = () => (s = (s*16807) % 2147483647) /
       fill ? ctx.fill() : ctx.stroke(); }
   }; })();
 
-const D = Math.PI/180, BLUE = "#2b4ac0", PINK = "#f0479f", HAND = '"Reenie Beanie", cursive';
+const D = Math.PI/180, BLUE = "#2b4ac0", PINK = "#f0479f", INK = "#1f2a5c", PAPER = "#fbf8f0", HAND = '"Reenie Beanie", cursive', PRINT = '"Noto Serif SC", serif';
 const CITIES = {
   la: { name:"Los Angeles", lat:34.05, lon:-118.24, tz:"America/Los_Angeles", color:BLUE },
   cd: { name:"Chengdu",     lat:30.66, lon:104.07,  tz:"Asia/Shanghai",       color:PINK }
@@ -173,7 +173,7 @@ function draw(s, alt, shown, now){
   rough.seed(Math.floor(now/130)*97 + 13);   // line boil, ~8 fps
   ctx.clearRect(0,0,W,H);
   ctx.lineCap = "round"; ctx.lineJoin = "round";
-  G.R = Math.min(W, H) * 0.31; G.cx = W*0.56; G.cy = H*0.46;
+  G.R = Math.min(W*0.26, (H - 250)/2); G.cx = W*0.56; G.cy = 40 + (H - 250)/2 + 10;
   const { R, cx, cy } = G;
 
   // the sun
@@ -215,23 +215,40 @@ function draw(s, alt, shown, now){
       label(f.text, x + 10, y - 10, col, 26, "left"); }
   }
 
-  // cities
+  // cities on the globe: just a dot and a short name
   for (const k of ["la","cd"]){
-    const c = CITIES[k], p = project(c.lat*D, c.lon*D, s), time = fmt[k].format(shown);
-    const waiting = pending.filter(m => m.from === k), landed = arrived.filter(m => m.at === k);
-    let x = p.X, y = p.Y, faded = p.depth <= 0;
-    if (faded){ const dx = x-cx, dy = y-cy, L = Math.hypot(dx,dy)||1; x = cx + dx/L*(R+22); y = cy + dy/L*(R+22); }
-    const right = !faded || x > cx, ax = right ? x + 18 : x - 18, al = right ? "left" : "right";
+    const c = CITIES[k], p = project(c.lat*D, c.lon*D, s);
+    let x = p.X, y = p.Y; const faded = p.depth <= 0;
+    if (faded){ const dx = x-cx, dy = y-cy, L = Math.hypot(dx,dy)||1; x = cx + dx/L*(R+14); y = cy + dy/L*(R+14); }
     ctx.fillStyle = c.color; ctx.strokeStyle = c.color; ctx.lineWidth = 1.6;
     ctx.globalAlpha = faded ? .45 : 1; rough.circle(ctx, x, y, faded ? 4 : 6, 1, true); if (!faded) rough.circle(ctx, x, y, 12, 1.5); ctx.globalAlpha = 1;
-    label(faded ? `(${c.name})` : c.name, ax, y - 4, c.color, 34, al, faded ? .5 : 1);
-    label(time, ax, y + 22, c.color, 28, al, faded ? .5 : .85);
-    let ly = y + 50;
-    for (const m of waiting){ label(`"${m.text}"`, ax, ly, c.color, 26, al, faded ? .5 : 1); ly += 24; }
-    for (const m of landed){ const a = Math.max(0, 1 - (now - m.born)/9000), col = CITIES[k==="la"?"cd":"la"].color;
-      label(`"${m.text}"`, ax, ly, col, 26, al, a); if (m.note){ label(m.note, ax, ly + 20, col, 20, al, a*.6); ly += 22; } ly += 24; }
-    if (!awake(k, shown)) label("z z z", ax + (right ? ctx.measureText(faded ? `(${c.name})` : c.name).width + 14 : -ctx.measureText(c.name).width - 50), y - 14, c.color, 26, al, faded ? .4 : .7);
+    const right = x >= cx - R*0.2;
+    small(k === "la" ? "LA" : "CHENGDU", x + (right ? 18 : -18), y + 4, c.color, right ? "left" : "right", faded ? .45 : 1);
   }
+  // the two clocks, in fixed cards at the bottom corners
+  clockCard("la", 28, H - 196, shown, now);
+  clockCard("cd", W - 28 - 280, H - 196, shown, now);
+}
+
+function small(t, x, y, color, align="left", alpha=1){ ctx.globalAlpha = alpha; ctx.fillStyle = color; ctx.font = `600 12px ${PRINT}`; ctx.textAlign = align;
+  try{ ctx.letterSpacing = "2px"; }catch(e){} ctx.fillText(t, x, y); try{ ctx.letterSpacing = "0px"; }catch(e){} ctx.globalAlpha = 1; ctx.textAlign = "left"; }
+function clockCard(k, x, y, shown, now){
+  const c = CITIES[k], w = 280, h = 168, isAwake = awake(k, shown);
+  ctx.fillStyle = PAPER; ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = "rgba(31,42,92,.35)"; ctx.lineWidth = 1.2; rough.line(ctx, x, y, x + w, y, .6); rough.line(ctx, x + w, y, x + w, y + h, .6); rough.line(ctx, x + w, y + h, x, y + h, .6); rough.line(ctx, x, y + h, x, y, .6);
+  small(k === "la" ? "YOU · LOS ANGELES" : "MOM · CHENGDU", x + 16, y + 24, c.color);
+  ctx.fillStyle = c.color; ctx.font = `900 38px ${PRINT}`; ctx.textAlign = "left"; ctx.fillText(fmt[k].format(shown), x + 16, y + 66);
+  small(isAwake ? "AWAKE" : "ASLEEP", x + 140, y + 64, INK, "left", .55);
+  if (!isAwake){ ctx.fillStyle = c.color; ctx.font = `26px ${HAND}`; ctx.fillText("z z z", x + 208, y + 62); }
+  ctx.strokeStyle = "rgba(31,42,92,.15)"; rough.line(ctx, x + 16, y + 82, x + w - 16, y + 82, .4);
+  // messages: what's waiting to leave this side, and what just arrived here
+  const waiting = pending.filter(m => m.from === k), landed = arrived.filter(m => m.at === k);
+  let ly = y + 108;
+  const lines = [...waiting.map(m => ({ t:m.text, col:c.color, tag:"waiting", a:1 })),
+                 ...landed.map(m => ({ t:m.text, col:CITIES[k==="la"?"cd":"la"].color, tag:"arrived", a:Math.max(0, 1 - (now - m.born)/9000) }))].slice(-2);
+  if (!lines.length) small(k === "la" ? "WRITE SOMETHING BELOW" : "NOTHING YET", x + 16, ly + 4, INK, "left", .3);
+  for (const l of lines){ ctx.globalAlpha = l.a; ctx.fillStyle = l.col; ctx.font = `26px ${HAND}`; ctx.fillText(`"${l.t}"`, x + 16, ly); ctx.globalAlpha = 1;
+    small(l.tag.toUpperCase(), x + w - 16, ly - 2, l.col, "right", .5*l.a); ly += 30; }
 }
 
 addEventListener("load", () => document.fonts && document.fonts.load(`30px ${HAND}`));

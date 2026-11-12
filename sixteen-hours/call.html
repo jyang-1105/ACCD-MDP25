@@ -194,7 +194,7 @@ function layout(){ DPR = Math.min(2, devicePixelRatio||1); W = innerWidth; H = i
   L.tl = { x0: Math.max(130, W*0.12), x1: W - Math.max(110, W*0.1), yYou: tlTop, yHer: tlTop + 74, rowH: 50 };
   L.tl.cw = (L.tl.x1 - L.tl.x0)/24;
   L.tray = { x: L.tl.x0 + 44, y: L.tl.yHer + L.tl.rowH + 84 };
-  L.talkY = L.tl.yHer + L.tl.rowH + 74;
+  L.talkY = L.tl.yHer + L.tl.rowH + 140;
   L.floorY = H + 40;
 }
 addEventListener("resize", layout); layout();
@@ -204,6 +204,10 @@ addEventListener("resize", layout); layout();
 // =====================================================================
 function txt(t, x, y, color, font, align="left", alpha=1, base="alphabetic"){ alpha = Math.max(0, Math.min(1, alpha)); if (!alpha) return;
   const a0 = ctx.globalAlpha; ctx.globalAlpha = a0*alpha; ctx.fillStyle = color; ctx.font = font; ctx.textAlign = align; ctx.textBaseline = base; ctx.fillText(t, x, y); ctx.globalAlpha = a0; }
+function ptxt(t, x, y, color, size, align="left", alpha=1, weight=600, track=0, base="alphabetic"){ alpha = Math.max(0, Math.min(1, alpha)); if (!alpha) return;
+  ctx.save(); ctx.globalAlpha *= alpha; ctx.fillStyle = color; ctx.font = `${weight} ${size}px ${PRINT}`; ctx.textAlign = align; ctx.textBaseline = base;
+  try{ ctx.letterSpacing = track + "px"; }catch(e){} ctx.fillText(t, x, y); ctx.restore(); }
+const caps = (t, x, y, color, align="left", alpha=1, size=11) => ptxt(t.toUpperCase(), x, y, color, size, align, alpha, 600, 2);
 function wrap(t, maxW, font){ ctx.font = font; const words = t.split(" "), lines = []; let cur = "";
   for (const w of words){ const test = cur ? cur + " " + w : w; if (ctx.measureText(test).width > maxW && cur){ lines.push(cur); cur = w; } else cur = test; }
   if (cur) lines.push(cur); return lines; }
@@ -238,10 +242,10 @@ function drawPad(k){
   // name
   if (k === "la" && S.phase === "end"){
     const a = Math.min(1, (performance.now() - S.landedAt)/900);
-    txt("Los Angeles", p.x + pw/2, p.y - 30, BLUE, `34px ${HAND}`, "center", .5);
-    ctx.strokeStyle = BLUE; ctx.lineWidth = 2.2; for (let i=0;i<3;i++) rough.line(ctx, p.x + pw/2 - 70, p.y - 40 + i*4, p.x + pw/2 - 70 + 140*a, p.y - 37 + i*3, 1.2);
-    if (a >= 1) txt("Chengdu", p.x + pw/2 + 50, p.y - 58, BLUE, `32px ${HAND}`, "center");
-  } else txt(k === "la" ? "you · Los Angeles" : "mom · Chengdu", p.x + pw/2, p.y - 30, k === "la" ? BLUE : PINK, `34px ${HAND}`, "center");
+    caps("you · Los Angeles", p.x + pw/2, p.y - 30, BLUE, "center", .45);
+    ctx.strokeStyle = BLUE; ctx.lineWidth = 2; for (let i=0;i<2;i++) rough.line(ctx, p.x + pw/2 - 72, p.y - 35 + i*3, p.x + pw/2 - 72 + 144*a, p.y - 33 + i*3, 1);
+    if (a >= 1) txt("Chengdu", p.x + pw/2 + 60, p.y - 50, BLUE, `32px ${HAND}`, "center");
+  } else caps(k === "la" ? "you · Los Angeles" : "mom · Chengdu", p.x + pw/2, p.y - 30, k === "la" ? BLUE : PINK, "center");
   // top page
   ctx.save(); ctx.translate(p.x, p.y);
   const note = k === "cd" ? (S.phase === "end" ? S.endNote : S.herNote) : null;
@@ -252,7 +256,7 @@ function drawPad(k){
     ctx.fillStyle = "#f2eee4"; ctx.beginPath(); ctx.moveTo(pw, ph - c); ctx.lineTo(pw, ph); ctx.lineTo(pw - c, ph); ctx.closePath(); ctx.fill();
     ctx.fillStyle = "#e9e2d2"; ctx.beginPath(); ctx.moveTo(pw, ph - c); ctx.lineTo(pw - c, ph - c*0.08); ctx.lineTo(pw - c, ph); ctx.closePath(); ctx.fill();
     ctx.strokeStyle = "rgba(31,42,92,.5)"; ctx.lineWidth = 1.1; rough.line(ctx, pw, ph - c, pw - c, ph - c*0.08, .6); rough.line(ctx, pw - c, ph - c*0.08, pw - c, ph, .6);
-    if (prog > 0.7){ txt("the day is ending", pw - c/2 - 4, ph + 30, RED, `24px ${HAND}`, "center", (prog - 0.7)/0.3); }
+    if (prog > 0.7){ caps("the day is ending", pw/2, ph + 34, RED, "center", (prog - 0.7)/0.3); }
   }
   ctx.restore();
 }
@@ -277,8 +281,9 @@ function drawRow(states, y, who){
         ctx.strokeStyle = who === "her" ? PINK : BLUE; ctx.lineWidth = 1.3; rough.rect(ctx, x + 2, y + 3, w - 4, rowH - 6, .8);
         ctx.strokeStyle = COLORS[st] || "rgba(31,42,92,.35)"; ctx.lineWidth = 1;
         rough.hatch(ctx, x + 2, y + 3, w - 4, rowH - 6, st === "sleep" ? 7 : 5, st === "work" ? -0.8 : 0.8, .6);
-        if (w > 34){ ctx.fillStyle = "rgba(251,248,240,.85)"; const label = st === "sleep" ? "asleep" : st; ctx.font = `24px ${HAND}`; const tw = ctx.measureText(label).width;
-          ctx.fillRect(x + w/2 - tw/2 - 4, y + rowH/2 - 12, tw + 8, 22); txt(label, x + w/2, y + rowH/2 + 6, who === "her" ? PINK : BLUE, `24px ${HAND}`, "center"); }
+        const label = (st === "sleep" ? "asleep" : st).toUpperCase(); ctx.font = `600 10px ${PRINT}`; try{ ctx.letterSpacing = "2px"; }catch(e){} const tw = ctx.measureText(label).width; try{ ctx.letterSpacing = "0px"; }catch(e){}
+        if (w > tw + 18){
+          ctx.fillStyle = "rgba(251,248,240,.92)"; ctx.fillRect(x + w/2 - tw/2 - 6, y + rowH/2 - 9, tw + 12, 18); caps(label, x + w/2, y + rowH/2 + 4, who === "her" ? PINK : BLUE, "center", 1, 10); }
       }
       a = h;
     }
@@ -288,17 +293,16 @@ function drawRow(states, y, who){
 
 function drawTimeline(now){
   const { x0, x1, cw, yYou, yHer, rowH } = L.tl;
-  txt("you", x0 - 14, yYou + rowH/2 + 2, BLUE, `30px ${HAND}`, "right", 1, "middle");
-  txt("mom", x0 - 14, yHer + rowH/2 + 2, PINK, `30px ${HAND}`, "right", 1, "middle");
+  caps("you", x0 - 14, yYou + rowH/2 + 4, BLUE, "right");
+  caps("mom", x0 - 14, yHer + rowH/2 + 4, PINK, "right");
   // hours on both clocks, lined up on the same moment
   for (let h=0; h<24; h++){ const x = x0 + h*cw + cw/2;
-    if (h % 3 === 0){ txt(String(h).padStart(2,"0"), x, yYou - 8, BLUE, `20px ${HAND}`, "center", .8);
-      txt(String(herHour(h)).padStart(2,"0"), x, yHer + rowH + 20, PINK, `20px ${HAND}`, "center", .8); }
+    if (h % 3 === 0){ ptxt(String(h).padStart(2,"0"), x, yYou - 9, BLUE, 11, "center", .75);
+      ptxt(String(herHour(h)).padStart(2,"0"), x, yHer + rowH + 18, PINK, 11, "center", .75); }
     ctx.strokeStyle = "rgba(31,42,92,.12)"; ctx.lineWidth = 1; rough.line(ctx, x0 + h*cw, yYou + rowH, x0 + h*cw, yHer, .4);
   }
-  txt("your clock", x1 + 10, yYou - 8, BLUE, `20px ${HAND}`, "left", .6);
-  txt("her clock", x1 + 10, yHer + rowH + 20, PINK, `20px ${HAND}`, "left", .6);
-  txt("same moment ↕", x1 + 10, (yYou + rowH + yHer)/2 + 6, INK, `20px ${HAND}`, "left", .45);
+  caps("your clock", x0 - 14, yYou - 9, BLUE, "right", .45, 9);
+  caps("her clock", x0 - 14, yHer + rowH + 18, PINK, "right", .45, 9);
   drawRow(S.sched.you, yYou, "you"); drawRow(S.sched.her, yHer, "her");
   // hover column
   const col = drag ? hoverCol : (S.callAt >= 0 ? S.callAt : -1);
@@ -306,7 +310,7 @@ function drawTimeline(now){
     ctx.fillStyle = "rgba(43,74,192,.08)"; ctx.fillRect(x, yYou - 2, cw, yHer + rowH - yYou + 4);
     ctx.strokeStyle = INK; ctx.lineWidth = 1.6; rough.rect(ctx, x, yYou - 2, cw, yHer + rowH - yYou + 4, .8);
     if (drag){ const lbl = `your ${String(col).padStart(2,"0")}:00  ·  her ${String(herHour(col)).padStart(2,"0")}:00`;
-      txt(lbl, x + cw/2, yYou - 34, INK, `26px ${HAND}`, "center"); }
+      ptxt(lbl, x + cw/2, yYou - 30, INK, 14, "center"); }
   }
   // the call, placed
   if (S.callAt >= 0 && (S.phase === "ringing" || S.phase === "talk")){
@@ -321,14 +325,14 @@ function drawTray(now){
   const { x, y } = L.tray, wig = drag ? 0 : Math.sin(now/260)*1.5;
   const px = drag ? drag.x : x, py = drag ? drag.y : y;
   ctx.strokeStyle = BLUE; ctx.lineWidth = 2.2; phoneGlyph(px + wig, py, 1);
-  if (!drag) txt(S.i === 0 ? "← drag me up to a time" : "call", x + 46, y + 8, BLUE, `26px ${HAND}`, "left", .8);
+  if (!drag) caps(S.i === 0 ? "← drag up onto the timeline" : "drag to call", x + 46, y + 4, BLUE, "left", .7);
 }
 
 function drawTired(){
-  const x = L.tl.x1 + 14, y = L.tl.yHer + L.tl.rowH + 30;
-  txt("tired", x, y + 4, INK, `22px ${HAND}`, "left", .7);
-  for (let i=0;i<3;i++){ const cx = x + 10 + i*24, cy = y + 22; ctx.strokeStyle = INK; ctx.lineWidth = 1.4; rough.circle(ctx, cx, cy, 8, .8);
-    if (i < S.tired){ ctx.fillStyle = "rgba(43,74,192,.7)"; rough.circle(ctx, cx, cy, 6, .6, true); } }
+  const y = L.tray.y, x = L.tl.x1 - 3*22 - 4;
+  caps("tired", x - 12, y + 4, INK, "right", .6);
+  for (let i=0;i<3;i++){ const cx = x + 8 + i*22, cy = y; ctx.strokeStyle = INK; ctx.lineWidth = 1.4; rough.circle(ctx, cx, cy, 7, .8);
+    if (i < S.tired){ ctx.fillStyle = "rgba(43,74,192,.7)"; rough.circle(ctx, cx, cy, 5, .5, true); } }
 }
 
 function drawTalk(){
@@ -349,33 +353,34 @@ function draw(now){
   ctx.lineCap = "round"; ctx.lineJoin = "round";
 
   if (S.phase === "intro"){ drawIntro(now); return; }
+  for (const f of falling) if (!f.lost){ ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(f.rot); drawPage(f.k, f.n, { stamp:f.stamp, note:f.note }); ctx.restore(); }
   drawPad("la"); drawPad("cd");
   if (S.sched && S.phase !== "end" && S.phase !== "flight") { drawTimeline(now); drawTired(); }
   drawTray(now); drawTalk();
-  for (const f of falling){ ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(f.rot); drawPage(f.k, f.n, { stamp:f.stamp, note:f.note, lost:f.lost, phone:f.phone }); ctx.restore();
-    if (f.lost) txt("Feb 4 — the day you never lived", f.x + L.pw/2, f.y - 14, BLUE, `30px ${HAND}`, "center", 1 - f.age/3.5); }
+  for (const f of falling) if (f.lost){ ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(f.rot); drawPage(f.k, f.n, { stamp:f.stamp, note:f.note, lost:f.lost, phone:f.phone }); ctx.restore();
+    txt("Feb 4 — the day you never lived", f.x + L.pw/2, f.y - 14, BLUE, `30px ${HAND}`, "center", 1 - f.age/3.5); }
   // score
-  if (S.phase !== "end") txt(`calls ${S.calls} / ${S.results.length}`, W - 24, 34, INK, `28px ${HAND}`, "right", .7);
+  if (S.phase !== "end"){ caps("calls", W - 24, 26, INK, "right", .5); ptxt(`${S.calls} / ${S.results.length}`, W - 24, 52, INK, 22, "right", .85, 900); }
   if (S.toast){ const a = S.toast.t < .15 ? S.toast.t/.15 : 1 - Math.max(0, S.toast.t - (S.toast.life - .4))/.4;
-    txt(S.toast.text, W/2, L.tl.yYou - 64, S.toast.color, `34px ${HAND}`, "center", a); }
-  if (S.phase === "riffle") txt(S.riffleLabel || "", W/2, L.tl.yYou + 60, INK, `34px ${HAND}`, "center", .6);
+    ptxt(S.toast.text, W/2, L.tl.yYou - 56, S.toast.color, 17, "center", a); }
+  if (S.phase === "riffle") caps(S.riffleLabel || "", W/2, L.tl.yYou - 56, INK, "center", .6, 12);
   if (S.phase === "end") drawEnd(now);
 }
 
 function drawIntro(now){
-  const cx = W/2, cy = H*0.42;
-  ctx.strokeStyle = BLUE; ctx.lineWidth = 2.4; phoneGlyph(cx, cy - 130, 1.6);
-  txt("Find a Time to Call", cx, cy - 50, INK, `76px ${HAND}`, "center");
-  txt("you're in Los Angeles. mom is in Chengdu, 16 hours ahead.", cx, cy + 10, BLUE, `32px ${HAND}`, "center");
-  txt("every day until new year's eve, drag the phone to an hour when you're both free.", cx, cy + 46, BLUE, `32px ${HAND}`, "center");
-  txt("before the page tears off.", cx, cy + 82, BLUE, `32px ${HAND}`, "center");
-  txt("click to start", cx, cy + 150, PINK, `38px ${HAND}`, "center", .6 + .4*Math.sin(now/300));
+  const cx = W/2, cy = H*0.4;
+  ctx.strokeStyle = BLUE; ctx.lineWidth = 2.4; phoneGlyph(cx, cy - 120, 1.4);
+  caps("Sixteen Hours · 03", cx, cy - 70, PINK, "center", 1, 12);
+  ptxt("Find a Time to Call", cx, cy - 20, INK, 54, "center", 1, 900);
+  ptxt("You're in Los Angeles. Mom is in Chengdu, sixteen hours ahead.", cx, cy + 28, INK, 17, "center", .8, 400);
+  ptxt("Every day until New Year's Eve, drag the phone to an hour when you're both free —", cx, cy + 56, INK, 17, "center", .8, 400);
+  ptxt("before the page tears off.", cx, cy + 84, INK, 17, "center", .8, 400);
+  txt("click to start", cx, cy + 150, PINK, `36px ${HAND}`, "center", .6 + .4*Math.sin(now/300));
 }
 function drawEnd(now){
-  const t = (performance.now() - S.landedAt)/1000;
-  txt(`you called ${S.calls} of ${DAYS.length} days`, W/2, L.pad.la.y + L.ph + 110, INK, `36px ${HAND}`, "center", (t - 2)/1);
-  // her pile: the pages she tore, the ones with a call marked
-  txt("click or press R to play again", W/2, L.pad.la.y + L.ph + 156, PINK, `28px ${HAND}`, "center", (t - 3.5)/1 * .7);
+  const t = (performance.now() - S.landedAt)/1000, y = L.pad.la.y + L.ph + 100;
+  ptxt(`You called ${S.calls} of ${DAYS.length} days.`, W/2, y, INK, 22, "center", (t - 2)/1);
+  caps("click or press R to play again", W/2, y + 40, PINK, "center", (t - 3.5)/1 * .8, 11);
 }
 
 // =====================================================================
