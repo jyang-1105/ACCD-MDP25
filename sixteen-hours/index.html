@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sixteen Hours — a cross-time-zone chat, remade three ways</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Reenie+Beanie&display=swap" rel="stylesheet">
+<style>
+  :root{ --blue:#2b4ac0; --pink:#f0479f; --ink:#1f2a5c; --paper:#f2eee4; }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;background:var(--paper);color:var(--ink);font-family:"Reenie Beanie",cursive}
+  #paper{position:fixed;inset:0;pointer-events:none;mix-blend-mode:multiply;opacity:.6;z-index:5}
+  main{max-width:1180px;margin:0 auto;padding:56px 32px 60px}
+  h1{font-weight:400;font-size:clamp(56px,8vw,96px);line-height:.9;margin:0;color:var(--ink)}
+  .sub{font-size:clamp(24px,2.6vw,32px);margin:10px 0 0;color:var(--blue)}
+  .source{display:flex;gap:28px;align-items:center;margin:34px 0 40px;flex-wrap:wrap}
+  .source canvas{width:300px;height:120px;flex:none}
+  .source p{margin:0;font-size:27px;line-height:1.15;max-width:640px}
+  .source p .pk{color:var(--pink)} .source p .bl{color:var(--blue)}
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+  .card{position:relative;background:#fbf8f0;padding:20px 20px 22px;cursor:pointer;transition:transform .2s;text-align:left;border:0;font:inherit;color:inherit}
+  .card:hover{transform:rotate(-1deg) translateY(-4px)}
+  .card:nth-child(2):hover{transform:rotate(1deg) translateY(-4px)}
+  .card canvas.frame{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .card canvas.pic{display:block;width:100%;height:190px}
+  .num{font-size:30px;color:var(--pink)}
+  .card h2{font-weight:400;font-size:40px;line-height:.95;margin:4px 0 8px}
+  .card p{margin:0;font-size:25px;line-height:1.1;color:var(--blue)}
+  .verb{position:absolute;top:14px;right:18px;font-size:30px;color:var(--pink)}
+  footer{margin-top:40px;font-size:24px;color:var(--blue);opacity:.7}
+  /* the game view */
+  #view{position:fixed;inset:0;background:var(--paper);display:none;z-index:10}
+  #view.open{display:block}
+  #view iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  #back{position:absolute;top:14px;left:16px;z-index:2;background:rgba(242,238,228,.9);border:0;font-family:"Reenie Beanie",cursive;font-size:30px;color:var(--blue);cursor:pointer;padding:2px 10px}
+  #back:hover{color:var(--pink)}
+  @media (max-width:860px){ .cards{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div id="paper"></div>
+<main>
+  <h1>Sixteen Hours</h1>
+  <p class="sub">one chat between Los Angeles and Chengdu, remade in three unlikely media</p>
+
+  <section class="source">
+    <canvas id="srcPic" width="600" height="240"></canvas>
+    <p>the source: my <span class="bl">WeChat</span> with my mom. I'm in <span class="bl">Los Angeles</span>, she's in <span class="pk">Chengdu</span>, sixteen hours ahead. her "have you eaten?" arrives at my 2am. her "good night" is my morning.</p>
+  </section>
+
+  <section class="cards">
+    <button class="card" data-go="earth"><canvas class="frame"></canvas><span class="verb">push</span>
+      <span class="num">1</span><canvas class="pic" data-pic="earth" width="600" height="380"></canvas>
+      <h2>Turn the Earth to Speak</h2><p>a message only leaves when her side faces the sun. you have to turn the planet.</p></button>
+    <button class="card" data-go="eyes"><canvas class="frame"></canvas><span class="verb">miss</span>
+      <span class="num">2</span><canvas class="pic" data-pic="eyes" width="600" height="380"></canvas>
+      <h2>Messages That Arrive When You're Not Looking</h2><p>her evening only plays while your eyes are closed.</p></button>
+    <button class="card" data-go="call"><canvas class="frame"></canvas><span class="verb">wait</span>
+      <span class="num">3</span><canvas class="pic" data-pic="call" width="600" height="380"></canvas>
+      <h2>Find a Time to Call</h2><p>every day until new year's eve, find one hour when you're both free.</p></button>
+  </section>
+
+  <footer>Jia Yang · Unnatural Transformation, part 1</footer>
+</main>
+
+<div id="view"><button id="back">← back</button><iframe id="frame" allow="camera; autoplay" title="game"></iframe></div>
+
+<script>
+(() => {
+// paper grain
+(function(){ const c = document.createElement("canvas"); c.width = c.height = 300; const x = c.getContext("2d");
+  const d = x.createImageData(300,300);
+  for (let i=0;i<d.data.length;i+=4){ const v = 150 + Math.random()*90; d.data[i]=v; d.data[i+1]=v*.98; d.data[i+2]=v*.93; d.data[i+3] = Math.random()<.35 ? 45 : 0; }
+  x.putImageData(d,0,0); document.getElementById("paper").style.backgroundImage = `url(${c.toDataURL()})`; })();
+
+// a shaky pen, seeded so each drawing stays put
+function pen(seed){ let s = seed; const r = () => (s = (s*16807) % 2147483647) / 2147483647; const j = a => (r()-.5)*2*a;
+  return { r, j,
+    line(c,x1,y1,x2,y2,a=1.4){ const dx=x2-x1, dy=y2-y1, L=Math.hypot(dx,dy)||1, nx=-dy/L, ny=dx/L, bow=(r()-.5)*Math.min(5,L*.03);
+      c.beginPath(); c.moveTo(x1+j(a), y1+j(a)); c.quadraticCurveTo((x1+x2)/2+nx*bow+j(a), (y1+y2)/2+ny*bow+j(a), x2+j(a), y2+j(a)); c.stroke(); },
+    circle(c,cx,cy,rad,a=1.5,fill=false){ const st = r()*6.28, over = fill ? 0 : .25, n = Math.max(16, rad*.45|0);
+      c.beginPath(); for (let i=0;i<=n;i++){ const t = st + (6.28+over)*i/n, rr = rad + j(a)*.6; const x = cx + Math.cos(t)*rr, y = cy + Math.sin(t)*rr; i ? c.lineTo(x,y) : c.moveTo(x,y); } fill ? c.fill() : c.stroke(); },
+    curve(c,x1,y1,qx,qy,x2,y2,a=1.5){ c.beginPath(); c.moveTo(x1+j(a),y1+j(a)); c.quadraticCurveTo(qx+j(a*2),qy+j(a*2),x2+j(a),y2+j(a)); c.stroke(); } }; }
+const BLUE = "#2b4ac0", PINK = "#f0479f", INK = "#1f2a5c", HAND = '"Reenie Beanie", cursive';
+
+function frameCard(cv, seed){ const b = cv.getBoundingClientRect(), d = Math.min(2, devicePixelRatio||1); cv.width = b.width*d; cv.height = b.height*d;
+  const c = cv.getContext("2d"), p = pen(seed); c.scale(d,d); c.strokeStyle = "rgba(31,42,92,.55)"; c.lineWidth = 1.4; c.lineCap = "round";
+  const w = b.width, h = b.height; p.line(c,2,2,w-2,2); p.line(c,w-2,2,w-2,h-2); p.line(c,w-2,h-2,2,h-2); p.line(c,2,h-2,2,2);
+  c.strokeStyle = "rgba(31,42,92,.25)"; p.line(c,6,h+0,w-4,h-1,1); }
+
+function drawPic(cv){
+  const c = cv.getContext("2d"), p = pen(cv.dataset.pic.length*991 + 7), W = cv.width, H = cv.height, kind = cv.dataset.pic;
+  c.lineCap = "round"; c.lineJoin = "round";
+  if (kind === "earth"){
+    const cx = W*.58, cy = H*.5, R = H*.38;
+    c.strokeStyle = PINK; c.lineWidth = 3; p.circle(c, W*.14, cy, H*.11);
+    for (let i=0;i<9;i++){ const a = i*6.28/9; p.line(c, W*.14+Math.cos(a)*H*.15, cy+Math.sin(a)*H*.15, W*.14+Math.cos(a)*H*.2, cy+Math.sin(a)*H*.2); }
+    c.save(); c.beginPath(); c.arc(cx, cy, R, 0, 6.28); c.clip();
+    c.strokeStyle = "rgba(43,74,192,.55)"; c.lineWidth = 2; for (let d=-R*2; d<R*2; d+=11) p.line(c, cx + d*.2 + R*.05, cy - R, cx + d*.2 + R*.05 + R*1.2, cy + R, 1);
+    c.restore(); c.fillStyle = "#fbf8f0"; c.beginPath(); c.ellipse(cx - R*.35, cy, R*.62, R*.99, 0, 0, 6.28); c.fill();
+    c.strokeStyle = "rgba(240,71,159,.5)"; c.lineWidth = 2; c.save(); c.beginPath(); c.arc(cx, cy, R, 0, 6.28); c.clip(); for (let d=-R; d<R*.4; d+=14) p.line(c, cx + d - 40, cy - R, cx + d + 40, cy + R, 1); c.restore();
+    c.strokeStyle = BLUE; c.lineWidth = 3.5; p.circle(c, cx, cy, R, 2.5); c.lineWidth = 2; p.curve(c, cx, cy - R, cx - R*.5, cy, cx, cy + R); p.line(c, cx - R, cy, cx + R, cy, 2);
+    c.strokeStyle = INK; c.lineWidth = 3; p.curve(c, cx + R*.3, cy - R*1.15, cx + R*.95, cy - R*1.2, cx + R*1.15, cy - R*.55); p.line(c, cx + R*1.15, cy - R*.55, cx + R*1.0, cy - R*.68); p.line(c, cx + R*1.15, cy - R*.55, cx + R*1.22, cy - R*.72);
+  }
+  if (kind === "eyes"){
+    c.strokeStyle = "rgba(240,71,159,.4)"; c.lineWidth = 3; for (let k=0;k<5;k++){ const x = p.r()*W, y = p.r()*H; for (let d=0; d<60; d+=6) p.line(c, x - 70, y + d, x + 70, y + d + 18, 2); }
+    const cx = W*.5, cy = H*.45, w = W*.42; c.strokeStyle = BLUE; c.lineWidth = 4;
+    p.curve(c, cx - w/2, cy, cx, cy + w*.22, cx + w/2, cy);
+    for (let i=1;i<=6;i++){ const t = i/7, x = cx - w/2 + w*t, y = cy + Math.sin(Math.PI*t)*w*.11; p.line(c, x, y, x + (t-.5)*20, y + 24); }
+    c.fillStyle = INK; c.font = `46px ${HAND}`; c.textAlign = "center"; c.fillText("have you eaten?", cx, H*.86);
+  }
+  if (kind === "call"){
+    const x0 = W*.06, x1 = W*.94, cw = (x1-x0)/24, y1 = H*.3, y2 = H*.56, rh = H*.17;
+    c.strokeStyle = "rgba(31,42,92,.45)"; c.lineWidth = 2; for (const y of [y1, y2]){ p.line(c,x0,y,x1,y); p.line(c,x1,y,x1,y+rh); p.line(c,x1,y+rh,x0,y+rh); p.line(c,x0,y+rh,x0,y); }
+    const blocks = [[y1,0,7,BLUE],[y1,9,14,BLUE],[y1,23,24,BLUE],[y2,0,2,PINK],[y2,7,15,PINK],[y2,17,24,PINK]];
+    for (const [y,a,b,col] of blocks){ c.strokeStyle = col; c.lineWidth = 2.4; const x = x0 + a*cw, w = (b-a)*cw;
+      p.line(c,x+3,y+4,x+w-3,y+4); p.line(c,x+w-3,y+4,x+w-3,y+rh-4); p.line(c,x+w-3,y+rh-4,x+3,y+rh-4); p.line(c,x+3,y+rh-4,x+3,y+4);
+      c.save(); c.beginPath(); c.rect(x+3,y+4,w-6,rh-8); c.clip(); c.lineWidth = 1.4; for (let d=-rh; d<w; d+=9) p.line(c, x + d, y + rh, x + d + rh, y, 1); c.restore(); }
+    const px = x0 + 15.5*cw, py = (y1 + rh + y2)/2; c.strokeStyle = INK; c.lineWidth = 3;
+    p.line(c, px - 34, py - 12, px + 34, py - 12); p.line(c, px - 34, py - 2, px + 34, py - 2); p.circle(c, px - 38, py + 4, 13); p.circle(c, px + 38, py + 4, 13);
+    c.fillStyle = BLUE; c.font = `44px ${HAND}`; c.textAlign = "center"; c.fillText("ring ring", px + 10, H*.93);
+  }
+}
+
+function drawSource(){
+  const cv = document.getElementById("srcPic"), c = cv.getContext("2d"), p = pen(4242); c.lineCap = "round";
+  const bubble = (x, y, w0, txt, col, right) => { c.font = `38px ${HAND}`; const w = Math.min(cv.width - x - 6, c.measureText(txt).width + 30); c.strokeStyle = col; c.lineWidth = 2.4;
+    p.line(c, x, y, x + w, y); p.line(c, x + w, y, x + w, y + 54); p.line(c, x + w, y + 54, x, y + 54); p.line(c, x, y + 54, x, y);
+    c.fillStyle = col; c.font = `38px ${HAND}`; c.textAlign = "left"; c.fillText(txt, x + 14, y + 38); };
+  bubble(14, 18, 330, "have you eaten?  · her 18:05", PINK);
+  bubble(170, 120, 330, "it's 2am mom  · my 02:05", BLUE);
+}
+
+function draw(){
+  document.querySelectorAll(".card").forEach((el, i) => frameCard(el.querySelector(".frame"), 101 + i*17));
+  document.querySelectorAll("canvas.pic").forEach(drawPic);
+  drawSource();
+}
+document.fonts ? document.fonts.load(`30px ${HAND}`).then(draw, draw) : draw();
+addEventListener("resize", () => document.querySelectorAll(".card").forEach((el, i) => frameCard(el.querySelector(".frame"), 101 + i*17)));
+
+// open a game full screen; #earth, #eyes, #call can be linked to directly
+const view = document.getElementById("view"), frame = document.getElementById("frame");
+const FILES = { earth:"earth.html", eyes:"eyes.html", call:"call.html" };
+function route(){
+  const k = location.hash.slice(1);
+  if (FILES[k]){ if (!frame.src.endsWith(FILES[k])) frame.src = FILES[k]; view.classList.add("open"); setTimeout(() => frame.focus(), 300); }
+  else { view.classList.remove("open"); frame.src = "about:blank"; }
+}
+document.querySelectorAll(".card").forEach(el => el.addEventListener("click", () => { location.hash = el.dataset.go; }));
+document.getElementById("back").addEventListener("click", () => { location.hash = ""; });
+addEventListener("hashchange", route); route();
+})();
+</script>
+</body>
+</html>

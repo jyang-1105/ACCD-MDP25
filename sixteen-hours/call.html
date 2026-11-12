@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Find a Time to Call</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Reenie+Beanie&family=Noto+Serif+SC:wght@600;900&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;height:100%;background:#f2eee4;overflow:hidden;user-select:none}
+  canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none}
+  #paper{position:fixed;inset:0;pointer-events:none;mix-blend-mode:multiply;opacity:.6}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="paper"></div>
+<script>
+(() => {
+// =====================================================================
+//  paper, pen, sound
+// =====================================================================
+(function(){ const c = document.createElement("canvas"); c.width = c.height = 300; const x = c.getContext("2d");
+  const d = x.createImageData(300,300);
+  for (let i=0;i<d.data.length;i+=4){ const v = 150 + Math.random()*90; d.data[i]=v; d.data[i+1]=v*.98; d.data[i+2]=v*.93; d.data[i+3] = Math.random()<.35 ? 45 : 0; }
+  x.putImageData(d,0,0);
+  x.strokeStyle = "rgba(120,100,70,.08)"; for (let i=0;i<70;i++){ x.beginPath(); const a = Math.random()*300, b = Math.random()*300; x.moveTo(a,b); x.lineTo(a+Math.random()*30-15, b+Math.random()*30-15); x.stroke(); }
+  document.getElementById("paper").style.backgroundImage = `url(${c.toDataURL()})`; })();
+
+let wobble = 1;   // the pen gets shakier when you're tired
+const rough = (() => { let s = 1; const r = () => (s = (s*16807) % 2147483647) / 2147483647; const j = a => (r()-.5)*2*a*wobble;
+  return { r, j, seed(v){ s = (Math.floor(Math.abs(v)) % 2147483646) + 1; },
+    line(ctx,x1,y1,x2,y2,a=1.2){ const dx=x2-x1, dy=y2-y1, L=Math.hypot(dx,dy)||1, nx=-dy/L, ny=dx/L, bow=(r()-.5)*Math.min(4,L*.02);
+      ctx.beginPath(); ctx.moveTo(x1+j(a), y1+j(a)); ctx.quadraticCurveTo((x1+x2)/2+nx*bow+j(a), (y1+y2)/2+ny*bow+j(a), x2+j(a), y2+j(a)); ctx.stroke(); },
+    rect(ctx,x,y,w,h,a=1.2){ this.line(ctx,x,y,x+w,y,a); this.line(ctx,x+w,y,x+w,y+h,a); this.line(ctx,x+w,y+h,x,y+h,a); this.line(ctx,x,y+h,x,y,a); },
+    circle(ctx,cx,cy,rad,a=1,fill=false){ const st = r()*Math.PI*2, over = fill ? 0 : 0.2 + r()*0.3, n = Math.max(12, rad*0.5|0);
+      ctx.beginPath(); for (let i=0;i<=n;i++){ const t = st + (Math.PI*2+over)*i/n, rr = rad + j(a)*.5; const x = cx + Math.cos(t)*rr, y = cy + Math.sin(t)*rr; i ? ctx.lineTo(x,y) : ctx.moveTo(x,y); }
+      fill ? ctx.fill() : ctx.stroke(); },
+    hatch(ctx,x,y,w,h,gap,ang,a=.8){ ctx.save(); ctx.beginPath(); ctx.rect(x,y,w,h); ctx.clip(); const L = w + h;
+      for (let d=-L; d<L; d+=gap){ this.line(ctx, x + d, y + h, x + d + h*ang, y, a); } ctx.restore(); } }; })();
+const hashRand = n => { const x = Math.sin(n*127.1 + 311.7)*43758.5453; return x - Math.floor(x); };
+
+const BLUE = "#2b4ac0", PINK = "#f0479f", RED = "#d8344a", INK = "#1f2a5c", PAGE = "#fbf8f0", GREY = "#8a8ea0";
+const HAND = '"Reenie Beanie", cursive', PRINT = '"Noto Serif SC", serif';
+
+let ac = null, noiseBuf = null;
+function audio(){ if (ac) return; try{ ac = new (window.AudioContext||window.webkitAudioContext)();
+  const n = ac.sampleRate, b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0); for (let i=0;i<n;i++) d[i] = Math.random()*2-1; noiseBuf = b; }catch(e){ ac = null; } }
+function tone(freq, dur, type="sine", gain=.12, when=0){ if (!ac) return; try{ const t = ac.currentTime + when, o = ac.createOscillator(), g = ac.createGain();
+  o.type = type; o.frequency.value = freq; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + .015); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur + .05); }catch(e){} }
+function noise(dur, f0, f1, gain=.4, when=0, type="bandpass"){ if (!ac) return; try{ const t = ac.currentTime + when, src = ac.createBufferSource(); src.buffer = noiseBuf;
+  const f = ac.createBiquadFilter(); f.type = type; f.Q.value = .8; f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  const g = ac.createGain(); g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(f).connect(g).connect(ac.destination); src.start(t, Math.random()*.5, dur + .05); }catch(e){} }
+const sfx = {
+  rip(){ noise(.45, 900, 3800, .55); noise(.12, 2500, 4000, .4, .3); },
+  flip(){ noise(.06, 2000, 3000, .25); },
+  ring(){ for (let i=0;i<2;i++){ tone(440, .35, "sine", .09, i*.5); tone(480, .35, "sine", .09, i*.5); } },
+  connect(){ tone(523, .9, "triangle", .08); tone(659, .9, "triangle", .07, .06); tone(784, 1.1, "triangle", .06, .12); },
+  nope(){ tone(140, .18, "square", .05); tone(110, .2, "square", .05, .09); },
+  tick(){ tone(1800, .04, "square", .03); },
+  whoosh(){ noise(1.8, 300, 2400, .3, 0, "lowpass"); },
+  pick(){ tone(660, .08, "triangle", .05); },
+};
+
+// =====================================================================
+//  calendar & schedules
+// =====================================================================
+const DAYMS = 86400000;
+const MONTHS = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+const WD = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"], ZH = ["星期日","星期一","星期二","星期三","星期四","星期五","星期六"];
+const dn = (y,m,d) => Math.round(Date.UTC(y, m-1, d)/DAYMS);
+const fromN = n => { const t = new Date(n*DAYMS); return { y:t.getUTCFullYear(), mo:t.getUTCMonth()+1, d:t.getUTCDate(), wd:t.getUTCDay() }; };
+const HOME = dn(2027,2,5), FLIGHT = dn(2027,2,3), LOST = dn(2027,2,4);
+
+// her clock is 16 hours ahead of yours. column h = your hour h; for her it's hour (h+16)%24,
+// on your date if h < 8, otherwise on the next day.
+const herHour = h => (h + 16) % 24;
+const herDay = (n, h) => h < 8 ? n : n + 1;
+
+// the days you get to play. cls/you = your busy blocks [from, to, label] on your clock.
+// her: works 09–18 on weekdays (her own weekdays), sleeps 23–07.
+const DAYS = [
+  { d:[2026,11,12], you:[[9,12,"class"],[13,14,"class"]], note:"it's already tomorrow here :)", talk:["I'm on the bus to work. how was class?","good. sunny. it's 3pm here"] },
+  { d:[2026,11,14], you:[[10,14,"shift"]], note:"it's sunday here. call whenever!", talk:["your dad wants to say hi","hi dad!!"] },
+  { d:[2026,11,18], you:[[9,12,"class"],[14,17,"class"]], note:"made sausages. they're on the balcony", talk:["they need a month to dry","save me the spicy ones"] },
+  { d:[2026,11,22], you:[[11,15,"shift"]], note:"have you booked your ticket?", talk:["did you book it?","feb 3. I land on new year's eve"] },
+  { d:[2026,11,26], you:[[13,21,"thanksgiving"]], note:"a holiday there? eat well", talk:["what did you eat?","turkey. dry. I miss your cooking"] },
+  { d:[2026,12,2],  you:[[8,12,"class"],[13,17,"class"]], note:"your room is clean", talk:["I washed your sheets","don't touch my desk!!"] },
+  { d:[2026,12,7],  you:[[8,10,"class"],[10,13,"exam"],[13,22,"study"]], finals:true, note:"finals week. don't call. focus!", talk:["didn't I say don't call?","I just wanted to hear you"] },
+  { d:[2026,12,9],  you:[[9,11,"exam"],[11,14,"study"],[14,17,"exam"],[17,22,"study"]], finals:true, note:"eat something. not just instant noodles", talk:["did you eat?","instant noodles count"] },
+  { d:[2026,12,11], you:[[9,12,"exam"],[13,16,"exam"]], note:"last exam today? you can do it", talk:["how did it go?","DONE. I'm free!!"] },
+  { d:[2026,12,19], you:[[16,22,"shift"]], note:"on break? then call more!", talk:["you look thinner on video","it's the camera, mom"] },
+  { d:[2026,12,24], you:[[14,23,"party"]], note:"it's already christmas here", talk:["merry christmas! did I say it right?","perfect. merry christmas mom"] },
+  { d:[2026,12,31], you:[[18,23,"party"]], herOff:[dn(2027,1,1)], note:"happy new year from 2027!", talk:["it's already next year here","save some of it for me"] },
+  { d:[2027,1,8],   you:[[9,12,"class"],[13,16,"class"]], note:"grandma made a list of food for you", talk:["grandma is making braised pork","tell her two bowls"] },
+  { d:[2027,1,15],  you:[[9,12,"class"],[13,17,"class"]], herLate:21, note:"new year rush. home late every night", talk:["sorry, just got home","it's ok. it's 5am. I'm up anyway"] },
+  { d:[2027,1,22],  you:[[9,12,"class"]], note:"two weeks!", talk:["what do you want to eat first?","hotpot. obviously"] },
+  { d:[2027,1,29],  you:[[9,11,"class"],[13,17,"class"]], note:"one week!!!", talk:["dad bought a new rice cooker","I'm not laughing"] },
+  { d:[2027,2,1],   you:[[9,12,"class"],[14,16,"class"]], note:"dad washed the car to pick you up", talk:["what time do you land again?","5:30am. on the 5th"] },
+  { d:[2027,2,3],   you:[[9,13,"packing"],[19,24,"airport"]], note:"sleep on the plane. no movies all night", talk:["packed everything?","yes. see you tomorrow — your tomorrow"] },
+];
+DAYS.forEach(D => D.n = dn(...D.d));
+
+function schedule(D, overslept){
+  const you = [], her = [];
+  for (let h=0; h<24; h++){
+    // you
+    let s = (h < 7 || h >= 23) ? "sleep" : "free";
+    for (const [a,b,l] of D.you) if (h >= a && h < b) s = l;
+    if (overslept && h < 17) s = "overslept";
+    you.push(s);
+    // her
+    const hh = herHour(h), hd = herDay(D.n, h), wd = fromN(hd).wd, workday = wd >= 1 && wd <= 5 && !(D.herOff||[]).includes(hd);
+    let t = (hh < 7 || hh >= 23) ? "sleep" : "free";
+    if (workday && hh >= 9 && hh < (D.herLate || 18)) t = "work";
+    if (D.herLate && wd === 6 && hh >= 9 && hh < D.herLate) t = "work";   // the new-year rush eats her saturdays too
+    her.push(t);
+  }
+  return { you, her };
+}
+
+// =====================================================================
+//  game state
+// =====================================================================
+const S = {
+  phase: "intro",        // intro | day | ringing | talk | tearing | riffle | flight | end
+  i: 0, t: 0, dur: 10, tired: 0, overslept: false,
+  calls: 0, missStreak: 0, sched: null, callAt: -1, callNight: false,
+  phaseT: 0, shake: 0, toast: null, results: [],
+  youShown: DAYS[0].n, herShown: DAYS[0].n + 1, landedAt: 0,
+};
+let drag = null, hoverCol = -1;
+const falling = [], floorPile = [];
+
+function noteFor(D){
+  if (S.missStreak >= 3) return "…";
+  if (S.missStreak === 2) return "dad asked if you're ok";
+  if (S.missStreak === 1 && !D.finals) return "busy? it's ok";
+  return D.note;
+}
+function startDay(){
+  const D = DAYS[S.i];
+  S.overslept = S.tired >= 3; if (S.overslept) S.tired = 1;
+  S.sched = schedule(D, S.overslept); S.t = 0; S.dur = D.finals ? 9 : 10; S.callAt = -1; S.phase = "day";
+  S.herNote = noteFor(D); S.youShown = D.n; S.herShown = D.n + 1;
+  if (S.overslept) toast("you were so tired you slept through the day", BLUE, 3.2);
+}
+function toast(text, color=INK, life=1.6){ S.toast = { text, color, life, t:0 }; }
+
+function tryCall(h){
+  const you = S.sched.you[h], her = S.sched.her[h];
+  const hh = String(herHour(h)).padStart(2,"0");
+  let why = null;
+  if (her === "sleep") why = `she's asleep — it's ${hh}:00 for her`;
+  else if (her === "work") why = `she's at work — ${hh}:00 for her`;
+  else if (you === "overslept") why = "you're out cold";
+  else if (you !== "free" && you !== "sleep") why = `you're busy — ${you}`;
+  if (why){ sfx.nope(); S.shake = 0.35; S.t = Math.min(S.dur, S.t + 1.2); toast(why, RED); return; }
+  S.callAt = h; S.callNight = you === "sleep"; S.phase = "ringing"; S.phaseT = 0; sfx.ring();
+}
+
+function endDay(success){
+  const D = DAYS[S.i];
+  S.results.push(success); S.lastSuccess = success;
+  if (success){ S.calls++; S.missStreak = 0; if (S.callNight) S.tired = Math.min(3, S.tired + 1); else S.tired = Math.max(0, S.tired - 1); }
+  else { if (!D.finals) S.missStreak++; S.tired = Math.max(0, S.tired - 1); }
+  if (success && S.tired === 3) toast("you're running on empty. one more late night and you'll crash", BLUE, 2.6);
+  // both pages come off; the next ones show underneath
+  sfx.rip();
+  const herNote = S.herNote;
+  dropPage("la", D.n, success ? null : "MISSED");
+  setTimeout(() => { dropPage("cd", D.n + 1, null, herNote); sfx.flip(); }, 140);
+  S.herNote = ""; S.youShown = D.n === FLIGHT ? LOST : D.n + 1; S.herShown = D.n + 2;
+  S.phase = "tearing"; S.phaseT = 0;
+}
+
+function dropPage(k, n, stamp, note){
+  const p = L.pad[k]; falling.push({ k, n, stamp, note, x:p.x, y:p.y, rot:0, vx:(Math.random()-.5)*140 + (k==="la"?-60:60), vy:-60, vr:(Math.random()-.5)*2.4, age:0 });
+}
+
+// =====================================================================
+//  layout
+// =====================================================================
+const cv = document.getElementById("c"), ctx = cv.getContext("2d");
+let W, H, DPR, L = {};
+function layout(){ DPR = Math.min(2, devicePixelRatio||1); W = innerWidth; H = innerHeight; cv.width = W*DPR; cv.height = H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
+  const pw = Math.min(210, W*0.17, H*0.22), ph = pw*1.2, gap = Math.max(160, W*0.16);
+  const top = 92;
+  L.pw = pw; L.ph = ph; L.s = pw/210;
+  L.pad = { la:{ x: W/2 - gap/2 - pw, y: top }, cd:{ x: W/2 + gap/2, y: top } };
+  const tlTop = top + ph + 92;
+  L.tl = { x0: Math.max(130, W*0.12), x1: W - Math.max(110, W*0.1), yYou: tlTop, yHer: tlTop + 74, rowH: 50 };
+  L.tl.cw = (L.tl.x1 - L.tl.x0)/24;
+  L.tray = { x: L.tl.x0 + 44, y: L.tl.yHer + L.tl.rowH + 84 };
+  L.talkY = L.tl.yHer + L.tl.rowH + 74;
+  L.floorY = H + 40;
+}
+addEventListener("resize", layout); layout();
+
+// =====================================================================
+//  drawing
+// =====================================================================
+function txt(t, x, y, color, font, align="left", alpha=1, base="alphabetic"){ alpha = Math.max(0, Math.min(1, alpha)); if (!alpha) return;
+  const a0 = ctx.globalAlpha; ctx.globalAlpha = a0*alpha; ctx.fillStyle = color; ctx.font = font; ctx.textAlign = align; ctx.textBaseline = base; ctx.fillText(t, x, y); ctx.globalAlpha = a0; }
+function wrap(t, maxW, font){ ctx.font = font; const words = t.split(" "), lines = []; let cur = "";
+  for (const w of words){ const test = cur ? cur + " " + w : w; if (ctx.measureText(test).width > maxW && cur){ lines.push(cur); cur = w; } else cur = test; }
+  if (cur) lines.push(cur); return lines; }
+
+function drawPage(k, n, opts = {}){
+  const { pw, ph, s } = L, dt = fromN(n), left = HOME - n, festive = n === HOME, weekend = dt.wd === 0 || dt.wd === 6;
+  ctx.fillStyle = PAGE; ctx.fillRect(0, 0, pw, ph);
+  ctx.strokeStyle = "rgba(31,42,92,.5)"; ctx.lineWidth = 1.1; rough.rect(ctx, 0, 0, pw, ph, .6);
+  ctx.fillStyle = "rgba(31,42,92,.3)"; for (let i=7; i<pw-4; i+=8) ctx.fillRect(i, 5, 2.5, 1.6);
+  const nc = festive || weekend ? RED : INK;
+  txt(`${dt.y} · ${MONTHS[dt.mo-1]}`, 12*s, 26*s, RED, `600 ${11*s}px ${PRINT}`);
+  txt(left > 0 ? `${left} days until home` : (left === 0 ? "home" : ""), pw - 12*s, 26*s, RED, `600 ${9.5*s}px ${PRINT}`, "right", .85);
+  txt(String(dt.d), pw/2, 104*s, nc, `900 ${82*s}px ${PRINT}`, "center");
+  txt(festive ? "New Year's Eve  除夕" : `${WD[dt.wd]}  ${ZH[dt.wd]}`, pw/2, 126*s, nc, `600 ${11*s}px ${PRINT}`, "center", .85);
+  ctx.strokeStyle = "rgba(31,42,92,.22)"; ctx.lineWidth = 1; rough.line(ctx, 12*s, 138*s, pw - 12*s, 138*s, .5);
+  if (opts.note){ const f = `${23*s}px ${HAND}`, lines = wrap(opts.note, pw - 22*s, f); let y = 162*s;
+    for (const l of lines.slice(0,4)){ txt(l, 12*s, y, PINK, f); y += 21*s; } }
+  if (opts.lost) txt("over the Pacific", pw/2, 168*s, BLUE, `${26*s}px ${HAND}`, "center", .85);
+  if (opts.stamp){ ctx.save(); ctx.translate(pw/2, ph*0.62); ctx.rotate(-0.25); ctx.strokeStyle = RED; ctx.lineWidth = 2.5; rough.rect(ctx, -62*s, -20*s, 124*s, 40*s, 1.2);
+    txt(opts.stamp, 0, 9*s, RED, `900 ${24*s}px ${PRINT}`, "center", .85); ctx.restore(); }
+  if (opts.phone){ ctx.strokeStyle = BLUE; ctx.lineWidth = 1.6; phoneGlyph(pw - 30*s, ph - 26*s, .55*s); }
+}
+
+function drawPad(k){
+  const { pw, ph, s } = L, p = L.pad[k], n = k === "la" ? S.youShown : S.herShown;
+  ctx.fillStyle = "rgba(31,42,92,.05)"; ctx.fillRect(p.x - 8, p.y - 20, pw + 16, ph + 34);
+  ctx.strokeStyle = "rgba(31,42,92,.45)"; ctx.lineWidth = 1.3; rough.rect(ctx, p.x - 8, p.y - 20, pw + 16, ph + 34, 1);
+  const thick = 2 + 16*Math.max(0, HOME - n)/90;
+  ctx.fillStyle = "#efe9dc"; ctx.fillRect(p.x, p.y + ph, pw, thick);
+  ctx.strokeStyle = "rgba(31,42,92,.3)"; ctx.lineWidth = .8; for (let i=2; i<thick; i+=2.2) rough.line(ctx, p.x + 1, p.y + ph + i, p.x + pw - 1, p.y + ph + i, .3);
+  ctx.fillStyle = RED; ctx.fillRect(p.x - 3, p.y - 14, pw + 6, 12);
+  // name
+  if (k === "la" && S.phase === "end"){
+    const a = Math.min(1, (performance.now() - S.landedAt)/900);
+    txt("Los Angeles", p.x + pw/2, p.y - 30, BLUE, `34px ${HAND}`, "center", .5);
+    ctx.strokeStyle = BLUE; ctx.lineWidth = 2.2; for (let i=0;i<3;i++) rough.line(ctx, p.x + pw/2 - 70, p.y - 40 + i*4, p.x + pw/2 - 70 + 140*a, p.y - 37 + i*3, 1.2);
+    if (a >= 1) txt("Chengdu", p.x + pw/2 + 50, p.y - 58, BLUE, `32px ${HAND}`, "center");
+  } else txt(k === "la" ? "you · Los Angeles" : "mom · Chengdu", p.x + pw/2, p.y - 30, k === "la" ? BLUE : PINK, `34px ${HAND}`, "center");
+  // top page
+  ctx.save(); ctx.translate(p.x, p.y);
+  const note = k === "cd" ? (S.phase === "end" ? S.endNote : S.herNote) : null;
+  drawPage(k, n, { note });
+  // the day running out: the corner of your page curls up
+  if (k === "la" && (S.phase === "day")){
+    const prog = S.t / S.dur, c = 16 + prog*(pw*0.72);
+    ctx.fillStyle = "#f2eee4"; ctx.beginPath(); ctx.moveTo(pw, ph - c); ctx.lineTo(pw, ph); ctx.lineTo(pw - c, ph); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#e9e2d2"; ctx.beginPath(); ctx.moveTo(pw, ph - c); ctx.lineTo(pw - c, ph - c*0.08); ctx.lineTo(pw - c, ph); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = "rgba(31,42,92,.5)"; ctx.lineWidth = 1.1; rough.line(ctx, pw, ph - c, pw - c, ph - c*0.08, .6); rough.line(ctx, pw - c, ph - c*0.08, pw - c, ph, .6);
+    if (prog > 0.7){ txt("the day is ending", pw - c/2 - 4, ph + 30, RED, `24px ${HAND}`, "center", (prog - 0.7)/0.3); }
+  }
+  ctx.restore();
+}
+
+function phoneGlyph(x, y, sc=1){
+  ctx.save(); ctx.translate(x, y); ctx.scale(sc, sc);
+  // an old handset: two cups joined by a bar
+  rough.line(ctx, -22, -10, 22, -10, 1); rough.line(ctx, -22, -2, 22, -2, 1);
+  rough.circle(ctx, -24, 2, 9, 1); rough.circle(ctx, 24, 2, 9, 1);
+  ctx.restore();
+}
+
+const COLORS = { sleep:"rgba(43,74,192,.35)", work:"rgba(240,71,159,.45)", overslept:"rgba(43,74,192,.6)" };
+function drawRow(states, y, who){
+  const { x0, cw, rowH } = L.tl;
+  // merge runs into blocks
+  let a = 0;
+  for (let h=1; h<=24; h++){
+    if (h === 24 || states[h] !== states[a]){
+      const st = states[a], x = x0 + a*cw, w = (h - a)*cw;
+      if (st !== "free"){
+        ctx.strokeStyle = who === "her" ? PINK : BLUE; ctx.lineWidth = 1.3; rough.rect(ctx, x + 2, y + 3, w - 4, rowH - 6, .8);
+        ctx.strokeStyle = COLORS[st] || "rgba(31,42,92,.35)"; ctx.lineWidth = 1;
+        rough.hatch(ctx, x + 2, y + 3, w - 4, rowH - 6, st === "sleep" ? 7 : 5, st === "work" ? -0.8 : 0.8, .6);
+        if (w > 34){ ctx.fillStyle = "rgba(251,248,240,.85)"; const label = st === "sleep" ? "asleep" : st; ctx.font = `24px ${HAND}`; const tw = ctx.measureText(label).width;
+          ctx.fillRect(x + w/2 - tw/2 - 4, y + rowH/2 - 12, tw + 8, 22); txt(label, x + w/2, y + rowH/2 + 6, who === "her" ? PINK : BLUE, `24px ${HAND}`, "center"); }
+      }
+      a = h;
+    }
+  }
+  ctx.strokeStyle = "rgba(31,42,92,.35)"; ctx.lineWidth = 1.2; rough.rect(ctx, x0, y, 24*cw, rowH, .8);
+}
+
+function drawTimeline(now){
+  const { x0, x1, cw, yYou, yHer, rowH } = L.tl;
+  txt("you", x0 - 14, yYou + rowH/2 + 2, BLUE, `30px ${HAND}`, "right", 1, "middle");
+  txt("mom", x0 - 14, yHer + rowH/2 + 2, PINK, `30px ${HAND}`, "right", 1, "middle");
+  // hours on both clocks, lined up on the same moment
+  for (let h=0; h<24; h++){ const x = x0 + h*cw + cw/2;
+    if (h % 3 === 0){ txt(String(h).padStart(2,"0"), x, yYou - 8, BLUE, `20px ${HAND}`, "center", .8);
+      txt(String(herHour(h)).padStart(2,"0"), x, yHer + rowH + 20, PINK, `20px ${HAND}`, "center", .8); }
+    ctx.strokeStyle = "rgba(31,42,92,.12)"; ctx.lineWidth = 1; rough.line(ctx, x0 + h*cw, yYou + rowH, x0 + h*cw, yHer, .4);
+  }
+  txt("your clock", x1 + 10, yYou - 8, BLUE, `20px ${HAND}`, "left", .6);
+  txt("her clock", x1 + 10, yHer + rowH + 20, PINK, `20px ${HAND}`, "left", .6);
+  txt("same moment ↕", x1 + 10, (yYou + rowH + yHer)/2 + 6, INK, `20px ${HAND}`, "left", .45);
+  drawRow(S.sched.you, yYou, "you"); drawRow(S.sched.her, yHer, "her");
+  // hover column
+  const col = drag ? hoverCol : (S.callAt >= 0 ? S.callAt : -1);
+  if (col >= 0){ const x = x0 + col*cw;
+    ctx.fillStyle = "rgba(43,74,192,.08)"; ctx.fillRect(x, yYou - 2, cw, yHer + rowH - yYou + 4);
+    ctx.strokeStyle = INK; ctx.lineWidth = 1.6; rough.rect(ctx, x, yYou - 2, cw, yHer + rowH - yYou + 4, .8);
+    if (drag){ const lbl = `your ${String(col).padStart(2,"0")}:00  ·  her ${String(herHour(col)).padStart(2,"0")}:00`;
+      txt(lbl, x + cw/2, yYou - 34, INK, `26px ${HAND}`, "center"); }
+  }
+  // the call, placed
+  if (S.callAt >= 0 && (S.phase === "ringing" || S.phase === "talk")){
+    const x = x0 + S.callAt*cw + cw/2, y = (yYou + rowH + yHer)/2, buzz = S.phase === "ringing" ? Math.sin(now/30)*3 : 0;
+    ctx.strokeStyle = S.phase === "talk" ? PINK : BLUE; ctx.lineWidth = 2; phoneGlyph(x + buzz, y, .7);
+    if (S.phase === "ringing"){ const k = Math.floor(S.phaseT*3) % 2; txt(k ? "ring" : "ring ring", x + 34, y - 18, BLUE, `26px ${HAND}`, "left"); }
+  }
+}
+
+function drawTray(now){
+  if (S.phase !== "day") return;
+  const { x, y } = L.tray, wig = drag ? 0 : Math.sin(now/260)*1.5;
+  const px = drag ? drag.x : x, py = drag ? drag.y : y;
+  ctx.strokeStyle = BLUE; ctx.lineWidth = 2.2; phoneGlyph(px + wig, py, 1);
+  if (!drag) txt(S.i === 0 ? "← drag me up to a time" : "call", x + 46, y + 8, BLUE, `26px ${HAND}`, "left", .8);
+}
+
+function drawTired(){
+  const x = L.tl.x1 + 14, y = L.tl.yHer + L.tl.rowH + 30;
+  txt("tired", x, y + 4, INK, `22px ${HAND}`, "left", .7);
+  for (let i=0;i<3;i++){ const cx = x + 10 + i*24, cy = y + 22; ctx.strokeStyle = INK; ctx.lineWidth = 1.4; rough.circle(ctx, cx, cy, 8, .8);
+    if (i < S.tired){ ctx.fillStyle = "rgba(43,74,192,.7)"; rough.circle(ctx, cx, cy, 6, .6, true); } }
+}
+
+function drawTalk(){
+  const D = DAYS[S.i], y = L.talkY, cx = W/2;
+  if (S.phase !== "talk" && !(S.phase === "tearing" && S.lastSuccess)) return;
+  const T = S.phase === "talk" ? S.phaseT : 9;
+  const lines = [[D.talk[0], PINK]];
+  if (S.callNight) lines.push([`…it's ${String(S.callAt).padStart(2,"0")}:00 there?! go to sleep`, PINK]);
+  lines.push([D.talk[1], BLUE]);
+  lines.forEach(([t, c], i) => { const a = (T - i*1.1)/0.4; txt(t, cx + (c === BLUE ? 40 : -40), y + i*34, c, `32px ${HAND}`, "center", Math.min(1, a) * (S.phase === "tearing" ? Math.max(0, 1 - S.phaseT/1.2) : 1)); });
+}
+
+function draw(now){
+  rough.seed(Math.floor(now/150)*97 + 5);
+  wobble = 1 + (S.tired >= 2 ? (S.tired - 1)*0.9 : 0);
+  ctx.setTransform(DPR,0,0,DPR,0,0); ctx.clearRect(0,0,W,H);
+  if (S.shake > 0) ctx.translate((Math.random()-.5)*12*S.shake, (Math.random()-.5)*8*S.shake);
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+
+  if (S.phase === "intro"){ drawIntro(now); return; }
+  drawPad("la"); drawPad("cd");
+  if (S.sched && S.phase !== "end" && S.phase !== "flight") { drawTimeline(now); drawTired(); }
+  drawTray(now); drawTalk();
+  for (const f of falling){ ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(f.rot); drawPage(f.k, f.n, { stamp:f.stamp, note:f.note, lost:f.lost, phone:f.phone }); ctx.restore();
+    if (f.lost) txt("Feb 4 — the day you never lived", f.x + L.pw/2, f.y - 14, BLUE, `30px ${HAND}`, "center", 1 - f.age/3.5); }
+  // score
+  if (S.phase !== "end") txt(`calls ${S.calls} / ${S.results.length}`, W - 24, 34, INK, `28px ${HAND}`, "right", .7);
+  if (S.toast){ const a = S.toast.t < .15 ? S.toast.t/.15 : 1 - Math.max(0, S.toast.t - (S.toast.life - .4))/.4;
+    txt(S.toast.text, W/2, L.tl.yYou - 64, S.toast.color, `34px ${HAND}`, "center", a); }
+  if (S.phase === "riffle") txt(S.riffleLabel || "", W/2, L.tl.yYou + 60, INK, `34px ${HAND}`, "center", .6);
+  if (S.phase === "end") drawEnd(now);
+}
+
+function drawIntro(now){
+  const cx = W/2, cy = H*0.42;
+  ctx.strokeStyle = BLUE; ctx.lineWidth = 2.4; phoneGlyph(cx, cy - 130, 1.6);
+  txt("Find a Time to Call", cx, cy - 50, INK, `76px ${HAND}`, "center");
+  txt("you're in Los Angeles. mom is in Chengdu, 16 hours ahead.", cx, cy + 10, BLUE, `32px ${HAND}`, "center");
+  txt("every day until new year's eve, drag the phone to an hour when you're both free.", cx, cy + 46, BLUE, `32px ${HAND}`, "center");
+  txt("before the page tears off.", cx, cy + 82, BLUE, `32px ${HAND}`, "center");
+  txt("click to start", cx, cy + 150, PINK, `38px ${HAND}`, "center", .6 + .4*Math.sin(now/300));
+}
+function drawEnd(now){
+  const t = (performance.now() - S.landedAt)/1000;
+  txt(`you called ${S.calls} of ${DAYS.length} days`, W/2, L.pad.la.y + L.ph + 110, INK, `36px ${HAND}`, "center", (t - 2)/1);
+  // her pile: the pages she tore, the ones with a call marked
+  txt("click or press R to play again", W/2, L.pad.la.y + L.ph + 156, PINK, `28px ${HAND}`, "center", (t - 3.5)/1 * .7);
+}
+
+// =====================================================================
+//  update
+// =====================================================================
+let prev = performance.now(), lastTick = -1;
+function update(dt, now){
+  if (S.shake > 0) S.shake = Math.max(0, S.shake - dt*1.6);
+  if (S.toast){ S.toast.t += dt; if (S.toast.t > S.toast.life) S.toast = null; }
+  S.phaseT += dt;
+  if (S.phase === "day"){
+    S.t += dt;
+    const left = S.dur - S.t; if (left < 3 && Math.ceil(left*2) !== lastTick){ lastTick = Math.ceil(left*2); sfx.tick(); }
+    if (S.t >= S.dur){ drag = null; toast(S.overslept ? "you slept through it" : "the day ran out", RED, 1.6); endDay(false); }
+  } else if (S.phase === "ringing"){ if (S.phaseT > 1.5){ S.phase = "talk"; S.phaseT = 0; sfx.connect(); } }
+  else if (S.phase === "talk"){ if (S.phaseT > 3.9) endDay(true); }
+  else if (S.phase === "tearing"){ if (S.phaseT > 1.1) nextDay(); }
+  else if (S.phase === "riffle"){
+    S.riffleClock += dt;
+    if (S.riffleClock > 0.09 && S.youShown < S.riffleTo){ S.riffleClock = 0;
+      dropPage("la", S.youShown); dropPage("cd", S.herShown); sfx.flip(); S.youShown++; S.herShown++; }
+    if (S.youShown >= S.riffleTo && S.phaseT > 0.4) startDay();
+  } else if (S.phase === "flight"){
+    if (S.phaseT > 3.2 && !S.landedAt){ S.youShown = HOME; S.herShown = HOME; S.landedAt = performance.now(); S.phase = "end"; sfx.connect(); }
+  }
+  for (let i=falling.length-1;i>=0;i--){ const f = falling[i]; f.age += dt;
+    if (f.lost){ f.vy -= 50*dt; f.x += f.vx*dt; f.y += f.vy*dt + Math.sin(f.age*6)*1.5; f.rot += f.vr*dt; if (f.y < -L.ph*2 || f.x > W + L.pw*2) falling.splice(i,1); continue; }
+    f.vy += 900*dt; f.vy *= Math.pow(0.4, dt); f.vx *= Math.pow(0.5, dt);
+    f.x += f.vx*dt + Math.sin(f.age*5 + f.n)*30*dt; f.y += f.vy*dt; f.rot += f.vr*dt;
+    if (f.y > H + 40) falling.splice(i,1); }
+}
+
+function nextDay(){
+  const cur = DAYS[S.i];
+  if (cur.n === FLIGHT){
+    // the flight: Feb 4 is ripped away somewhere over the ocean
+    sfx.whoosh(); S.youShown = LOST; S.herShown = HOME;
+    falling.push({ k:"la", n:LOST, lost:true, x:L.pad.la.x, y:L.pad.la.y, rot:0, vx:520, vy:-480, vr:1.3, age:0 });
+    S.youShown = HOME;
+    const r = S.calls / DAYS.length;
+    S.endNote = r >= 0.75 ? "you called almost every day. I kept all the pages." : r >= 0.4 ? "you were busy. I know. you're home now." : "you're home. that's enough.";
+    S.phase = "flight"; S.phaseT = 0; S.sched = null; return;
+  }
+  S.i++;
+  const nxt = DAYS[S.i];
+  S.youShown = cur.n + 1; S.herShown = cur.n + 2;
+  if (nxt.n > S.youShown){ S.phase = "riffle"; S.phaseT = 0; S.riffleClock = 0; S.riffleTo = nxt.n;
+    const gap = nxt.n - cur.n; S.riffleLabel = gap > 6 ? `${gap} days pass` : "a few days pass"; }
+  else startDay();
+}
+
+// =====================================================================
+//  input
+// =====================================================================
+function colAt(x, y){ const { x0, cw, yYou, yHer, rowH } = L.tl; if (y < yYou - 40 || y > yHer + rowH + 40) return -1;
+  const c = Math.floor((x - x0)/cw); return c >= 0 && c < 24 ? c : -1; }
+cv.addEventListener("pointerdown", e => { audio();
+  if (S.phase === "intro"){ startDay(); return; }
+  if (S.phase === "end"){ if ((performance.now() - S.landedAt) > 3500) restart(); return; }
+  if (S.phase !== "day") return;
+  const { x, y } = L.tray;
+  if (Math.hypot(e.clientX - x, e.clientY - y) < 46){ drag = { x:e.clientX, y:e.clientY }; sfx.pick(); cv.setPointerCapture(e.pointerId); }
+});
+cv.addEventListener("pointermove", e => {
+  if (drag){ drag.x = e.clientX; drag.y = e.clientY; hoverCol = colAt(e.clientX, e.clientY); }
+  cv.style.cursor = drag ? "grabbing" : (S.phase === "day" && Math.hypot(e.clientX - L.tray.x, e.clientY - L.tray.y) < 46 ? "grab" : (S.phase === "intro" || S.phase === "end" ? "pointer" : "default"));
+});
+function release(){ if (!drag) return; const c = hoverCol; drag = null; hoverCol = -1; if (S.phase === "day" && c >= 0) tryCall(c); }
+cv.addEventListener("pointerup", release); cv.addEventListener("pointercancel", release);
+addEventListener("keydown", e => { if (e.key === "r" || e.key === "R") restart(); });
+function restart(){ Object.assign(S, { phase:"intro", i:0, t:0, tired:0, calls:0, missStreak:0, results:[], landedAt:0, sched:null, callAt:-1, youShown:DAYS[0].n, herShown:DAYS[0].n+1 }); falling.length = 0; }
+
+function frame(now){ const dt = Math.min(0.05, (now - prev)/1000); prev = now; update(dt, now); draw(now); requestAnimationFrame(frame); }
+addEventListener("load", () => document.fonts && Promise.all([document.fonts.load(`30px ${HAND}`), document.fonts.load(`900 40px ${PRINT}`)]));
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

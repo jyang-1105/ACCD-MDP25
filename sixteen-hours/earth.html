@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Turn the Earth to Speak</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Reenie+Beanie&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;height:100%;background:#f2eee4;overflow:hidden}
+  canvas{position:fixed;inset:0;width:100%;height:100%;cursor:grab;touch-action:none}
+  canvas.dragging{cursor:grabbing}
+  #paper{position:fixed;inset:0;pointer-events:none;mix-blend-mode:multiply;opacity:.6}
+  form{position:fixed;left:50%;bottom:34px;transform:translateX(-50%);width:min(440px,80vw)}
+  input{width:100%;background:transparent;border:0;border-bottom:1.5px solid rgba(43,74,192,.55);color:#2b4ac0;
+    font-family:"Reenie Beanie",cursive;font-size:30px;padding:2px 4px;outline:none;text-align:center}
+  input::placeholder{color:rgba(43,74,192,.4)}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="paper"></div>
+<form id="form"><input id="inp" maxlength="50" placeholder="write something home" autocomplete="off"></form>
+
+<script>
+(() => {
+// ---------- paper ----------
+(function(){ const c = document.createElement("canvas"); c.width = c.height = 300; const x = c.getContext("2d");
+  const d = x.createImageData(300,300);
+  for (let i=0;i<d.data.length;i+=4){ const v = 150 + Math.random()*90; d.data[i]=v; d.data[i+1]=v*.98; d.data[i+2]=v*.93; d.data[i+3] = Math.random()<.35 ? 45 : 0; }
+  x.putImageData(d,0,0);
+  x.strokeStyle = "rgba(120,100,70,.08)"; for (let i=0;i<70;i++){ x.beginPath(); const a = Math.random()*300, b = Math.random()*300; x.moveTo(a,b); x.lineTo(a+Math.random()*30-15, b+Math.random()*30-15); x.stroke(); }
+  document.getElementById("paper").style.backgroundImage = `url(${c.toDataURL()})`; })();
+
+// ---------- a shaky pen ----------
+const rough = (() => { let s = 1; const r = () => (s = (s*16807) % 2147483647) / 2147483647;
+  const j = a => (r()-.5)*2*a;
+  return { r, j,
+    seed(v){ s = (Math.floor(Math.abs(v)) % 2147483646) + 1; },
+    line(ctx,x1,y1,x2,y2,a=1.2){ const dx=x2-x1, dy=y2-y1, L=Math.hypot(dx,dy)||1, nx=-dy/L, ny=dx/L, bow=(r()-.5)*Math.min(5,L*.03);
+      ctx.beginPath(); ctx.moveTo(x1+j(a), y1+j(a)); ctx.quadraticCurveTo((x1+x2)/2+nx*bow+j(a), (y1+y2)/2+ny*bow+j(a), x2+j(a), y2+j(a)); ctx.stroke(); },
+    path(ctx, pts, a=1){ if (pts.length < 2) return; ctx.beginPath(); ctx.moveTo(pts[0][0]+j(a), pts[0][1]+j(a));
+      for (let i=1;i<pts.length;i++) ctx.lineTo(pts[i][0]+j(a), pts[i][1]+j(a)); ctx.stroke(); },
+    circle(ctx,cx,cy,rad,a=1.4,fill=false){ const st = r()*Math.PI*2, over = fill ? 0 : 0.2 + r()*0.35, n = Math.max(14, rad*0.45|0), ph = r()*6.3, k = 1 + (r()-.5)*0.05;
+      ctx.beginPath(); for (let i=0;i<=n;i++){ const t = st + (Math.PI*2+over)*i/n, rr = rad*(1+0.022*Math.sin(t*2+ph)) + j(a)*.5;
+        const x = cx + Math.cos(t)*rr*k, y = cy + Math.sin(t)*rr/k; i ? ctx.lineTo(x,y) : ctx.moveTo(x,y); }
+      fill ? ctx.fill() : ctx.stroke(); }
+  }; })();
+
+const D = Math.PI/180, BLUE = "#2b4ac0", PINK = "#f0479f", HAND = '"Reenie Beanie", cursive';
+const CITIES = {
+  la: { name:"Los Angeles", lat:34.05, lon:-118.24, tz:"America/Los_Angeles", color:BLUE },
+  cd: { name:"Chengdu",     lat:30.66, lon:104.07,  tz:"Asia/Shanghai",       color:PINK }
+};
+function sun(date){
+  const n = date.getTime()/86400000 + 2440587.5 - 2451545.0;
+  const L = (280.460 + 0.9856474*n) % 360, g = ((357.528 + 0.9856003*n) % 360) * D;
+  const lam = (L + 1.915*Math.sin(g) + 0.020*Math.sin(2*g)) * D, eps = (23.439 - 0.0000004*n) * D;
+  const ra = Math.atan2(Math.cos(eps)*Math.sin(lam), Math.cos(lam)), dec = Math.asin(Math.sin(eps)*Math.sin(lam));
+  const gmst = ((18.697374558 + 24.06570982441908*n) % 24) * 15 * D;
+  let subLon = ra - gmst; subLon = Math.atan2(Math.sin(subLon), Math.cos(subLon));
+  return { dec, subLon };
+}
+function altitude(date, c){ const s = sun(date), H = c.lon*D - s.subLon;
+  return Math.asin(Math.sin(c.lat*D)*Math.sin(s.dec) + Math.cos(c.lat*D)*Math.cos(s.dec)*Math.cos(H)); }
+const fmt = {}; for (const k in CITIES) fmt[k] = new Intl.DateTimeFormat("en-GB",{timeZone:CITIES[k].tz,hour:"2-digit",minute:"2-digit",hour12:false});
+
+let offsetH = 0, vel = 0, dragging = false, lastX = 0, lastT = 0, releasedAt = -1e9;
+const pending = [], flights = [], arrived = [];
+// people read messages when they're awake (07:00–23:00 local), not when they arrive
+const hourIn = (k, d) => +fmt[k].format(d).slice(0,2);
+const awake = (k, d) => { const h = hourIn(k, d); return h >= 7 && h < 23; };
+// her reply depends on what time it is for her
+function replyFor(h){
+  if (h < 10) return "just woke up and saw this!";
+  if (h < 14) return "at lunch. have you eaten?";
+  if (h < 18) return "at work, talk tonight";
+  if (h < 21) return "making dinner. it's so late there, go sleep";
+  return "about to sleep. you too";
+}
+
+const cv = document.getElementById("c"), ctx = cv.getContext("2d");
+let W=0,H=0,DPR=1;
+function resize(){ DPR = Math.min(2, window.devicePixelRatio||1); W = innerWidth; H = innerHeight;
+  cv.width = W*DPR; cv.height = H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); }
+addEventListener("resize", resize); resize();
+
+// sun fixed to screen-left; camera on the dawn line (places cross the middle from night into day)
+const TILT = 14*D;
+let G = { R:0, cx:0, cy:0 };
+function project(lat, lon, s){
+  const a = lon - s.subLon, x = Math.cos(lat)*Math.cos(a), y = Math.cos(lat)*Math.sin(a), z = Math.sin(lat);
+  const depth = -y, sy = z*Math.cos(TILT) - depth*Math.sin(TILT), d2 = depth*Math.cos(TILT) + z*Math.sin(TILT);
+  return { X: G.cx - x*G.R, Y: G.cy - sy*G.R, depth: d2 };
+}
+function lightAt(X, Y, s){ // screen point -> sunlight on the sphere (null if off the globe)
+  const sx = (G.cx - X)/G.R, sy = (G.cy - Y)/G.R, q = 1 - sx*sx - sy*sy; if (q <= 0) return null;
+  const d2 = Math.sqrt(q), z = sy*Math.cos(TILT) + d2*Math.sin(TILT);
+  return sx*Math.cos(s.dec) + z*Math.sin(s.dec);
+}
+function greatCircle(a, b, t){
+  const v = (la,lo)=>[Math.cos(la)*Math.cos(lo), Math.cos(la)*Math.sin(lo), Math.sin(la)];
+  const p = v(a.lat*D,a.lon*D), q = v(b.lat*D,b.lon*D), om = Math.acos(Math.max(-1,Math.min(1,p[0]*q[0]+p[1]*q[1]+p[2]*q[2])));
+  const s1 = Math.sin((1-t)*om)/Math.sin(om), s2 = Math.sin(t*om)/Math.sin(om), r = [p[0]*s1+q[0]*s2, p[1]*s1+q[1]*s2, p[2]*s1+q[2]*s2];
+  return [Math.asin(r[2]), Math.atan2(r[1], r[0])];
+}
+
+// ---------- sound ----------
+let ac=null, noiseGain=null;
+function initAudio(){ if (ac) return; try{
+  ac = new (window.AudioContext||window.webkitAudioContext)();
+  const buf = ac.createBuffer(1, ac.sampleRate*2, ac.sampleRate), d = buf.getChannelData(0);
+  for (let i=0;i<d.length;i++) d[i] = Math.random()*2-1;
+  const src = ac.createBufferSource(); src.buffer = buf; src.loop = true;
+  const f = ac.createBiquadFilter(); f.type="bandpass"; f.frequency.value=180; f.Q.value=0.8;
+  noiseGain = ac.createGain(); noiseGain.gain.value = 0; src.connect(f).connect(noiseGain).connect(ac.destination); src.start();
+}catch(e){ ac=null; } }
+function chime(freq){ if (!ac) return; try{ const o = ac.createOscillator(), g = ac.createGain(); o.type="sine"; o.frequency.value=freq;
+  g.gain.setValueAtTime(0.0001, ac.currentTime); g.gain.exponentialRampToValueAtTime(0.14, ac.currentTime+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime+1.4); o.connect(g).connect(ac.destination); o.start(); o.stop(ac.currentTime+1.5); }catch(e){} }
+
+const HOURS_PER_PX = 0.032;   // one full day ≈ 750px of drag
+cv.addEventListener("pointerdown", e => { initAudio(); dragging = true; lastX = e.clientX; lastT = performance.now(); vel = 0; cv.classList.add("dragging"); cv.setPointerCapture(e.pointerId); });
+cv.addEventListener("pointermove", e => { if (!dragging) return;
+  const now = performance.now(), dx = e.clientX - lastX, dt = Math.max(1, now-lastT)/1000, dh = -dx*HOURS_PER_PX;
+  offsetH += dh; vel = dh/dt*0.7; lastX = e.clientX; lastT = now;
+  if (noiseGain) noiseGain.gain.setTargetAtTime(Math.min(0.25, Math.abs(dx)*0.012), ac.currentTime, 0.03); });
+function endDrag(){ if (!dragging) return; dragging=false; releasedAt = performance.now(); cv.classList.remove("dragging");
+  if (noiseGain) noiseGain.gain.setTargetAtTime(0, ac.currentTime, 0.15); }
+cv.addEventListener("pointerup", endDrag); cv.addEventListener("pointercancel", endDrag);
+document.getElementById("form").addEventListener("submit", e => { e.preventDefault(); initAudio();
+  const inp = document.getElementById("inp"), text = inp.value.trim(); if (!text) return; inp.value = ""; pending.push({ text, from:"la", to:"cd" }); });
+
+// ---------- loop ----------
+let prev = performance.now();
+function frame(now){
+  const dt = Math.min(0.05, (now-prev)/1000); prev = now;
+  if (!dragging){ offsetH += vel*dt; vel *= Math.pow(0.2, dt);
+    if (now - releasedAt > 2500) offsetH *= Math.pow(0.6, dt); if (Math.abs(offsetH) < 0.002) offsetH = 0; }
+  const shown = new Date(Date.now() + offsetH*3600000), s = sun(shown);
+  const alt = { la: altitude(shown, CITIES.la), cd: altitude(shown, CITIES.cd) };
+  for (let i=pending.length-1;i>=0;i--){ const m = pending[i]; if (awake(m.to, shown)){ pending.splice(i,1); flights.push({ ...m, t:0, sentAt: m.sentAt || shown }); chime(m.to==="cd"?660:520); } }
+  for (let i=flights.length-1;i>=0;i--){ const f = flights[i]; f.t += dt/2.8;
+    if (f.t >= 1){ flights.splice(i,1); chime(f.to==="cd"?880:700);
+      const seen = new Date(Date.now() + offsetH*3600000);
+      arrived.push({ text:f.text, at:f.to, born:now, note: f.to==="cd" ? `read at her ${fmt.cd.format(seen)}` : "" });
+      if (f.to==="cd"){ const reply = replyFor(hourIn("cd", seen));
+        setTimeout(()=> pending.push({ text:reply, from:"cd", to:"la", sentAt: new Date(Date.now() + offsetH*3600000) }), 2200); } } }
+  for (let i=arrived.length-1;i>=0;i--) if (now - arrived[i].born > 9000) arrived.splice(i,1);
+  draw(s, alt, shown, now);
+  requestAnimationFrame(frame);
+}
+
+function hatchGlobe(s, angle, spacing, want, color, width){
+  const ca = Math.cos(angle), sa = Math.sin(angle), R = G.R;
+  ctx.strokeStyle = color; ctx.lineWidth = width;
+  for (let d = -R; d <= R; d += spacing){
+    let run = null;
+    for (let t = -R; t <= R + 4; t += 4){
+      const X = G.cx - sa*d + ca*t, Y = G.cy + ca*d + sa*t, L = lightAt(X, Y, s);
+      const ok = L !== null && want(L);
+      if (ok && !run) run = [X, Y, X, Y]; else if (ok) { run[2] = X; run[3] = Y; }
+      if (!ok && run){ if (Math.hypot(run[2]-run[0], run[3]-run[1]) > 5) rough.line(ctx, run[0], run[1], run[2], run[3], 1); run = null; }
+    }
+    if (run && Math.hypot(run[2]-run[0], run[3]-run[1]) > 5) rough.line(ctx, run[0], run[1], run[2], run[3], 1);
+  }
+}
+
+function label(text, x, y, color, size, align="left", alpha=1){
+  ctx.globalAlpha = alpha; ctx.fillStyle = color; ctx.font = `${size}px ${HAND}`; ctx.textAlign = align; ctx.fillText(text, x, y); ctx.globalAlpha = 1; ctx.textAlign = "left"; }
+
+function draw(s, alt, shown, now){
+  rough.seed(Math.floor(now/130)*97 + 13);   // line boil, ~8 fps
+  ctx.clearRect(0,0,W,H);
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  G.R = Math.min(W, H) * 0.31; G.cx = W*0.56; G.cy = H*0.46;
+  const { R, cx, cy } = G;
+
+  // the sun
+  const sx = cx - R*1.8, sr = R*0.2;
+  ctx.strokeStyle = PINK; ctx.lineWidth = 1.6; rough.circle(ctx, sx, cy, sr, 1.5); rough.circle(ctx, sx, cy, sr*1.04, 1.5);
+  ctx.save(); ctx.beginPath(); ctx.arc(sx, cy, sr, 0, Math.PI*2); ctx.clip(); ctx.lineWidth = 1.2;
+  for (let d=-sr; d<sr; d+=5) rough.line(ctx, sx-sr, cy+d-sr*.4, sx+sr, cy+d+sr*.4, 1); ctx.restore();
+  ctx.lineWidth = 1.8;
+  for (let i=0;i<11;i++){ const a = i*Math.PI*2/11 + 0.2; rough.line(ctx, sx+Math.cos(a)*sr*1.35, cy+Math.sin(a)*sr*1.35, sx+Math.cos(a)*sr*1.75, cy+Math.sin(a)*sr*1.75, 1.2); }
+
+  // shading: the night side in blue pen, sunlight near the noon edge in pink pencil
+  hatchGlobe(s, -0.75, 6.5, L => L < -0.03, "rgba(43,74,192,.55)", 1.1);
+  hatchGlobe(s,  0.75, 7.5, L => L < -0.35, "rgba(43,74,192,.45)", 1.0);
+  hatchGlobe(s,  0.95, 9,   L => L > 0.35,  "rgba(240,71,159,.45)", 1.2);
+
+  // graticule
+  ctx.strokeStyle = "rgba(43,74,192,.35)"; ctx.lineWidth = 1;
+  const vis = pts => { const segs = [], cur = []; for (const [la,lo] of pts){ const p = project(la,lo,s);
+      if (p.depth > 0) cur.push([p.X,p.Y]); else if (cur.length){ segs.push(cur.splice(0)); } } if (cur.length) segs.push(cur); return segs; };
+  for (let lo=-180; lo<180; lo+=30){ const pts=[]; for (let la=-85; la<=85; la+=8) pts.push([la*D, lo*D]); vis(pts).forEach(sg => rough.path(ctx, sg, 0.8)); }
+  for (const la of [-45, 0, 45]){ const pts=[]; for (let lo=-180; lo<=180; lo+=8) pts.push([la*D, lo*D]); vis(pts).forEach(sg => rough.path(ctx, sg, 0.8)); }
+
+  // outline, drawn twice like a quick sketch
+  ctx.strokeStyle = BLUE; ctx.lineWidth = 2; rough.circle(ctx, cx, cy, R, 2); ctx.lineWidth = 1.2; rough.circle(ctx, cx, cy, R*1.006, 2.5);
+
+  // dawn line, pink dashes
+  ctx.strokeStyle = PINK; ctx.lineWidth = 2;
+  { const lx = Math.cos(s.dec), lz = Math.sin(s.dec), pts = [];
+    for (let k=0;k<=360;k+=3){ const t = k*D, x = -lz*Math.sin(t), y = Math.cos(t), z = lx*Math.sin(t); pts.push([Math.asin(z), Math.atan2(y,x) + s.subLon]); }
+    vis(pts).forEach(sg => { for (let i=0;i+1<sg.length;i+=2) rough.line(ctx, sg[i][0], sg[i][1], sg[i+1][0], sg[i+1][1], 0.8); }); }
+
+  // messages in flight: a dashed pen arc and a little dot
+  for (const f of flights){
+    const a = CITIES[f.from], b = CITIES[f.to], col = a.color, pts = [];
+    for (let k=0;k<=40;k++){ const tt = k/40; if (tt > f.t) break; const [la,lo] = greatCircle(a,b,tt), p = project(la,lo,s);
+      const lift = 1 + 0.16*Math.sin(Math.PI*tt); pts.push([G.cx + (p.X-G.cx)*lift, G.cy + (p.Y-G.cy)*lift]); }
+    ctx.strokeStyle = col; ctx.lineWidth = 1.6; for (let i=0;i+1<pts.length;i+=2) rough.line(ctx, pts[i][0], pts[i][1], pts[i+1][0], pts[i+1][1], .8);
+    if (pts.length){ const [x,y] = pts[pts.length-1]; ctx.fillStyle = col; rough.circle(ctx, x, y, 5, 1, true);
+      label(f.text, x + 10, y - 10, col, 26, "left"); }
+  }
+
+  // cities
+  for (const k of ["la","cd"]){
+    const c = CITIES[k], p = project(c.lat*D, c.lon*D, s), time = fmt[k].format(shown);
+    const waiting = pending.filter(m => m.from === k), landed = arrived.filter(m => m.at === k);
+    let x = p.X, y = p.Y, faded = p.depth <= 0;
+    if (faded){ const dx = x-cx, dy = y-cy, L = Math.hypot(dx,dy)||1; x = cx + dx/L*(R+22); y = cy + dy/L*(R+22); }
+    const right = !faded || x > cx, ax = right ? x + 18 : x - 18, al = right ? "left" : "right";
+    ctx.fillStyle = c.color; ctx.strokeStyle = c.color; ctx.lineWidth = 1.6;
+    ctx.globalAlpha = faded ? .45 : 1; rough.circle(ctx, x, y, faded ? 4 : 6, 1, true); if (!faded) rough.circle(ctx, x, y, 12, 1.5); ctx.globalAlpha = 1;
+    label(faded ? `(${c.name})` : c.name, ax, y - 4, c.color, 34, al, faded ? .5 : 1);
+    label(time, ax, y + 22, c.color, 28, al, faded ? .5 : .85);
+    let ly = y + 50;
+    for (const m of waiting){ label(`"${m.text}"`, ax, ly, c.color, 26, al, faded ? .5 : 1); ly += 24; }
+    for (const m of landed){ const a = Math.max(0, 1 - (now - m.born)/9000), col = CITIES[k==="la"?"cd":"la"].color;
+      label(`"${m.text}"`, ax, ly, col, 26, al, a); if (m.note){ label(m.note, ax, ly + 20, col, 20, al, a*.6); ly += 22; } ly += 24; }
+    if (!awake(k, shown)) label("z z z", ax + (right ? ctx.measureText(faded ? `(${c.name})` : c.name).width + 14 : -ctx.measureText(c.name).width - 50), y - 14, c.color, 26, al, faded ? .4 : .7);
+  }
+}
+
+addEventListener("load", () => document.fonts && document.fonts.load(`30px ${HAND}`));
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

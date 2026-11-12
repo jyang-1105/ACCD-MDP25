@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Messages That Arrive When You're Not Looking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Reenie+Beanie&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;height:100%;background:#f2eee4;overflow:hidden;cursor:default}
+  canvas{position:fixed;inset:0;width:100%;height:100%}
+  #paper{position:fixed;inset:0;pointer-events:none;mix-blend-mode:multiply;opacity:.6}
+  video{position:fixed;right:20px;bottom:20px;width:110px;opacity:.35;transform:scaleX(-1);filter:grayscale(1);mix-blend-mode:multiply;display:none}
+  video.on{display:block}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="paper"></div>
+<video id="vid" playsinline muted></video>
+<script>
+(() => {
+(function(){ const c = document.createElement("canvas"); c.width = c.height = 300; const x = c.getContext("2d");
+  const d = x.createImageData(300,300);
+  for (let i=0;i<d.data.length;i+=4){ const v = 150 + Math.random()*90; d.data[i]=v; d.data[i+1]=v*.98; d.data[i+2]=v*.93; d.data[i+3] = Math.random()<.35 ? 45 : 0; }
+  x.putImageData(d,0,0);
+  x.strokeStyle = "rgba(120,100,70,.08)"; for (let i=0;i<70;i++){ x.beginPath(); const a = Math.random()*300, b = Math.random()*300; x.moveTo(a,b); x.lineTo(a+Math.random()*30-15, b+Math.random()*30-15); x.stroke(); }
+  document.getElementById("paper").style.backgroundImage = `url(${c.toDataURL()})`; })();
+
+const rough = (() => { let s = 1; const r = () => (s = (s*16807) % 2147483647) / 2147483647; const j = a => (r()-.5)*2*a;
+  return { r, j, seed(v){ s = (Math.floor(Math.abs(v)) % 2147483646) + 1; },
+    line(ctx,x1,y1,x2,y2,a=1.2){ const dx=x2-x1, dy=y2-y1, L=Math.hypot(dx,dy)||1, nx=-dy/L, ny=dx/L, bow=(r()-.5)*Math.min(5,L*.03);
+      ctx.beginPath(); ctx.moveTo(x1+j(a), y1+j(a)); ctx.quadraticCurveTo((x1+x2)/2+nx*bow+j(a), (y1+y2)/2+ny*bow+j(a), x2+j(a), y2+j(a)); ctx.stroke(); },
+    curve(ctx, x1,y1, qx,qy, x2,y2, a=1.5){ ctx.beginPath(); ctx.moveTo(x1+j(a), y1+j(a)); ctx.quadraticCurveTo(qx+j(a*2), qy+j(a*2), x2+j(a), y2+j(a)); ctx.stroke(); },
+    circle(ctx,cx,cy,rad,a=1.4,fill=false){ const st = r()*Math.PI*2, over = fill ? 0 : 0.2 + r()*0.35, n = Math.max(14, rad*0.45|0), ph = r()*6.3, k = 1 + (r()-.5)*0.05;
+      ctx.beginPath(); for (let i=0;i<=n;i++){ const t = st + (Math.PI*2+over)*i/n, rr = rad*(1+0.022*Math.sin(t*2+ph)) + j(a)*.5;
+        const x = cx + Math.cos(t)*rr*k, y = cy + Math.sin(t)*rr/k; i ? ctx.lineTo(x,y) : ctx.moveTo(x,y); } fill ? ctx.fill() : ctx.stroke(); } }; })();
+
+const BLUE = "#2b4ac0", PINK = "#f0479f", INK = "#3a2a8a", HAND = '"Reenie Beanie", cursive';
+
+// sample messages on Chengdu's clock [minutes, english, chinese] — swap in a real chat log
+// You fall asleep at 23:30 in LA = 15:30 in Chengdu. You wake at 07:30 = 23:30 there.
+// So while you sleep, you get her afternoon and evening. [Chengdu minutes, english, chinese] — swap in a real chat log
+const MSGS = [
+  [15*60+40,"do you have enough money? tell me if not","钱够不够用？不够跟妈说"],
+  [16*60+20,"[forwarded] ten ways staying up late hurts you","[转发] 熬夜对身体的十大伤害"],
+  [17*60+30,"grandma asks when you're coming home","外婆问你什么时候回来过年"],
+  [18*60+5, "have you eaten?","吃饭了没？"],
+  [19*60+10,"saw your old classmate's mum downstairs","今天在楼下碰到你小学同学的妈妈了"],
+  [20*60+15,"your dad misses you. he won't say it","你爸说想你了，他不好意思说"],
+  [21*60+0, "it'll be morning for you soon. don't be late","你那边快早上了吧？上课别迟到"],
+  [22*60+45,"we're going to bed. take care","我们先睡了。你照顾好自己"],
+  [23*60+20,"good night","晚安"]
+];
+const START = 15*60+30, END = 23*60+30, MIN_PER_SEC = 8;   // ≈1 minute for your whole night
+
+let started = false, closed = false, cdMin = START, next = 0, received = [], lastSummary = null, scribbles = [], camOk = false;
+const cv = document.getElementById("c"), ctx = cv.getContext("2d");
+let W, H, DPR;
+function resize(){ DPR = Math.min(2, devicePixelRatio||1); W = innerWidth; H = innerHeight; cv.width = W*DPR; cv.height = H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); }
+addEventListener("resize", resize); resize();
+
+// ---------- sound ----------
+let ac = null;
+function chime(){ if (!ac) return; try{ const o = ac.createOscillator(), g = ac.createGain(); o.type="sine"; o.frequency.value=740;
+  g.gain.setValueAtTime(0.0001, ac.currentTime); g.gain.exponentialRampToValueAtTime(0.1, ac.currentTime+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime+1.2); o.connect(g).connect(ac.destination); o.start(); o.stop(ac.currentTime+1.3); }catch(e){} }
+const synth = window.speechSynthesis; let zhVoice = null, enVoice = null;
+function pickVoice(){ if (!synth) return; const v = synth.getVoices();
+  zhVoice = v.find(x=>/zh[-_]CN/i.test(x.lang)) || v.find(x=>/^zh/i.test(x.lang)) || null; enVoice = v.find(x=>/^en/i.test(x.lang)) || null; }
+if (synth){ pickVoice(); synth.onvoiceschanged = pickVoice; }
+function speak(m){
+  m.state = "speaking";
+  if (!synth){ setTimeout(()=>{ if (m.state==="speaking") m.state="heard"; }, 2500); return; }
+  const u = zhVoice ? new SpeechSynthesisUtterance(m.zh.replace(/^\[转发\]\s*/,"转发了一篇文章，")) : new SpeechSynthesisUtterance(m.text.replace(/^\[forwarded\]\s*/,"forwarded an article: "));
+  u.lang = zhVoice ? "zh-CN" : "en-US"; if (zhVoice) u.voice = zhVoice; else if (enVoice) u.voice = enVoice; u.rate = .92; u.pitch = 1.05;
+  u.onend = () => { if (m.state === "speaking") m.state = "heard"; };
+  try{ synth.speak(u); }catch(e){}
+}
+const fmt = min => { min = ((min % 1440) + 1440) % 1440; return String(Math.floor(min/60)).padStart(2,"0") + ":" + String(Math.floor(min%60)).padStart(2,"0"); };
+const both = min => `Chengdu ${fmt(min)}   ·   LA ${fmt(min - 16*60)}`;
+
+function setClosed(c){
+  if (!started || c === closed) return;
+  closed = c;
+  if (c){ lastSummary = null; scribbles = []; }
+  else {
+    if (synth) try{ synth.cancel(); }catch(e){}
+    received.forEach(m => { if (m.state === "speaking") m.state = "half"; else if (m.state === "queued") m.state = "missed"; });
+    const fresh = received.filter(m => !m.seen); fresh.forEach(m => m.seen = true);
+    lastSummary = { n: fresh.length, half: fresh.filter(m=>m.state==="half"||m.state==="missed").length, end: cdMin >= END };
+  }
+}
+
+// ---------- drawing ----------
+function text(t, x, y, color, size, align="center", alpha=1, rot=0){ ctx.save(); ctx.translate(x,y); ctx.rotate(rot); ctx.globalAlpha = alpha;
+  ctx.fillStyle = color; ctx.font = `${size}px ${HAND}`; ctx.textAlign = align; ctx.textBaseline = "middle"; ctx.fillText(t, 0, 0); ctx.restore(); }
+function hatchPatch(p){ ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.strokeStyle = `rgba(240,71,159,${p.a})`; ctx.lineWidth = 2.2;
+  for (let d=-p.h/2; d<p.h/2; d+=5) rough.line(ctx, -p.w/2 + rough.j(8), d, p.w/2 + rough.j(8), d + p.w*0.18, 1.5); ctx.restore(); }
+
+function drawEye(x, y, w, isClosed){
+  ctx.strokeStyle = BLUE; ctx.lineWidth = 2.4; ctx.lineCap = "round";
+  if (!isClosed){
+    rough.curve(ctx, x-w/2, y, x, y - w*0.42, x+w/2, y, 1.6); rough.curve(ctx, x-w/2, y, x, y + w*0.42, x+w/2, y, 1.6);
+    ctx.lineWidth = 1.6; rough.circle(ctx, x, y, w*0.15, 1.2);
+    ctx.save(); ctx.beginPath(); ctx.arc(x, y, w*0.15, 0, Math.PI*2); ctx.clip(); ctx.lineWidth = 1.3;
+    for (let d=-w*.15; d<w*.15; d+=3.5) rough.line(ctx, x - w*.16, y + d - 4, x + w*.16, y + d + 4, .8); ctx.restore();
+    ctx.fillStyle = BLUE; rough.circle(ctx, x, y, w*0.055, .8, true);
+  } else {
+    rough.curve(ctx, x-w/2, y, x, y + w*0.2, x+w/2, y, 1.4);
+    ctx.lineWidth = 1.8;
+    for (let i=1;i<=6;i++){ const t = i/7, px = x - w/2 + w*t, py = y + Math.sin(Math.PI*t)*w*0.1; rough.line(ctx, px, py, px + (t-.5)*14, py + 16, 1); }
+  }
+}
+
+function draw(now){
+  rough.seed(Math.floor(now/130)*97 + 7);
+  ctx.clearRect(0,0,W,H);
+  const cx = W/2, cy = H*0.42, ew = Math.min(260, W*0.3);
+
+  if (closed){
+    // light through eyelids: pink pencil building up while you keep them shut
+    for (const p of scribbles) hatchPatch(p);
+    drawEye(cx, cy, ew, true);
+    // what the room can see, and she can't
+    received.filter(m => !m.seen).forEach(m => {
+      const a = m.state === "half" ? .5 : 1;
+      text(m.text, m.x, m.y, INK, 34, "center", a, m.rot);
+      text(`${m.zh}   ·   her ${fmt(m.t)}, your ${fmt(m.t - 16*60)}`, m.x, m.y + 26, INK, 22, "center", a*.55, m.rot);
+    });
+    text(both(cdMin), W - 30, 34, PINK, 32, "right");
+    return;
+  }
+
+  drawEye(cx, cy, ew, false);
+  if (!started){ text("click, then close your eyes", cx, cy + ew*0.55 + 20, BLUE, 44); return; }
+  if (lastSummary && lastSummary.n){
+    const r = 46; ctx.strokeStyle = PINK; ctx.lineWidth = 2.2; rough.circle(ctx, cx, cy + ew*0.55 + 58, r, 2);
+    text(String(lastSummary.n), cx, cy + ew*0.55 + 60, PINK, 78);
+    text(lastSummary.end ? "her whole evening, while you slept" : "came while you were gone", cx, cy + ew*0.55 + 132, BLUE, 34);
+    if (lastSummary.half) text(`${lastSummary.half} you only half heard`, cx, cy + ew*0.55 + 166, BLUE, 26, "center", .6);
+  } else if (lastSummary && lastSummary.end){
+    text("good morning. it's night there now", cx, cy + ew*0.55 + 40, BLUE, 40);
+  } else {
+    text("close your eyes", cx, cy + ew*0.55 + 30, BLUE, 44);
+    if (!camOk) text("(hold space)", cx, cy + ew*0.55 + 68, BLUE, 28, "center", .5);
+  }
+  text(both(cdMin), W - 30, 34, PINK, 32, "right", .7);
+}
+
+let lastNow = performance.now(), scribbleClock = 0;
+function loop(now){
+  const dt = Math.min(0.1, (now - lastNow)/1000); lastNow = now;
+  if (started && closed && cdMin < END){
+    cdMin = Math.min(END, cdMin + MIN_PER_SEC*dt);
+    scribbleClock += dt;
+    if (scribbleClock > 0.35 && scribbles.length < 60){ scribbleClock = 0;
+      scribbles.push({ x: Math.random()*W, y: Math.random()*H, w: 120 + Math.random()*260, h: 60 + Math.random()*160, rot: (Math.random()-.5)*0.6, a: .18 + Math.random()*.2 }); }
+    while (next < MSGS.length && MSGS[next][0] <= cdMin){
+      const [t, en, zh] = MSGS[next++], onScreen = received.filter(m=>!m.seen).length;
+      const SLOTS = [0.68, 0.8, 0.92, 0.1, 0.2, 0.6];
+      const m = { t, text:en, zh, state:"queued", x: W*(0.3 + Math.random()*0.4), y: H*SLOTS[onScreen % SLOTS.length] + Math.floor(onScreen/SLOTS.length)*14, rot:(Math.random()-.5)*0.08 };
+      received.push(m); chime();
+      const trySpeak = () => { if (!closed || m.state !== "queued") return; if (synth && synth.speaking){ setTimeout(trySpeak, 300); return; } speak(m); };
+      setTimeout(trySpeak, 500);
+    }
+  }
+  draw(now);
+  requestAnimationFrame(loop);
+}
+
+// ---------- start: click anywhere; try the camera, fall back to the space bar ----------
+async function start(){
+  if (started) return; started = true;
+  try{ ac = new (window.AudioContext||window.webkitAudioContext)(); ac.resume(); }catch(e){}
+  if (synth){ try{ const u = new SpeechSynthesisUtterance(" "); u.volume = 0; synth.speak(u); }catch(e){} }
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({ video:{ width:640, height:480 } });
+    const vid = document.getElementById("vid"); vid.srcObject = stream; await vid.play(); vid.classList.add("on");
+    const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs");
+    const fileset = await vision.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+    const lm = await vision.FaceLandmarker.createFromOptions(fileset, {
+      baseOptions:{ modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task", delegate:"GPU" },
+      runningMode:"VIDEO", numFaces:1, outputFaceBlendshapes:true });
+    camOk = true;
+    let lastTs = -1, closedFrames = 0, openFrames = 0;
+    const tick = () => {
+      if (vid.readyState >= 2 && vid.currentTime !== lastTs){ lastTs = vid.currentTime;
+        const r = lm.detectForVideo(vid, performance.now()), bs = r.faceBlendshapes && r.faceBlendshapes[0];
+        if (bs){ const get = n => (bs.categories.find(c=>c.categoryName===n)||{score:0}).score, blink = (get("eyeBlinkLeft") + get("eyeBlinkRight"))/2;
+          if (blink > 0.55){ closedFrames++; openFrames = 0; } else if (blink < 0.35){ openFrames++; closedFrames = 0; }
+          if (closedFrames > 8) setClosed(true); if (openFrames > 3) setClosed(false);
+        } else { openFrames++; if (openFrames > 6) setClosed(false); } }
+      requestAnimationFrame(tick); };
+    tick();
+  }catch(err){ camOk = false; }
+}
+addEventListener("pointerdown", e => { if (!started) start(); });
+addEventListener("keydown", e => { if (e.code === "Space"){ e.preventDefault(); if (!started) start(); setClosed(true); }
+  if (e.key === "r" || e.key === "R"){ if (synth) try{ synth.cancel(); }catch(_){} cdMin = START; next = 0; received = []; lastSummary = null; closed = false; } });
+addEventListener("keyup", e => { if (e.code === "Space"){ e.preventDefault(); setClosed(false); } });
+addEventListener("load", () => document.fonts && document.fonts.load(`30px ${HAND}`));
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
