@@ -9,38 +9,37 @@
 <style>
   :root{ --blue:#2b4ac0; --pink:#f0479f; --ink:#1f2a5c; --paper:#f2eee4; --card:#fbf8f0; --rule:rgba(31,42,92,.18); }
   *{box-sizing:border-box}
-  html,body{margin:0;min-height:100%;background:var(--paper);color:var(--ink);font-family:"Noto Serif SC",Georgia,serif}
+  html,body{margin:0;min-height:100%;background:var(--paper);color:var(--ink);font-family:"Reenie Beanie",cursive}
   #paper{position:fixed;inset:0;pointer-events:none;mix-blend-mode:multiply;opacity:.6;z-index:5}
-  main{max-width:1080px;margin:0 auto;padding:64px 32px 56px}
-  .eyebrow{font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--pink);margin:0 0 14px}
-  h1{font-weight:900;font-size:clamp(48px,7vw,80px);line-height:1;margin:0;letter-spacing:-.01em}
-  .sub{font-size:19px;line-height:1.5;margin:14px 0 0;opacity:.8;max-width:560px}
-  hr{border:0;border-top:1px solid var(--rule);margin:44px 0}
+  main{max-width:1080px;margin:0 auto;padding:56px 32px 56px}
+  .eyebrow{font-size:28px;color:var(--pink);margin:0 0 4px}
+  h1{font-weight:400;font-size:clamp(84px,11vw,132px);line-height:.85;margin:0}
+  .sub{font-size:32px;line-height:1.1;margin:12px 0 0;color:var(--blue);max-width:640px}
+  hr{border:0;border-top:1px solid var(--rule);margin:40px 0}
   .source{display:grid;grid-template-columns:340px 1fr;gap:48px;align-items:center}
   .chat{display:flex;flex-direction:column;gap:12px}
-  .bubble{font-family:"Reenie Beanie",cursive;font-size:30px;line-height:1;padding:10px 16px 8px;border:1.5px solid currentColor;border-radius:16px;max-width:290px}
-  .bubble small{display:block;font-family:"Noto Serif SC",serif;font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.7;margin-top:6px}
+  .bubble{font-size:32px;line-height:1;padding:10px 16px 8px;border:1.5px solid currentColor;border-radius:16px;max-width:290px}
+  .bubble small{display:block;font-size:20px;opacity:.7;margin-top:4px}
   .bubble.her{color:var(--pink);align-self:flex-start;border-bottom-left-radius:4px}
   .bubble.me{color:var(--blue);align-self:flex-end;border-bottom-right-radius:4px}
-  .label{font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;margin:0 0 10px;opacity:.6}
-  .source p{margin:0;font-size:17px;line-height:1.7}
+  .label{font-size:28px;margin:0 0 6px;color:var(--pink)}
+  .source p{margin:0;font-size:28px;line-height:1.2}
   .pk{color:var(--pink)} .bl{color:var(--blue)}
   .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:6px}
   .card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--rule);padding:0;cursor:pointer;text-align:left;font:inherit;color:inherit;transition:transform .2s, box-shadow .2s}
-  .card:hover{transform:translateY(-4px);box-shadow:0 10px 0 -4px rgba(31,42,92,.08)}
-  .card .top{display:flex;justify-content:space-between;align-items:baseline;padding:16px 18px 0;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase}
+  .card:hover{transform:translateY(-4px) rotate(-.5deg);box-shadow:0 10px 0 -4px rgba(31,42,92,.08)}
+  .card .top{display:flex;justify-content:space-between;align-items:baseline;padding:12px 18px 0;font-size:26px}
   .card .top .n{opacity:.5} .card .top .v{color:var(--pink)}
   .card canvas{display:block;width:100%;aspect-ratio:3/2}
-  .card .body{padding:4px 18px 18px;display:flex;flex-direction:column;flex:1}
-  .card h2{font-weight:600;font-size:21px;line-height:1.3;margin:0 0 8px}
-  .card p{margin:0 0 16px;font-size:15px;line-height:1.6;opacity:.8;flex:1}
-  .card .play{font-family:"Reenie Beanie",cursive;font-size:28px;color:var(--blue);line-height:1}
-  .card:hover .play{color:var(--pink)}
-  footer{margin-top:48px;font-size:13px;letter-spacing:.06em;opacity:.55}
+  .card .body{padding:0 18px 18px;display:flex;flex-direction:column;flex:1}
+  .card h2{font-weight:400;font-size:38px;line-height:.95;margin:0 0 8px}
+  .card p{margin:0 0 14px;font-size:25px;line-height:1.1;color:var(--blue);flex:1}
+  .card .play{font-size:30px;color:var(--pink);line-height:1}
+  footer{margin-top:44px;font-size:24px;opacity:.6}
   #view{position:fixed;inset:0;background:var(--paper);display:none;z-index:10}
   #view.open{display:block}
   #view iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-  #back{position:absolute;top:16px;left:18px;z-index:2;background:var(--paper);border:1px solid var(--rule);border-radius:999px;font:600 12px "Noto Serif SC",serif;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);cursor:pointer;padding:7px 14px}
+  #back{position:absolute;top:14px;left:16px;z-index:2;background:var(--paper);border:1px solid var(--rule);border-radius:999px;font:26px "Reenie Beanie",cursive;color:var(--ink);cursor:pointer;padding:2px 14px 0}
   #back:hover{color:var(--pink);border-color:var(--pink)}
   @media (max-width:860px){ .cards{grid-template-columns:1fr} .source{grid-template-columns:1fr;gap:28px} }
 </style>
@@ -48,7 +47,7 @@
 <body>
 <div id="paper"></div>
 <main>
-  <p class="eyebrow">Unnatural Transformation · Part 1</p>
+  <p class="eyebrow">unnatural transformation · part 1</p>
   <h1>Sixteen Hours</h1>
   <p class="sub">One chat between Los Angeles and Chengdu, remade in three media that don't seem to fit it.</p>
 
@@ -59,21 +58,21 @@
       <div class="bubble me">mom it's 2am here<small>my 02:05</small></div>
     </div>
     <div>
-      <p class="label">The source</p>
+      <p class="label">the source</p>
       <p>My WeChat with my mom. I'm in <span class="bl">Los Angeles</span>; she's in <span class="pk">Chengdu</span>, sixteen hours ahead. Messages arrive instantly, but they're written for a different time of day — her dinner-time "have you eaten?" lands at my 2am, her "good night" is my morning.</p>
     </div>
   </section>
 
   <hr>
-  <p class="label">Three translations</p>
+  <p class="label">three translations</p>
   <section class="cards">
-    <button class="card" data-go="earth"><div class="top"><span class="n">01</span><span class="v">Push</span></div>
+    <button class="card" data-go="earth"><div class="top"><span class="n">01</span><span class="v">push</span></div>
       <canvas data-pic="earth" width="600" height="400"></canvas>
       <div class="body"><h2>Turn the Earth to Speak</h2><p>A message only leaves when her side of the planet faces the sun. You turn the Earth yourself — and it turns back when you let go.</p><span class="play">play →</span></div></button>
-    <button class="card" data-go="eyes"><div class="top"><span class="n">02</span><span class="v">Miss</span></div>
+    <button class="card" data-go="eyes"><div class="top"><span class="n">02</span><span class="v">miss</span></div>
       <canvas data-pic="eyes" width="600" height="400"></canvas>
       <div class="body"><h2>Messages That Arrive When You're Not Looking</h2><p>Her evening only plays while your eyes are closed. Open them and it stops mid-sentence.</p><span class="play">play →</span></div></button>
-    <button class="card" data-go="call"><div class="top"><span class="n">03</span><span class="v">Wait</span></div>
+    <button class="card" data-go="call"><div class="top"><span class="n">03</span><span class="v">wait</span></div>
       <canvas data-pic="call" width="600" height="400"></canvas>
       <div class="body"><h2>Find a Time to Call</h2><p>Every day until New Year's Eve, find one hour when you're both free — before the page tears off.</p><span class="play">play →</span></div></button>
   </section>
@@ -81,7 +80,7 @@
   <footer>Jia Yang · 2026</footer>
 </main>
 
-<div id="view"><button id="back">← Back</button><iframe id="frame" allow="camera; autoplay" title="game"></iframe></div>
+<div id="view"><button id="back">← back</button><iframe id="frame" allow="camera; autoplay" title="game"></iframe></div>
 
 <script>
 (() => {

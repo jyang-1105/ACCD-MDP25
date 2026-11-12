@@ -95,8 +95,8 @@ function setClosed(c){
 // ---------- drawing ----------
 function text(t, x, y, color, size, align="center", alpha=1, rot=0){ ctx.save(); ctx.translate(x,y); ctx.rotate(rot); ctx.globalAlpha = alpha;
   ctx.fillStyle = color; ctx.font = `${size}px ${HAND}`; ctx.textAlign = align; ctx.textBaseline = "middle"; ctx.fillText(t, 0, 0); ctx.restore(); }
-function ptext(t, x, y, color, size, align="center", alpha=1, weight=600, track=0){ ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = color; ctx.font = `${weight} ${size}px ${PRINT}`;
-  ctx.textAlign = align; ctx.textBaseline = "middle"; try{ ctx.letterSpacing = track + "px"; }catch(e){} ctx.fillText(t, x, y); ctx.restore(); }
+function ptext(t, x, y, color, size, align="center", alpha=1, weight=600, track=0){ ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = color; ctx.font = `${weight >= 900 ? Math.round(size*1.7) : Math.round(size*1.9)}px ${HAND}`;
+  ctx.textAlign = align; ctx.textBaseline = "middle"; ctx.fillText(weight >= 900 ? t : t.toLowerCase(), x, y); ctx.restore(); }
 function hatchPatch(p){ ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.strokeStyle = `rgba(240,71,159,${p.a})`; ctx.lineWidth = 2.2;
   for (let d=-p.h/2; d<p.h/2; d+=5) rough.line(ctx, -p.w/2 + rough.j(8), d, p.w/2 + rough.j(8), d + p.w*0.18, 1.5); ctx.restore(); }
 

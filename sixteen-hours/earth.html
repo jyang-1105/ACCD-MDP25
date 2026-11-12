@@ -230,16 +230,16 @@ function draw(s, alt, shown, now){
   clockCard("cd", W - 28 - 280, H - 196, shown, now);
 }
 
-function small(t, x, y, color, align="left", alpha=1){ ctx.globalAlpha = alpha; ctx.fillStyle = color; ctx.font = `600 12px ${PRINT}`; ctx.textAlign = align;
-  try{ ctx.letterSpacing = "2px"; }catch(e){} ctx.fillText(t, x, y); try{ ctx.letterSpacing = "0px"; }catch(e){} ctx.globalAlpha = 1; ctx.textAlign = "left"; }
+function small(t, x, y, color, align="left", alpha=1){ ctx.globalAlpha = alpha; ctx.fillStyle = color; ctx.font = `24px ${HAND}`; ctx.textAlign = align;
+  ctx.fillText(t.toLowerCase(), x, y + 3); ctx.globalAlpha = 1; ctx.textAlign = "left"; }
 function clockCard(k, x, y, shown, now){
   const c = CITIES[k], w = 280, h = 168, isAwake = awake(k, shown);
   ctx.fillStyle = PAPER; ctx.fillRect(x, y, w, h);
   ctx.strokeStyle = "rgba(31,42,92,.35)"; ctx.lineWidth = 1.2; rough.line(ctx, x, y, x + w, y, .6); rough.line(ctx, x + w, y, x + w, y + h, .6); rough.line(ctx, x + w, y + h, x, y + h, .6); rough.line(ctx, x, y + h, x, y, .6);
   small(k === "la" ? "YOU · LOS ANGELES" : "MOM · CHENGDU", x + 16, y + 24, c.color);
-  ctx.fillStyle = c.color; ctx.font = `900 38px ${PRINT}`; ctx.textAlign = "left"; ctx.fillText(fmt[k].format(shown), x + 16, y + 66);
-  small(isAwake ? "AWAKE" : "ASLEEP", x + 140, y + 64, INK, "left", .55);
-  if (!isAwake){ ctx.fillStyle = c.color; ctx.font = `26px ${HAND}`; ctx.fillText("z z z", x + 208, y + 62); }
+  ctx.fillStyle = c.color; ctx.font = `52px ${HAND}`; ctx.textAlign = "left"; ctx.fillText(fmt[k].format(shown), x + 16, y + 70);
+  small(isAwake ? "awake" : "asleep", x + 176, y + 64, INK, "left", .55);
+  if (!isAwake){ ctx.fillStyle = c.color; ctx.font = `26px ${HAND}`; ctx.fillText("z z z", x + 232, y + 62); }
   ctx.strokeStyle = "rgba(31,42,92,.15)"; rough.line(ctx, x + 16, y + 82, x + w - 16, y + 82, .4);
   // messages: what's waiting to leave this side, and what just arrived here
   const waiting = pending.filter(m => m.from === k), landed = arrived.filter(m => m.at === k);
