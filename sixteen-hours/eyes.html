@@ -57,7 +57,9 @@ const START = 15*60+30, END = 23*60+30, MIN_PER_SEC = 8;   // ≈1 minute for yo
 let started = false, closed = false, cdMin = START, next = 0, received = [], lastSummary = null, scribbles = [], camOk = false;
 const cv = document.getElementById("c"), ctx = cv.getContext("2d");
 let W, H, DPR;
-function resize(){ DPR = Math.min(2, devicePixelRatio||1); W = innerWidth; H = innerHeight; cv.width = W*DPR; cv.height = H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); }
+const layer = document.createElement("canvas"), lctx = layer.getContext("2d");
+function resize(){ DPR = Math.min(2, devicePixelRatio||1); W = innerWidth; H = innerHeight; cv.width = W*DPR; cv.height = H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
+  layer.width = W*DPR; layer.height = H*DPR; lctx.setTransform(DPR,0,0,DPR,0,0); lctx.lineCap = "round"; }
 addEventListener("resize", resize); resize();
 
 // ---------- sound ----------
@@ -83,7 +85,7 @@ const both = min => `Chengdu ${fmt(min)}   ·   LA ${fmt(min - 16*60)}`;
 function setClosed(c){
   if (!started || c === closed) return;
   closed = c;
-  if (c){ lastSummary = null; scribbles = []; }
+  if (c){ lastSummary = null; scribbles = []; lctx.clearRect(0, 0, W, H); }
   else {
     if (synth) try{ synth.cancel(); }catch(e){}
     received.forEach(m => { if (m.state === "speaking") m.state = "half"; else if (m.state === "queued") m.state = "missed"; });
@@ -97,7 +99,7 @@ function text(t, x, y, color, size, align="center", alpha=1, rot=0){ ctx.save();
   ctx.fillStyle = color; ctx.font = `${size}px ${HAND}`; ctx.textAlign = align; ctx.textBaseline = "middle"; ctx.fillText(t, 0, 0); ctx.restore(); }
 function ptext(t, x, y, color, size, align="center", alpha=1, weight=600, track=0){ ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = color; ctx.font = `${weight >= 900 ? Math.round(size*1.7) : Math.round(size*1.9)}px ${HAND}`;
   ctx.textAlign = align; ctx.textBaseline = "middle"; ctx.fillText(weight >= 900 ? t : t.toLowerCase(), x, y); ctx.restore(); }
-function hatchPatch(p){ ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.strokeStyle = `rgba(240,71,159,${p.a})`; ctx.lineWidth = 2.2;
+function hatchPatch(p, g = lctx){ const ctx = g; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.strokeStyle = `rgba(240,71,159,${p.a})`; ctx.lineWidth = 2.2;
   for (let d=-p.h/2; d<p.h/2; d+=5) rough.line(ctx, -p.w/2 + rough.j(8), d, p.w/2 + rough.j(8), d + p.w*0.18, 1.5); ctx.restore(); }
 
 function drawEye(x, y, w, isClosed){
@@ -122,7 +124,7 @@ function draw(now){
 
   if (closed){
     // light through eyelids: pink pencil building up while you keep them shut
-    for (const p of scribbles) hatchPatch(p);
+    ctx.drawImage(layer, 0, 0, W, H);
     drawEye(cx, cy, ew, true);
     // what the room can see, and she can't
     received.filter(m => !m.seen).forEach(m => {
@@ -157,7 +159,8 @@ function loop(now){
     cdMin = Math.min(END, cdMin + MIN_PER_SEC*dt);
     scribbleClock += dt;
     if (scribbleClock > 0.35 && scribbles.length < 60){ scribbleClock = 0;
-      scribbles.push({ x: Math.random()*W, y: Math.random()*H, w: 120 + Math.random()*260, h: 60 + Math.random()*160, rot: (Math.random()-.5)*0.6, a: .18 + Math.random()*.2 }); }
+      const patch = { x: Math.random()*W, y: Math.random()*H, w: 120 + Math.random()*260, h: 60 + Math.random()*160, rot: (Math.random()-.5)*0.6, a: .18 + Math.random()*.2 };
+      scribbles.push(patch); hatchPatch(patch); }
     while (next < MSGS.length && MSGS[next][0] <= cdMin){
       const [t, en, zh] = MSGS[next++], onScreen = received.filter(m=>!m.seen).length;
       const SLOTS = [0.68, 0.8, 0.92, 0.1, 0.2, 0.6];
@@ -185,13 +188,14 @@ async function start(){
       baseOptions:{ modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task", delegate:"GPU" },
       runningMode:"VIDEO", numFaces:1, outputFaceBlendshapes:true });
     camOk = true;
-    let lastTs = -1, closedFrames = 0, openFrames = 0;
+    let lastTs = -1, lastDetect = 0, closedFrames = 0, openFrames = 0;
     const tick = () => {
-      if (vid.readyState >= 2 && vid.currentTime !== lastTs){ lastTs = vid.currentTime;
+      const tnow = performance.now();
+      if (vid.readyState >= 2 && vid.currentTime !== lastTs && tnow - lastDetect > 66){ lastTs = vid.currentTime; lastDetect = tnow;
         const r = lm.detectForVideo(vid, performance.now()), bs = r.faceBlendshapes && r.faceBlendshapes[0];
         if (bs){ const get = n => (bs.categories.find(c=>c.categoryName===n)||{score:0}).score, blink = (get("eyeBlinkLeft") + get("eyeBlinkRight"))/2;
           if (blink > 0.55){ closedFrames++; openFrames = 0; } else if (blink < 0.35){ openFrames++; closedFrames = 0; }
-          if (closedFrames > 8) setClosed(true); if (openFrames > 3) setClosed(false);
+          if (closedFrames > 3) setClosed(true); if (openFrames > 1) setClosed(false);
         } else { openFrames++; if (openFrames > 6) setClosed(false); } }
       requestAnimationFrame(tick); };
     tick();
