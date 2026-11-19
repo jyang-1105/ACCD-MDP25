@@ -55,6 +55,7 @@ const MSGS = [
 const START = 15*60+30, END = 23*60+30, MIN_PER_SEC = 8;   // ≈1 minute for your whole night
 
 let started = false, closed = false, cdMin = START, next = 0, received = [], lastSummary = null, scribbles = [], camOk = false;
+let peeks = 0, closedTotal = 0, closedSince = 0, longest = 0, after = null;   // part 2: afterimage + what you missed
 const cv = document.getElementById("c"), ctx = cv.getContext("2d");
 let W, H, DPR;
 const layer = document.createElement("canvas"), lctx = layer.getContext("2d");
@@ -75,7 +76,7 @@ function speak(m){
   m.state = "speaking";
   if (!synth){ setTimeout(()=>{ if (m.state==="speaking") m.state="heard"; }, 2500); return; }
   const u = zhVoice ? new SpeechSynthesisUtterance(m.zh.replace(/^\[转发\]\s*/,"转发了一篇文章，")) : new SpeechSynthesisUtterance(m.text.replace(/^\[forwarded\]\s*/,"forwarded an article: "));
-  u.lang = zhVoice ? "zh-CN" : "en-US"; if (zhVoice) u.voice = zhVoice; else if (enVoice) u.voice = enVoice; u.rate = .92; u.pitch = 1.05;
+  u.lang = zhVoice ? "zh-CN" : "en-US"; if (zhVoice) u.voice = zhVoice; else if (enVoice) u.voice = enVoice; const run = closed ? (performance.now() - closedSince)/1000 : 0; u.rate = Math.max(.62, .92 - run*.008); u.volume = Math.max(.3, 1 - run*.012); u.pitch = 1.05;
   u.onend = () => { if (m.state === "speaking") m.state = "heard"; };
   try{ synth.speak(u); }catch(e){}
 }
@@ -85,13 +86,45 @@ const both = min => `Chengdu ${fmt(min)}   ·   LA ${fmt(min - 16*60)}`;
 function setClosed(c){
   if (!started || c === closed) return;
   closed = c;
-  if (c){ lastSummary = null; scribbles = []; lctx.clearRect(0, 0, W, H); }
+  if (c){ lastSummary = null; after = null; scribbles = []; lctx.clearRect(0, 0, W, H); closedSince = performance.now(); }
   else {
     if (synth) try{ synth.cancel(); }catch(e){}
     received.forEach(m => { if (m.state === "speaking") m.state = "half"; else if (m.state === "queued") m.state = "missed"; });
     const fresh = received.filter(m => !m.seen); fresh.forEach(m => m.seen = true);
+    const run = (performance.now() - closedSince)/1000; closedTotal += run; longest = Math.max(longest, run);
+    if (cdMin < END) peeks++;
+    // you open your eyes just in time to see the words leaving
+    after = fresh.length ? { msgs: fresh.slice(-3), t0: performance.now() } : null;
     lastSummary = { n: fresh.length, half: fresh.filter(m=>m.state==="half"||m.state==="missed").length, end: cdMin >= END };
   }
+}
+
+// ---------- part 2: the afterimage and the receipt ----------
+// when you open your eyes, the last messages are still there for a moment, losing letters as they fade
+function drawAfter(now){
+  if (!after) return;
+  const age = (now - after.t0)/1000, life = 3.2; if (age > life){ after = null; return; }
+  const k = age/life;
+  ctx.save(); ctx.filter = `blur(${(k*3).toFixed(1)}px)`;
+  after.msgs.forEach((m, j) => {
+    const keep = [...m.text].map((ch, i) => (ch === " " || hashR(i*7 + j*31 + m.t) > k*1.15) ? ch : " ").join("");
+    text(keep, m.x, m.y - k*18, INK, 34, "center", (1 - k)*.9, m.rot);
+  });
+  ctx.restore();
+}
+const hashR = n => { const x = Math.sin(n*127.1 + 311.7)*43758.5453; return x - Math.floor(x); };
+function drawReceipt(cx, top){
+  const w = 360, h = 250, x = cx - w/2, y = top - 10;
+  ctx.fillStyle = "#fbf8f0"; ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = "rgba(31,42,92,.4)"; ctx.lineWidth = 1.2;
+  rough.line(ctx, x, y, x + w, y, .6); rough.line(ctx, x, y, x, y + h, .6); rough.line(ctx, x + w, y, x + w, y + h, .6);
+  for (let i=0; i<w; i+=12) rough.line(ctx, x + i, y + h, x + i + 6, y + h + 6, .3), rough.line(ctx, x + i + 6, y + h + 6, x + i + 12, y + h, .3);
+  const heard = received.filter(m => m.state === "heard").length, lost = received.length - heard;
+  const rows = [["her evening", "15:30 – 23:30"], ["messages", String(received.length)], ["heard in full", String(heard)], ["lost", String(lost)],
+                ["times you peeked", String(peeks)], ["longest with eyes shut", `${Math.round(longest)} s`]];
+  text("what you missed", cx, y + 30, PINK, 34);
+  rows.forEach(([a,b], i) => { text(a, x + 22, y + 70 + i*28, INK, 24, "left", .8); text(b, x + w - 22, y + 70 + i*28, INK, 24, "right"); });
+  ptext("press R for another night", cx, y + h + 34, BLUE, 12, "center", .6);
 }
 
 // ---------- drawing ----------
@@ -127,16 +160,22 @@ function draw(now){
     ctx.drawImage(layer, 0, 0, W, H);
     drawEye(cx, cy, ew, true);
     // what the room can see, and she can't
+    const dream = Math.min(4, Math.max(0, ((performance.now() - closedSince)/1000 - 15)*0.12));
+    if (dream > 0.2) ctx.filter = `blur(${dream}px)`;
     received.filter(m => !m.seen).forEach(m => {
       const a = m.state === "half" ? .5 : 1;
       text(m.text, m.x, m.y, INK, 34, "center", a, m.rot);
       text(`${m.zh}   ·   her ${fmt(m.t)}, your ${fmt(m.t - 16*60)}`, m.x, m.y + 26, INK, 22, "center", a*.55, m.rot);
     });
+    ctx.filter = "none";
     ptext(both(cdMin).toUpperCase(), W - 30, 30, PINK, 12, "right", 1, 600, 2);
     return;
   }
 
   drawEye(cx, cy, ew, false);
+  drawAfter(now);
+  if (after && started) return;   // let the words leave before the count appears
+  if (lastSummary && lastSummary.end){ drawReceipt(cx, cy + ew*0.55 + 30); return; }
   if (!started){ ptext("Put on headphones. Click, then close your eyes.", cx, cy + ew*0.55 + 26, BLUE, 20); return; }
   if (lastSummary && lastSummary.n){
     const r = 46; ctx.strokeStyle = PINK; ctx.lineWidth = 2.2; rough.circle(ctx, cx, cy + ew*0.55 + 58, r, 2);
@@ -203,7 +242,7 @@ async function start(){
 }
 addEventListener("pointerdown", e => { if (!started) start(); });
 addEventListener("keydown", e => { if (e.code === "Space"){ e.preventDefault(); if (!started) start(); setClosed(true); }
-  if (e.key === "r" || e.key === "R"){ if (synth) try{ synth.cancel(); }catch(_){} cdMin = START; next = 0; received = []; lastSummary = null; closed = false; } });
+  if (e.key === "r" || e.key === "R"){ if (synth) try{ synth.cancel(); }catch(_){} cdMin = START; next = 0; received = []; lastSummary = null; closed = false; peeks = 0; closedTotal = 0; longest = 0; after = null; } });
 addEventListener("keyup", e => { if (e.code === "Space"){ e.preventDefault(); setClosed(false); } });
 addEventListener("load", () => document.fonts && document.fonts.load(`30px ${HAND}`));
 requestAnimationFrame(loop);
